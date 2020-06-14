@@ -1,8 +1,87 @@
-ul {
-  text-decoration: none;
+h1, h2, p {
+  font-size: 1.5em;
+  line-height: 1.2em;
+  font-weight: 400;
+  margin: 0;
 }
 
-.social-networks {
-  margin-rigth: 1em;
-  display: inline-block;
+a {
+  text-decoration: none;
+  color: black;
+  border-bottom: 1px solid rgba(0,0,0,.33);
+}
+
+a:hover {
+  color: #FF3C4B;
+  border-bottom: 1px solid rgba(255,60,75,.33);
+}
+
+.wrapper {
+  display: flex;
+  flex-flow: column;
+  justify-content: space-between;
+  max-width: 960px;
+  margin: 2em 30% 6em 10%;
+}
+
+header {
+  margin-bottom: 8em;
+}
+
+main {
+  margin-bottom: 12em;
+}
+
+.project {
+  margin-bottom: 4em;
+}
+
+.title {
+  margin-left: -.03em;
+  margin-bottom: .2em;
+  font-size: 6em;
+  line-height: 1em;
+}
+
+.small-caps {
+  font-size: .8em;
+  letter-spacing: .1em;
+}
+
+.tags  {
+  font-size: 1.5em;
+  text-transform: lowercase;
+  font-style: italic;
+}
+
+.tags span {
+  margin-right: 1em;
+}
+
+footer, footer p {
+  line-height: 2.4rem;
+}
+
+footer > a {
+  font-size: 1.5rem;
+  margin-right: 1em;
+}
+
+footer a:last-of-type {
+  margin: 0;
+}
+
+
+@media (max-width: 600px) {
+  .wrapper {
+    margin: 2em 15% 6em 5%;
+  }
+
+  main {
+    margin-bottom: 8em;
+  }
+
+  .title {
+    font-size: 3em;
+  }
 }
