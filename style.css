@@ -48,6 +48,7 @@ body, h1, h2, p, span, a {
 .col-2-1:not(:last-child) {
   margin-right: 1.2em;
 }
+/* Этот марджин не даёт слипнуться столбцам */
 
 .col-1 {
   flex-basis: calc(33%);
@@ -82,10 +83,11 @@ main {
 
 /* Типографика */
 sup {
-  vertical-align: baseline;
+  vertical-align: bottom;
   position: relative;
-  top: -0.4em;
-  left: 0.1em;
+  bottom: 0.5em;
+  left: 0.15em;
+  font-size: 0.75em;
 }
 
 .uppercase {
@@ -123,6 +125,10 @@ footer > a {
 
 footer a:last-of-type {
   margin: 0;
+}
+
+.test-no {
+  color: #E0463E;
 }
 /* Типографика */
 
@@ -217,7 +223,7 @@ body, h1, h2, p, span, a {
 /* Изменения при маленьких размерах экрана */
 
 /* Подсетка сетки */
-/* .cols {
+.cols {
   background-color: rgba(255, 240, 210, 1);
 }
 
@@ -227,5 +233,5 @@ body, h1, h2, p, span, a {
 
 .col-2-1, .col-1, .current  {
   background-color: rgba(224, 237, 255, 1);
-} */
+}
 /* Подсетка сетки */
