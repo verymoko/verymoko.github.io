@@ -224,7 +224,7 @@ body, h1, h2, p, span, a {
 
 /* Подсетка сетки */
 .cols {
-  background-color: rgba(255, 240, 210, 1);
+/*  background-color: rgba(255, 240, 210, 1);
 }
 
 .col-2 {
@@ -233,5 +233,5 @@ body, h1, h2, p, span, a {
 
 .col-2-1, .col-1, .current  {
   background-color: rgba(224, 237, 255, 1);
-}
+} */
 /* Подсетка сетки */
