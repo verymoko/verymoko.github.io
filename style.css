@@ -110,7 +110,7 @@ sup {
   margin-left: -0.05em;
 }
 
-.wanted {
+.note {
   font-size: 0.75em;
   margin-top: 0.25em;
 }
@@ -125,10 +125,6 @@ footer > a {
 
 footer a:last-of-type {
   margin: 0;
-}
-
-.test-no {
-  color: #E0463E;
 }
 /* Типографика */
 
@@ -193,7 +189,7 @@ body, h1, h2, p, span, a {
     width: inherit;
   }
 
-  .medium .wanted {
+  .medium .note {
     font-size: 0.5em;
   }
 
