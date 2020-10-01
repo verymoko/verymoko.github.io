@@ -219,8 +219,8 @@ body, h1, h2, p, span, a {
 /* Изменения при маленьких размерах экрана */
 
 /* Подсетка сетки */
-.cols {
-/*  background-color: rgba(255, 240, 210, 1);
+/*  .cols {
+background-color: rgba(255, 240, 210, 1);
 }
 
 .col-2 {
