@@ -21,7 +21,6 @@ body, h1, h2, p, span, a {
 main {
   display: flex;
   flex-flow: row wrap;
-  /* align-items: baseline; */
 }
 
 .project {
@@ -51,14 +50,12 @@ img {
   object-fit: cover;
 }
 
-
 .full-width {
   width: 100%;
   margin-right: auto;
   margin-left: auto;
 }
 
-.full-width img,
 .iframe {
   width: auto;
   height: 75vh;
@@ -69,6 +66,17 @@ img {
 .full-width p {
   margin-left: 1.25vw;
   margin-right: 1.25vw;
+  /* Подписи выровнены по марджинам страницы */
+}
+
+.full-width a {
+  display: flex;
+  flex-flow: column;
+  align-items: flex-start;
+  /* Чтобы длина андерлайна сопадала с длиной <h2>.
+  Если <p> длиннее <h2>, то длина андерлайна будет по <p>.
+    Без флексбокса длина <h2> при width: auto; совпадает с длиной контейнера.
+    А длина контейнера задаётся по <p> */
 }
 
 .divider {
@@ -76,6 +84,11 @@ img {
   height: 1px;
   background-color: #D5D5D5;
   margin: 0 -1.25vw;
+}
+
+main a h2 {
+  align-self: flex-start;
+  /* Выровнял ссылки по длине <h2> */
 }
 /* Лэйаут */
 
@@ -98,6 +111,18 @@ main {
   margin-bottom: 1.25vw;
 }
 /* Вертикальные и отступы */
+
+/* Ссылки */
+h2,
+footer a {
+  border-bottom: 1px solid lightgrey;
+}
+
+a:hover h2,
+footer a:hover {
+  border-bottom: 1px solid black;
+}
+/* Ссылки */
 
 /* Типографика и абзацные отступы */
 h1,
