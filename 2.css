@@ -118,6 +118,8 @@ h2 {
 }
 
 .about {
+  width: 61vw;
+  max-width: 1499px;
   margin-bottom: 1.25vw;
 }
 /* Вертикальные и отступы */
