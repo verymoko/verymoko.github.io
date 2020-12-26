@@ -79,6 +79,11 @@ img {
     А длина контейнера задаётся по <p> */
 }
 
+.about {
+  width: 62vw;
+  max-width: 1499px;
+}
+
 .divider {
   width: auto;
   height: 1px;
@@ -105,6 +110,11 @@ body {
 
 main {
   margin-bottom: 2.5vw;
+}
+
+h2 {
+  margin-top: calc(1.15em * 0.3);
+  margin-bottom: calc(1.15em * 0.15);
 }
 
 .about {
@@ -135,15 +145,11 @@ h1,
 h2 {
   font-size: 30px;
   line-height: 1.15em;
-  margin-top: calc(1.15em * 0.3);
-  margin-bottom: calc(1.15em * 0.15);
 }
 
 .about {
   font-size: 45px;
   line-height: 1.15em;
-  width: 78vw;
-  max-width: 1499px;
 }
 
 .caps {
@@ -172,7 +178,7 @@ h2 {
   }
 
   .about {
-    width: 95vw;
+    width: 100%;
   }
 }
 
