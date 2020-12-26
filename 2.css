@@ -1,0 +1,193 @@
+/* Шрифт */
+@font-face {
+  font-family: "GolosTextWebMedium";
+  src:
+      url("./typefaces/Golos%20Text_Medium.woff2") format("woff2");
+}
+/* Шрифт */
+
+/* Обнуление */
+body, h1, h2, p, span, a {
+  margin: 0;
+  text-decoration: none;
+  color: #000;
+
+  font-family: "GolosTextWebMedium", sans-serif;
+  font-weight: normal;
+ }
+/* Обнуление */
+
+/* Лэйаут */
+main {
+  display: flex;
+  flex-flow: row wrap;
+  /* align-items: baseline; */
+}
+
+.project {
+  display: flex;
+  flex-flow: column;
+  margin: 0 1.25vw 2.5vw 1.25vw;
+}
+
+.col-2 {
+  flex: 1 0 29vw;
+  max-width: 571px;
+}
+
+.col-3 {
+  flex: 1 0 45vw;
+  max-width: 880px;
+}
+
+.col-4 {
+  flex: 1 0 61vw;
+  max-width: 1189px;
+}
+
+img {
+  width: 100%;
+  flex: 1 0 auto;
+  object-fit: cover;
+}
+
+
+.full-width {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.full-width img,
+.iframe {
+  width: auto;
+  height: 75vh;
+  margin: 0 -1.25vw;
+}
+
+.full-width h2,
+.full-width p {
+  margin-left: 1.25vw;
+  margin-right: 1.25vw;
+}
+
+.divider {
+  width: auto;
+  height: 1px;
+  background-color: #D5D5D5;
+  margin: 0 -1.25vw;
+}
+/* Лэйаут */
+
+/* Вертикальные и отступы */
+body,
+header,
+footer {
+  margin: 0 1.25vw 2.5vw 1.25vw;
+}
+
+body {
+  margin-top: 1.25vw;
+}
+
+main {
+  margin-bottom: 2.5vw;
+}
+
+.about {
+  margin-bottom: 1.25vw;
+}
+/* Вертикальные и отступы */
+
+/* Типографика и абзацные отступы */
+h1,
+.project p,
+.social {
+  font-size: 20px;
+  line-height: 1.15em;
+}
+
+h2 {
+  font-size: 30px;
+  line-height: 1.15em;
+  margin-top: calc(1.15em * 0.3);
+  margin-bottom: calc(1.15em * 0.15);
+}
+
+.about {
+  font-size: 45px;
+  line-height: 1.15em;
+  width: 78vw;
+  max-width: 1499px;
+}
+
+.caps {
+  font-size: 0.95em;
+  text-transform: uppercase;
+  letter-spacing: 0.075em;
+}
+
+.apostrophe {
+  margin-right: -0.1em;
+}
+
+.social {
+  line-height: 1.5em;
+}
+
+.social a:not(:last-child) {
+  margin-right: 1em;
+}
+/* Типографика и абзацные отступы */
+
+/* Маленькие экраны */
+@media (max-width: 1023px) {
+  .col-4 {
+    flex: 1 1 95vw;
+  }
+
+  .about {
+    width: 95vw;
+  }
+}
+
+@media (max-width: 640px) {
+  h2 {
+    font-size: 20px;
+  }
+
+  h1,
+  .project p,
+  .social {
+    font-size: 14px;
+  }
+
+  .about {
+    font-size: 30px;
+    margin-bottom: 2.5vw;
+  }
+
+  .project {
+    margin-bottom: 5vw;
+  }
+}
+
+@media (max-width: 319px) {
+  @font-face {
+    font-family: "GolosTextWebBold";
+    src:
+        url("./typefaces/Golos%20Text_Bold.woff2") format("woff2");
+  }
+
+  h2,
+  h2 * {
+    font-family: "GolosTextWebBold", sans-serif;
+    font-weight: normal;
+    font-size: 14px;
+  }
+
+  .about {
+    font-size: 20px;
+  }
+}
+/* Маленькие экраны */
