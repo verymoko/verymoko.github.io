@@ -53,11 +53,6 @@ main {
   max-width: 1189px;
 }
 
-.about {
-  width: 61vw;
-  max-width: 1499px;
-}
-
 .full-width {
   width: 100%;
   margin-right: auto;
@@ -110,11 +105,11 @@ main {
 
 h2 {
   margin-top: calc(1.15em * 0.3);
-  margin-bottom: calc(1.15em * 0.15);
+  margin-bottom: calc(1.15em * 0.2);
 }
 
 .about {
-  margin-bottom: 1.25vw;
+  margin-bottom: 0.5em;
 }
 /* Вертикальные и отступы */
 
@@ -141,7 +136,7 @@ img {
 
 /* Типографика */
 h1,
-.project p,
+p,
 .social {
   font-size: 20px;
   line-height: 1.15em;
@@ -167,6 +162,10 @@ h2 {
   margin-right: -0.1em;
 }
 
+.quotes {
+  margin-left: -0.23em;
+}
+
 .social {
   line-height: 1.5em;
 }
@@ -180,6 +179,7 @@ h2 {
 @media (max-width: 1023px) {
   .col-4 {
     flex: 1 1 95vw;
+    /* Шринк, чтобы влез правый марджин */
   }
 
   .about {
@@ -188,6 +188,10 @@ h2 {
 }
 
 @media (max-width: 640px) {
+  header {
+    margin-bottom: 5vw;
+  }
+
   h2 {
     font-size: 20px;
   }
@@ -200,7 +204,6 @@ h2 {
 
   .about {
     font-size: 30px;
-    margin-bottom: 2.5vw;
   }
 
   .project {
