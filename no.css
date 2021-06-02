@@ -94,7 +94,14 @@ input {
 }
 /* Типографика */
 
-/* Интерактив */
+/* Ссылки и интерактив */
+a {
+  border-bottom: 1px solid lightgray;
+}
+
+a:hover {
+  border-bottom: 1px solid black;
+}
 input:hover {
   background-color: #F5F5F5;
 }
@@ -103,7 +110,7 @@ input:hover {
   transition-duration: 0.125s;
   transition-timing-function: ease-in;
 }
-/* Интерактив */
+/* Ссылки и интерактив */
 
 /* Маленькие экраны */
 @media (max-width: 500px) {
