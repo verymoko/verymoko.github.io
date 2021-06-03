@@ -65,6 +65,14 @@ main {
   margin-right: 1.25vw;
   /* Подписи выровнены по марджинам страницы */
 }
+
+.text-in-frame {
+  padding: 1.25vw 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: baseline;
+}
 /* Лэйаут */
 
 /* Картинки и вставленые сайты */
@@ -85,6 +93,11 @@ img {
   width: auto;
   height: 75vh;
   margin: 0 -1.25vw;
+}
+
+.text-in-frame {
+  background-color: #F5F5F5;
+  border-radius: 1vmax;
 }
 /* Картинки и вставленые сайты */
 
@@ -108,6 +121,11 @@ h2 {
   margin-bottom: calc(1.15em * 0.2);
 }
 
+.text-in-frame h2 {
+  margin-top: 0;
+  margin-bottom: 5vw;
+}
+
 .about {
   margin-bottom: 0.5em;
 }
@@ -123,12 +141,14 @@ a:not(.img-link):hover {
   border-bottom: 1px solid black;
 }
 
-img:hover {
+img:hover,
+.text-in-frame:hover {
   transform: scale(1.005);
 }
 
 a:not(.img-link),
-img {
+img,
+.text-in-frame {
   transition-duration: 0.125s;
   transition-timing-function: ease-in;
 }
@@ -147,7 +167,8 @@ h2 {
   line-height: 1.15em;
 }
 
-.about {
+.about,
+.text-in-frame {
   font-size: 45px;
   line-height: 1.15em;
 }
@@ -202,7 +223,8 @@ h2 {
     font-size: 14px;
   }
 
-  .about {
+  .about,
+  .text-in-frame {
     font-size: 30px;
   }
 
@@ -225,7 +247,8 @@ h2 {
     font-size: 14px;
   }
 
-  .about {
+  .about,
+  .text-in-frame {
     font-size: 20px;
   }
 }
