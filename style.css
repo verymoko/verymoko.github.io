@@ -2,9 +2,11 @@
 @font-face {
   font-family: "GolosTextWebMedium";
   src:
-      url("./typefaces/Golos%20Text_Medium.woff2") format("woff2");
+  url("./typefaces/Golos%20Text_Medium.woff2") format("woff2");
 }
-/* Шрифт */
+    /* Шрифт */
+
+
 
 /* Обнуление */
 body, h1, h2, p, span, a {
@@ -17,6 +19,8 @@ body, h1, h2, p, span, a {
  }
 /* Обнуление */
 
+
+
 /* Объекты */
 .divider {
   width: auto;
@@ -25,6 +29,8 @@ body, h1, h2, p, span, a {
   margin: 0 -1.25vw;
 }
 /* Объекты */
+
+
 
 /* Лэйаут */
 main {
@@ -36,6 +42,11 @@ main {
   display: flex;
   flex-flow: column;
   margin: 0 1.25vw 2.5vw 1.25vw;
+}
+
+.col-1 {
+  flex: 1 0 14vw;
+  max-width: 262px;
 }
 
 .col-2 {
@@ -57,6 +68,7 @@ main {
   width: 100%;
   margin-right: auto;
   margin-left: auto;
+  flex-grow: 1;
 }
 
 .full-width h2,
@@ -65,15 +77,9 @@ main {
   margin-right: 1.25vw;
   /* Подписи выровнены по марджинам страницы */
 }
-
-.text-in-frame {
-  padding: 1.25vw 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: baseline;
-}
 /* Лэйаут */
+
+
 
 /* Картинки и вставленые сайты */
 img {
@@ -85,8 +91,45 @@ img {
 .img-link {
   display: flex;
   height: fit-content;
-  flex: 1 0 auto;
-  /* Занимает всё место, чтобы картинка заняла его же */
+  flex: 1 0 auto;  /* Занимает всё место, чтобы картинка заняла его же */
+
+  overflow: hidden;  /* Картинки не вылезают за гринцы фрейма */
+}
+
+.cover-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  aspect-ratio: 16/9;
+}
+
+.cover-logo {
+  width: 50%;
+  height: 50%;
+  object-fit: contain;
+}
+
+.o-yandex-logo {
+  width: 200%;
+  height: 200%;
+}
+
+.yandex-zoom {
+  background-image: url(./pics/yandex-zoom-logo.svg);
+  background: linear-gradient(160.83deg, rgba(252, 63, 29, 0.2) 0%, rgba(255, 255, 255, 0) 38.36%), radial-gradient(145.15% 100% at 100% 100%, #2D8CFF 0%, rgba(255, 0, 153, .4) 100%), radial-gradient(145.15% 100% at 0% 0%, #FC3F1D 0%, rgba(255, 0, 153, 0.4) 100%);
+  background-blend-mode: multiply;
+}
+
+.beer-insiders {
+  background: url(./pics/beer-insiders-bg.png);
+  background-size: cover;
+}
+
+.beer-insiders-logo {
+  width: 65%;
+  height: 65%;
+  margin-top: 7%;
 }
 
 .iframe {
@@ -95,11 +138,12 @@ img {
   margin: 0 -1.25vw;
 }
 
-.text-in-frame {
+.gray-bg {
   background-color: #F5F5F5;
-  border-radius: 1vmax;
 }
 /* Картинки и вставленые сайты */
+
+
 
 /* Вертикальные и отступы */
 body,
@@ -121,15 +165,12 @@ h2 {
   margin-bottom: calc(1.15em * 0.2);
 }
 
-.text-in-frame h2 {
-  margin-top: 0;
-  margin-bottom: 5vw;
-}
-
 .about {
   margin-bottom: 0.5em;
 }
 /* Вертикальные и отступы */
+
+
 
 /* Ссылки и интерактив */
 a:not(.img-link) {
@@ -141,18 +182,25 @@ a:not(.img-link):hover {
   border-bottom: 1px solid black;
 }
 
-img:hover,
-.text-in-frame:hover {
-  transform: scale(1.005);
+.img-link:hover img {
+  transform: scale(1.05);
 }
 
-a:not(.img-link),
-img,
-.text-in-frame {
+.o-yandex:hover img {
+  transform: rotate(36deg);
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
+}
+
+
+a,
+img {
   transition-duration: 0.125s;
   transition-timing-function: ease-in;
 }
 /* Ссылки и интерактив */
+
+
 
 /* Типографика */
 h1,
@@ -167,8 +215,7 @@ h2 {
   line-height: 1.15em;
 }
 
-.about,
-.text-in-frame {
+.about {
   font-size: 45px;
   line-height: 1.15em;
 }
@@ -196,11 +243,16 @@ h2 {
 }
 /* Типографика */
 
-/* Маленькие экраны */
+
+
+/* Другие экраны */
 @media (max-width: 1023px) {
+  .col-2 {
+    max-width: 880px;  /* 571 → 880px, чтобы было во всю ширину, если один на строке */
+  }
+
   .col-4 {
-    flex: 1 1 95vw;
-    /* Шринк, чтобы влез правый марджин */
+    flex: 1 1 95vw;  /* Шринк, чтобы влез правый марджин */
   }
 
   .about {
@@ -223,8 +275,7 @@ h2 {
     font-size: 14px;
   }
 
-  .about,
-  .text-in-frame {
+  .about {
     font-size: 30px;
   }
 
@@ -247,9 +298,8 @@ h2 {
     font-size: 14px;
   }
 
-  .about,
-  .text-in-frame {
+  .about {
     font-size: 20px;
   }
 }
-/* Маленькие экраны */
+/* Другие экраны */
