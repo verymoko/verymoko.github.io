@@ -282,6 +282,20 @@ h2 {
   .project {
     margin-bottom: 5vw;
   }
+
+  h2 {
+    font-size: 16px;
+  }
+
+  h1,
+  .project p,
+  .social {
+    font-size: 12px;
+  }
+
+  .about {
+    font-size: 20px;
+  }
 }
 
 @media (max-width: 319px) {
