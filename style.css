@@ -154,7 +154,7 @@ footer {
 }
 
 body {
-  margin-top: 1.25vw;
+  margin-top: 2vw;
 }
 
 main {
@@ -276,6 +276,7 @@ h2 {
 
 @media (max-width: 640px) {
   header {
+    margin-top: 2.5vw;
     margin-bottom: 5vw;
   }
 
