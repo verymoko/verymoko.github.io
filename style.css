@@ -64,6 +64,11 @@ main {
   max-width: 1189px;
 }
 
+.col-6 {
+  flex: 1 0 94vw;
+  max-width: 1807px;
+}
+
 .full-width {
   width: 100%;
   margin-right: auto;
@@ -251,7 +256,8 @@ h2 {
     max-width: 880px;  /* 571 → 880px, чтобы было во всю ширину, если один на строке */
   }
 
-  .col-4 {
+  .col-4,
+  .col-6 {
     flex: 1 1 95vw;  /* Шринк, чтобы влез правый марджин */
   }
 
