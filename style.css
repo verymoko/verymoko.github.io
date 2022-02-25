@@ -251,7 +251,6 @@ h2 {
 
 
 /* Баннер */
-
 .banner {
   display: flex;
   justify-content: center;
@@ -260,6 +259,7 @@ h2 {
 }
 
 .banner a h2 {
+  font-size: max(12px, 5vmin);
   color: #ef4e23;
 }
 
@@ -270,7 +270,7 @@ h2 {
   width: 94vmin;
   padding: 1em;
   border-radius: 9999px;
-  border: 1px solid #ef4e23;
+  border: 0.6vmin solid #ef4e23;
 
   display: flex;
   justify-content: center;
@@ -351,8 +351,7 @@ h2 {
         url("./typefaces/Golos%20Text_Bold.woff2") format("woff2");
   }
 
-  h2,
-  h2 * {
+  .project h2 > a {
     font-family: "GolosTextWebBold", sans-serif;
     font-weight: normal;
     font-size: 14px;
