@@ -4,7 +4,7 @@
   src:
   url("./typefaces/Golos%20Text_Medium.woff2") format("woff2");
 }
-    /* Шрифт */
+/* Шрифт */
 
 
 
@@ -158,7 +158,7 @@ footer {
   margin: 0 1.25vw 2.5vw 1.25vw;
 }
 
-body {
+header {
   margin-top: 2vw;
 }
 
@@ -179,12 +179,12 @@ h2 {
 
 
 /* Ссылки и интерактив */
-a:not(.cover) {
+a:not(.cover, .banner *) {
   border-bottom: 1px solid lightgray;
 }
 
 /* Интерактив */
-a:not(.cover):hover {
+a:not(.cover, .banner *):hover {
   border-bottom: 1px solid black;
 }
 
@@ -250,6 +250,32 @@ h2 {
 
 
 
+/* Баннер */
+.banner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  height: 100vh;
+}
+
+.banner > a {
+  display: flex;
+  text-align: center;
+  flex-direction: column;
+  padding: 1.25vw 1.25vw 2vw 1.25vw;
+  border-radius: 8px;
+}
+
+.banner > a:hover * {
+  color: #ef4e23;
+  transition-duration: 0.125s;
+  transition-timing-function: ease-in;
+}
+/* Баннер */
+
+
+
 /* Другие экраны */
 @media (max-width: 1023px) {
   .col-2 {
@@ -271,6 +297,7 @@ h2 {
 
   h1,
   .project p,
+  .banner p,
   .social {
     font-size: 14px;
   }
@@ -281,6 +308,12 @@ h2 {
 }
 
 @media (max-width: 640px) {
+  .banner > a {
+    flex-direction: column;
+    align-items: center;
+    row-gap: 2em;
+  }
+
   header {
     margin-top: 2.5vw;
     margin-bottom: 5vw;
@@ -296,6 +329,7 @@ h2 {
 
   h1,
   .project p,
+  .banner p,
   .social {
     font-size: 12px;
   }
