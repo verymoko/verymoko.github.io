@@ -251,26 +251,39 @@ h2 {
 
 
 /* Баннер */
+
 .banner {
   display: flex;
   justify-content: center;
   align-items: center;
-
-  height: 100vh;
+  height: 100vmin;
 }
 
-.banner > a {
-  display: flex;
-  text-align: center;
-  flex-direction: column;
-  padding: 1.25vw 1.25vw 2vw 1.25vw;
-  border-radius: 8px;
-}
-
-.banner > a:hover * {
+.banner a h2 {
   color: #ef4e23;
-  transition-duration: 0.125s;
-  transition-timing-function: ease-in;
+}
+
+.banner a {
+  box-sizing: border-box;
+
+  height: 94vmin;
+  width: 94vmin;
+  padding: 1em;
+  border-radius: 9999px;
+  border: 1px solid #ef4e23;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.banner a:hover {
+  background: #ef4e23;
+}
+
+.banner a:hover h2 {
+  color: white;
 }
 /* Баннер */
 
@@ -297,7 +310,6 @@ h2 {
 
   h1,
   .project p,
-  .banner p,
   .social {
     font-size: 14px;
   }
@@ -308,12 +320,6 @@ h2 {
 }
 
 @media (max-width: 640px) {
-  .banner > a {
-    flex-direction: column;
-    align-items: center;
-    row-gap: 2em;
-  }
-
   header {
     margin-top: 2.5vw;
     margin-bottom: 5vw;
@@ -329,7 +335,6 @@ h2 {
 
   h1,
   .project p,
-  .banner p,
   .social {
     font-size: 12px;
   }
