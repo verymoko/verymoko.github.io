@@ -323,10 +323,6 @@ h2 {
     margin-bottom: 5vw;
   }
 
-  .project {
-    margin-bottom: 5vw;
-  }
-
   h2 {
     font-size: 16px;
   }
@@ -347,6 +343,10 @@ h2 {
     font-family: "GolosTextWebBold";
     src:
         url("./typefaces/Golos%20Text_Bold.woff2") format("woff2");
+  }
+
+  .project {
+    margin-bottom: 5vw;
   }
 
   .project h2 > a {
