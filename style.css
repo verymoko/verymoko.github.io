@@ -102,17 +102,6 @@ img {
   object-fit: contain;
 }
 
-.o-yandex-bg {
-  width: 200%;
-  height: 200%;
-}
-
-.yandex-zoom {
-  background-image: url(./pics/yandex-zoom-logo.svg);
-  background: linear-gradient(160.83deg, rgba(252, 63, 29, 0.2) 0%, rgba(255, 255, 255, 0) 38.36%), radial-gradient(145.15% 100% at 100% 100%, #2D8CFF 0%, rgba(255, 0, 153, .4) 100%), radial-gradient(145.15% 100% at 0% 0%, #FC3F1D 0%, rgba(255, 0, 153, 0.4) 100%);
-  background-blend-mode: multiply;
-}
-
 .beer-insiders {
   background: url(./pics/beer-insiders-bg.png);
   background-size: cover;
@@ -125,9 +114,7 @@ img {
 }
 
 .iframe {
-  width: auto;
-  height: 75vh;
-  margin: 0 -1.25vw;
+  height: 100%;
 }
 
 .gray-bg {
@@ -149,7 +136,8 @@ img {
 
 .tags span:nth-child(1), 
 .tags span:nth-child(4),
-.tags span:nth-child(8) {
+.tags span:nth-child(8),
+.tags span:nth-child(9) {
   background-color: #F2F2F2;
 }
 
@@ -194,11 +182,6 @@ h2 {
 
 
 
-/* Ссылки и интерактив */
-a:not(.cover, .banner *) {
-  border-bottom: 1px solid lightgray;
-}
-
 /* Интерактив */
 a:not(.cover, .banner *):hover {
   border-bottom: 1px solid black;
@@ -225,7 +208,7 @@ img {
   transition-duration: 1.25s;
   transition-timing-function: ease-in;
 }
-/* Ссылки и интерактив */
+/* Интерактив */
 
 
 
@@ -240,6 +223,10 @@ p,
 h2 {
   font-size: 30px;
   line-height: 1.2em;
+}
+
+.project p {
+  color: #a0a0a0;
 }
 
 .about {
@@ -314,12 +301,16 @@ h2 {
 /* Другие экраны */
 @media (max-width: 1023px) {
   .col-2 {
-    max-width: 880px;  /* 571 → 880px, чтобы было во всю ширину, если один на строке */
+    max-width: 100%;
   }
 
   .col-4,
   .col-6 {
     flex: 1 1 95vw;  /* Шринк, чтобы влез правый марджин */
+  }
+
+  .iframe {
+    height: 75vh;
   }
 
   .about {
@@ -375,16 +366,8 @@ h2 {
 }
 
 @media (max-width: 319px) {
-  @font-face {
-    font-family: "GolosTextWebMedium";
-    src:
-        url("./typefaces/Golos%20Text_Medium.woff2") format("woff2");
-  }
-
-  .project h2 :not(p) {
-    font-family: "GolosTextWebMedium", sans-serif;
-    font-weight: normal;
-    font-size: 14px;
+  .project {
+    margin-bottom: 9vw;
   }
 
   .tags span {
