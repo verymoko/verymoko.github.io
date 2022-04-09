@@ -1,8 +1,7 @@
 /* Шрифт */
 @font-face {
-  font-family: "GolosTextWebMedium";
-  src:
-  url("./typefaces/Golos%20Text_Medium.woff2") format("woff2");
+  font-family: "GolosTextRegular";
+  src: url("./typefaces/Golos%20Text_Regular.woff2") format("woff2");
 }
 /* Шрифт */
 
@@ -14,21 +13,10 @@ body, h1, h2, p, span, a {
   text-decoration: none;
   color: #000;
 
-  font-family: "GolosTextWebMedium", sans-serif;
+  font-family: "GolosTextRegular", sans-serif;
   font-weight: normal;
  }
 /* Обнуление */
-
-
-
-/* Объекты */
-.divider {
-  width: auto;
-  height: 1px;
-  background-color: #D5D5D5;
-  margin: 0 -1.25vw;
-}
-/* Объекты */
 
 
 
@@ -144,6 +132,36 @@ img {
 
 .gray-bg {
   background-color: #F5F5F5;
+}
+
+.notion .tags {
+  display: flex;
+  gap: .4em;
+  flex-wrap: wrap;
+}
+
+.tags span {
+  font-size: 90px;
+  line-height: 1em;
+  padding: .1em .4em .2em;
+  border-radius: 1vw;
+}
+
+.tags span:nth-child(1), 
+.tags span:nth-child(4),
+.tags span:nth-child(8) {
+  background-color: #F2F2F2;
+}
+
+.tags span:nth-child(2), 
+.tags span:nth-child(5),
+.tags span:nth-child(6) {
+  background-color: #FBEBF2;
+}
+
+.tags span:nth-child(3), 
+.tags span:nth-child(7) {
+  background-color: #FFF3D9;
 }
 /* Картинки и вставленые сайты */
 
@@ -268,7 +286,7 @@ h2 {
   width: 94vmin;
   padding: 1em;
   border-radius: 9999px;
-  border: 0.6vmin solid #ef4e23;
+  border: 0.5vmin solid #ef4e23;
 
   display: flex;
   justify-content: center;
@@ -312,6 +330,10 @@ h2 {
     font-size: 14px;
   }
 
+  .tags span {
+    font-size: 45px;
+  }
+
   .about {
     font-size: 30px;
   }
@@ -333,8 +355,12 @@ h2 {
 
   h1,
   .project p,
-  .social {
+  .social.about {
     font-size: 12px;
+  }
+
+  .tags span {
+    font-size: 30px;
   }
 
   .about {
@@ -344,14 +370,18 @@ h2 {
 
 @media (max-width: 319px) {
   @font-face {
-    font-family: "GolosTextWebBold";
+    font-family: "GolosTextWebMedium";
     src:
-        url("./typefaces/Golos%20Text_Bold.woff2") format("woff2");
+        url("./typefaces/Golos%20Text_Medium.woff2") format("woff2");
   }
 
-  .project h2 > a {
-    font-family: "GolosTextWebBold", sans-serif;
+  .project h2 :not(p) {
+    font-family: "GolosTextWebMedium", sans-serif;
     font-weight: normal;
+    font-size: 14px;
+  }
+
+  .tags span {
     font-size: 14px;
   }
 
