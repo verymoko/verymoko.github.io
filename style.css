@@ -219,6 +219,12 @@ img {
   transition-duration: 0.125s;
   transition-timing-function: ease-in;
 }
+
+.tags:hover span {
+  border-radius: 50em;
+  transition-duration: 1.25s;
+  transition-timing-function: ease-in;
+}
 /* Ссылки и интерактив */
 
 
