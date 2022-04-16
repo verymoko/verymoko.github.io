@@ -1,75 +1,115 @@
+/* Переменные */
+:root {
+  --module: 20px;
+  --orange: #ef4e23;
+
+  --col-1: calc((100% - var(--module) * 7) / 6);
+  --col-2: calc((100% - var(--module) * 2) / 3);
+  --col-3: calc((100% - var(--module) * 1) / 2);
+  --col-4: calc(100% - var(--module) - var(--col-2));
+  --col-6: 1 0 100%;
+}
+
+/* Переменные */
+
 /* Шрифт */
 @font-face {
   font-family: "GolosTextRegular";
   src: url("./typefaces/Golos%20Text_Regular.woff2") format("woff2");
 }
+
 /* Шрифт */
 
 
 
 /* Обнуление */
-body, h1, h2, p, span, a {
+body,
+h1,
+h2,
+p,
+span,
+a {
   margin: 0;
   text-decoration: none;
   color: #000;
 
   font-family: "GolosTextRegular", sans-serif;
   font-weight: normal;
- }
+}
+
 /* Обнуление */
 
 
 
 /* Лэйаут */
+body {
+  display: flex;
+  flex-direction: column;
+  margin: var(--module);
+}
+
+.above {
+  display: flex;
+  flex-direction: column;
+
+  z-index: 1;
+  background: white;
+  padding-bottom: var(--module);
+  /* Имитирует гаттер и свободное пространство под верхним слоем */
+}
+
+header {
+  margin-bottom: var(--module);
+}
+
 main {
   display: flex;
   flex-flow: row wrap;
+  gap: var(--module);
 }
 
 .project {
-  display: flex; /* Без него картинки не растянутся по модулю сетки */
+  display: flex;
+  /* Без него картинки не растянутся по модулю сетки */
   flex-flow: column;
-  margin: 0 1.25vw 2.5vw 1.25vw;
+}
+
+.project h2 {
+  margin-top: .20em;
 }
 
 .col-1 {
-  flex: 1 0 14vw;
-  max-width: 262px;
+  flex: 1 0 var(--col-1);
+  max-width: 294px;
 }
 
 .col-2 {
-  flex: 1 0 29vw;
-  max-width: 571px;
+  flex: 1 0 var(--col-2);
+  max-width: 608px;
 }
 
 .col-3 {
-  flex: 1 0 45vw;
-  max-width: 880px;
+  flex: 1 0 var(--col-3);
+  max-width: 922px;
 }
 
 .col-4 {
-  flex: 1 0 61vw;
-  max-width: 1189px;
+  flex: 1 0 var(--col-4);
+  max-width: 1235px;
 }
 
 .col-6 {
-  flex: 1 0 94vw;
-  max-width: 1807px;
+  flex: var(--col-6);
+  /* Если не задать 100%, то следующий модуль может влезть в строку 6-колонника */
+  max-width: 1863px;
 }
 
-.full-width {
-  width: 100%;
-  margin-right: auto;
-  margin-left: auto;
-  flex-grow: 1;
+footer {
+  position: sticky;
+  bottom: var(--module);
+  /* Без нижнего отступа не прилепляется */
 }
 
-.full-width h2,
-.full-width p {
-  margin-left: 1.25vw;
-  margin-right: 1.25vw;
-  /* Подписи выровнены по марджинам страницы */
-}
 /* Лэйаут */
 
 
@@ -79,13 +119,16 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  flex-shrink: 0; /* Чтобы картинки могли быть больше контейнера. Scale() и без этого работает */
+  flex-shrink: 0;
+  /* Чтобы картинки могли быть больше контейнера. Scale() и без этого работает */
 }
 
 .cover {
   display: flex;
-  flex: 1 1 auto; /* Освобождает картинки, чтобы .project занял всю высоту строки */
-  overflow: hidden; /* Картинки не вылезают за гринцы фрейма */
+  flex: 1 1 auto;
+  /* Освобождает картинки, чтобы .project занял всю высоту строки */
+  overflow: hidden;
+  /* Картинки не вылезают за границы фрейма */
 }
 
 .cover-link {
@@ -128,57 +171,31 @@ img {
 }
 
 .tags span {
-  font-size: 90px;
+  font-size: calc(var(--module) * 4);
   line-height: 1em;
   padding: .1em .4em .2em;
-  border-radius: 1vw;
+  border-radius: .1em;
 }
 
-.tags span:nth-child(1), 
+.tags span:nth-child(1),
 .tags span:nth-child(4),
 .tags span:nth-child(8),
 .tags span:nth-child(9) {
   background-color: #F2F2F2;
 }
 
-.tags span:nth-child(2), 
+.tags span:nth-child(2),
 .tags span:nth-child(5),
 .tags span:nth-child(6) {
   background-color: #FBEBF2;
 }
 
-.tags span:nth-child(3), 
+.tags span:nth-child(3),
 .tags span:nth-child(7) {
   background-color: #FFF3D9;
 }
+
 /* Картинки и вставленые сайты */
-
-
-
-/* Вертикальные и отступы */
-body,
-header,
-footer {
-  margin: 0 1.25vw 2.5vw 1.25vw;
-}
-
-header {
-  margin-top: 2vw;
-}
-
-main {
-  margin-bottom: 2.5vw;
-}
-
-h2 {
-  margin-top: calc(1.2em * 0.3);
-  margin-bottom: calc(1.2em * 0.2);
-}
-
-.about {
-  margin-bottom: 0.5em;
-}
-/* Вертикальные и отступы */
 
 
 
@@ -208,21 +225,17 @@ img {
   transition-duration: 1.25s;
   transition-timing-function: ease-in;
 }
+
 /* Интерактив */
 
 
 
 /* Типографика */
+h2,
 h1,
 p,
 .social {
-  font-size: 20px;
-  line-height: 1.3em;
-}
-
-h2 {
-  font-size: 30px;
-  line-height: 1.2em;
+  font-size: var(--module);
 }
 
 .project p {
@@ -230,8 +243,9 @@ h2 {
 }
 
 .about {
-  font-size: 45px;
+  font-size: calc(var(--module) * 2);
   line-height: 1.15em;
+  margin-bottom: calc(var(--module) / 4);
 }
 
 .caps {
@@ -245,7 +259,7 @@ h2 {
 }
 
 .quotes {
-  margin-left: -0.23em;
+  margin-left: -0.48em;
 }
 
 .social {
@@ -255,6 +269,7 @@ h2 {
 .social a:not(:last-child) {
   margin-right: 1em;
 }
+
 /* Типографика */
 
 
@@ -269,7 +284,7 @@ h2 {
 
 .banner a h2 {
   font-size: max(12px, 5vmin);
-  color: #ef4e23;
+  color: var(--orange);
 }
 
 .banner a {
@@ -279,7 +294,7 @@ h2 {
   width: 94vmin;
   padding: 1em;
   border-radius: 9999px;
-  border: 0.5vmin solid #ef4e23;
+  border: 0.5vmin solid var(--orange);
 
   display: flex;
   justify-content: center;
@@ -288,94 +303,59 @@ h2 {
 }
 
 .banner a:hover {
-  background: #ef4e23;
+  background: var(--orange);
 }
 
 .banner a:hover h2 {
   color: white;
 }
+
 /* Баннер */
 
 
 
 /* Другие экраны */
-@media (max-width: 1023px) {
-  .col-2 {
-    max-width: 100%;
+@media (max-width: 1135px) {
+  :root {
+    --module: 16px;
   }
+}
 
-  .col-4,
-  .col-6 {
-    flex: 1 1 95vw;  /* Шринк, чтобы влез правый марджин */
+@media (max-width: 905px) {
+  :root {
+    --module: 12px;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .col-2 {
+    flex: var(--col-6);
+    max-width: 1863px;
+
   }
 
   .iframe {
     height: 75vh;
   }
 
-  .about {
-    width: 100%;
-  }
-  
-  h2 {
-    font-size: 20px;
-  }
-
-  h1,
-  .project p,
-  .social {
-    font-size: 14px;
-  }
-
   .tags span {
-    font-size: 45px;
-  }
-
-  .about {
-    font-size: 30px;
-  }
-}
-
-@media (max-width: 640px) {
-  header {
-    margin-top: 2.5vw;
-    margin-bottom: 5vw;
-  }
-
-  .project {
-    margin-bottom: 5vw;
-  }
-
-  h2 {
-    font-size: 16px;
-  }
-
-  h1,
-  .project p,
-  .social.about {
-    font-size: 12px;
-  }
-
-  .tags span {
-    font-size: 30px;
-  }
-
-  .about {
-    font-size: 20px;
+    font-size: calc(var(--module) * 3);
   }
 }
 
 @media (max-width: 319px) {
-  .project {
-    margin-bottom: 9vw;
+  .notion .tags {
+    gap: .2em;
   }
 
-  .tags span {
-    font-size: 14px;
+  footer {
+    position: inherit;
   }
 
   .about {
-    font-size: 20px;
+    font-size: calc(var(--module) * 1.5);
   }
 }
+
 /* Другие экраны */
