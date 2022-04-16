@@ -349,9 +349,14 @@ p,
     gap: .2em;
   }
 
+  .tags span {
+    font-size: var(--module);
+  }
+
   footer {
     position: inherit;
   }
+  
 
   .about {
     font-size: calc(var(--module) * 1.5);
