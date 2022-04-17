@@ -45,7 +45,7 @@ a {
 body {
   display: flex;
   flex-direction: column;
-  margin: var(--module);
+  margin: 0 var(--module) var(--module);
 }
 
 .above {
@@ -59,7 +59,9 @@ body {
 }
 
 header {
+  position: sticky;
   margin-bottom: var(--module);
+  top: var(--module);
 }
 
 main {
@@ -193,6 +195,12 @@ img {
 .tags span:nth-child(3),
 .tags span:nth-child(7) {
   background-color: #FFF3D9;
+}
+
+.yandex-zoom {
+  background-image: url(./pics/yandex-zoom-logo.svg);
+  background: linear-gradient(160.83deg, rgba(252, 63, 29, 0.2) 0%, rgba(255, 255, 255, 0) 38.36%), radial-gradient(145.15% 100% at 100% 100%, #2D8CFF 0%, rgba(255, 0, 153, .4) 100%), radial-gradient(145.15% 100% at 0% 0%, #FC3F1D 0%, rgba(255, 0, 153, 0.4) 100%);
+  background-blend-mode: multiply;
 }
 
 /* Картинки и вставленые сайты */
@@ -329,10 +337,11 @@ p,
 
 
 @media (max-width: 480px) {
-  .col-2 {
+
+  .col-2,
+  .col-3 {
     flex: var(--col-6);
     max-width: 1863px;
-
   }
 
   .iframe {
@@ -356,7 +365,6 @@ p,
   footer {
     position: inherit;
   }
-  
 
   .about {
     font-size: calc(var(--module) * 1.5);
