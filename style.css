@@ -70,6 +70,12 @@ main {
   gap: var(--module);
 }
 
+.stack {
+  display: flex;
+  flex-flow: column wrap;
+  gap: var(--module);
+}
+
 .project {
   display: flex;
   /* Без него картинки не растянутся по модулю сетки */
@@ -142,8 +148,8 @@ img {
 }
 
 .cover-logo {
-  width: 50%;
-  height: 50%;
+  width: 66%;
+  height: 66%;
   object-fit: contain;
 }
 
@@ -163,7 +169,7 @@ img {
 }
 
 .gray-bg {
-  background-color: #F5F5F5;
+  background-color: #f2f2f2;
 }
 
 .notion .tags {
@@ -203,6 +209,18 @@ img {
   background-blend-mode: multiply;
 }
 
+.nda {
+  filter: blur(calc(var(--module) / 10));
+}
+
+.nda:hover {
+  filter: blur(0);
+}
+
+.nda:hover div {
+  filter: blur(calc(var(--module) / 2));
+}
+
 /* Картинки и вставленые сайты */
 
 
@@ -234,6 +252,11 @@ img {
   transition-timing-function: ease-in;
 }
 
+.nda {
+  transition-duration: 0.125s;
+  transition-timing-function: ease-in;
+}
+
 /* Интерактив */
 
 
@@ -246,7 +269,8 @@ p,
   font-size: var(--module);
 }
 
-.project p {
+.project p,
+p .caps {
   color: #a0a0a0;
 }
 
@@ -338,7 +362,12 @@ p,
 
 @media (max-width: 480px) {
 
-  .col-2,
+  .stack {
+    flex-flow: row wrap;
+    height: 100%;
+  }
+
+  .col-2:not(.narrow),
   .col-3 {
     flex: var(--col-6);
     max-width: 1863px;
