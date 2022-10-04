@@ -12,14 +12,6 @@
 
 /* Переменные */
 
-/* Шрифт */
-@font-face {
-  font-family: "GolosTextRegular";
-  src: url("./typefaces/Golos%20Text_Regular.woff2") format("woff2");
-}
-
-/* Шрифт */
-
 
 
 /* Обнуление */
@@ -33,7 +25,7 @@ a {
   text-decoration: none;
   color: #000;
 
-  font-family: "GolosTextRegular", sans-serif;
+  font-family: "Inter", sans-serif;
   font-weight: normal;
 }
 
