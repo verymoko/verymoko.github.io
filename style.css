@@ -129,6 +129,7 @@ img {
   /* Освобождает картинки, чтобы .project занял всю высоту строки */
   overflow: hidden;
   /* Картинки не вылезают за границы фрейма */
+  border-radius: calc(var(--module) / 2);
 }
 
 .cover-link {
@@ -158,6 +159,8 @@ img {
 
 .iframe {
   height: 100%;
+  border-radius: calc(var(--module) / 2);
+  overflow: hidden;
 }
 
 .gray-bg {
@@ -303,7 +306,8 @@ p .caps {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vmin;
+  /* Чтобы контент выглядывал */
+  height: 90vmin;
 }
 
 .banner a h2 {
@@ -314,8 +318,9 @@ p .caps {
 .banner a {
   box-sizing: border-box;
 
-  height: 94vmin;
-  width: 94vmin;
+  /* Чтобы кружок не выходил за границы экрана */
+  height: 84vmin;
+  width: 84vmin;
   padding: 1em;
   border-radius: 9999px;
   border: 0.5vmin solid var(--orange);
