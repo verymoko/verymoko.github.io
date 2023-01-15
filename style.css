@@ -177,7 +177,7 @@ img {
   font-size: calc(var(--module) * 4);
   line-height: 1em;
   padding: .1em .4em .2em;
-  border-radius: .1em;
+  border-radius: calc(var(--module) / 2);
 }
 
 .tags span:nth-child(1),
