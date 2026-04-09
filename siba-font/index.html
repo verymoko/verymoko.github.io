@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="icon" href="favicon.png">
+  <style>
+    body {
+      margin: 0;
+    }
+
+    .controls {
+      position: fixed;
+      z-index: 1;
+      left: max(10px, env(safe-area-inset-left));
+      bottom: max(10px, env(safe-area-inset-bottom));
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 10px;
+      max-width: calc(100vw - 20px - env(safe-area-inset-left) - env(safe-area-inset-right));
+      box-sizing: border-box;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .title-wrap {
+      flex: 0 1 auto;
+      width: min(20ch, calc(100vw - 11rem));
+      min-width: 0;
+    }
+
+    .page-title {
+      margin: 0;
+      font-family: sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #292524;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #btn {
+      flex-shrink: 0;
+      font-size: 14px;
+      color: #292524;
+      background: #E7E5E4;
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>	
+<body>
+
+<img id="img" src="Martian Grotesk.png">
+
+<div class="controls">
+  <div class="title-wrap">
+    <h1 class="page-title" id="page-title">Martian Grotesk</h1>
+  </div>
+  <button id="btn" type="button">Другой шрифт</button>
+</div>
+
+<script>
+let images = ["Martian Grotesk.png", "Onest.png"];
+let index = 0;
+
+function nameWithoutExt(path) {
+  const base = path.split("/").pop() || path;
+  return base.replace(/\.[^/.]+$/, "");
+}
+
+function syncTitle() {
+  document.getElementById("page-title").textContent = nameWithoutExt(images[index]);
+}
+
+function showNext() {
+  index = (index + 1) % images.length;
+  document.getElementById("img").src = images[index];
+  syncTitle();
+}
+
+function showPrev() {
+  index = (index - 1 + images.length) % images.length;
+  document.getElementById("img").src = images[index];
+  syncTitle();
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowRight") showNext();
+  if (e.key === "ArrowLeft") showPrev();
+});
+
+document.getElementById("btn").onclick = showNext;
+syncTitle();</script>
+
+</body>
+</html>
