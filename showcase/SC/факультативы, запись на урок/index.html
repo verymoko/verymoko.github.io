@@ -1,0 +1,1246 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מסך יומן - חוגים</title>
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --text: #1e1f24;
+      --muted: #7a7f8d;
+      --line: #e7e9ef;
+      --line-strong: #d8dce6;
+      --accent: #3a67ff;
+      --slot-h: 22px;
+      --teacher-col-w: 280px;
+      --time-col-w: 88px;
+      --header-h: 56px;
+      --radius: 14px;
+      --request-card-w: 244px;
+      --side-col-w: 268px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .page {
+      height: 100vh;
+      padding: 0px;
+      overflow: hidden;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr var(--side-col-w);
+      gap: 0px;
+      direction: ltr;
+      align-items: stretch;
+      height: calc(100vh - 48px);
+    }
+
+    .calendar {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(16, 24, 40, 0.04);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .calendar-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .date-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .date-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-inline-start: 6px;
+      min-width: 220px;
+    }
+
+    .field {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .field select {
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--text);
+      padding: 7px 8px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .field select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(58, 103, 255, 0.14);
+    }
+
+    .view-switch {
+      display: inline-flex;
+      background: #eef1f9;
+      padding: 4px;
+      border-radius: 10px;
+      gap: 4px;
+    }
+
+    .view-btn {
+      border: 0;
+      background: transparent;
+      color: #5c6272;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .view-btn.active {
+      background: #fff;
+      color: var(--text);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.1);
+    }
+
+    .calendar-grid {
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: stretch;
+      direction: rtl;
+      overflow: auto;
+      flex: 1 1 auto;
+      min-height: 0;
+      position: relative;
+    }
+
+    .calendar-grid > * {
+      direction: ltr;
+    }
+
+    #teachersWrap {
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      width: max-content;
+    }
+
+    .teacher-column {
+      width: var(--teacher-col-w);
+      min-width: var(--teacher-col-w);
+      border-right: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .teacher-header,
+    .time-header {
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--line-strong);
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 2;
+      direction: rtl;
+    }
+
+    .teacher-body,
+    .time-body {
+      display: grid;
+      grid-template-rows: repeat(var(--slots), var(--slot-h));
+    }
+
+    .teacher-body {
+      position: relative;
+    }
+
+    .slot {
+      border-bottom: 1px solid var(--line);
+      position: relative;
+    }
+
+    .slot.hour {
+      border-bottom-color: var(--line-strong);
+    }
+
+    .time-column {
+      width: var(--time-col-w);
+      min-width: var(--time-col-w);
+      border-right: 1px solid var(--line-strong);
+      background: #fafbff;
+      position: sticky;
+      right: 0;
+      z-index: 3;
+      flex-shrink: 0;
+    }
+
+    .time-slot {
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      align-items: start;
+      justify-content: center;
+      padding-top: 2px;
+      direction: ltr;
+    }
+
+    .time-slot.muted {
+      color: transparent;
+    }
+
+    .lesson-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .lesson-item {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      border-radius: 8px;
+      background: rgba(58, 103, 255, 0.14);
+      border: 1px solid rgba(58, 103, 255, 0.5);
+      color: #1f2e70;
+      font-size: 11px;
+      font-weight: 600;
+      display: block;
+      pointer-events: auto;
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+      overflow: hidden;
+      padding: 6px 8px 10px;
+    }
+
+    .lesson-item.dragging {
+      opacity: 0.85;
+      cursor: grabbing;
+    }
+
+    .lesson-title {
+      color: #1f2e70;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lesson-teacher,
+    .lesson-students {
+      color: #22315f;
+      font-size: 10px;
+      line-height: 1.25;
+      pointer-events: none;
+    }
+
+    .lesson-resize-handle {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 8px;
+      cursor: ns-resize;
+      background: linear-gradient(to bottom, transparent 0%, rgba(58, 103, 255, 0.35) 100%);
+    }
+
+    .slot.drop-hover {
+      background: rgba(58, 103, 255, 0.08);
+    }
+
+    .side-panel {
+      width: 100%;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      padding: 8px 16px 4px 12px;
+      box-shadow: none;
+      direction: rtl;
+      height: 100%;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .side-title {
+      margin: 0 0 12px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .side-subtitle {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .request-group {
+      margin-bottom: 18px;
+    }
+
+    .request-group-title {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #3b4254;
+    }
+
+    .card-palette {
+      display: grid;
+      gap: 12px;
+      justify-content: stretch;
+    }
+
+    .palette-card {
+      width: 100%;
+      max-width: var(--request-card-w);
+      margin-inline-start: auto;
+      border: 1px solid #ccd3e5;
+      border-radius: 14px;
+      background: #eef0f4;
+      color: #2f3a55;
+      font-size: 14px;
+      line-height: 20px;
+      cursor: grab;
+      user-select: none;
+      padding: 10px 12px;
+      padding-inline-end: 28px;
+      position: relative;
+    }
+
+    .palette-card:active {
+      cursor: grabbing;
+    }
+
+    .palette-card.unread::after {
+      content: "";
+      position: absolute;
+      inset-block-start: 10px;
+      inset-inline-end: 10px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #3f7fff;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .request-score {
+      color: #111827;
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 700;
+      direction: ltr;
+      text-align: left;
+    }
+
+    .request-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 2px;
+    }
+
+    .request-frequency {
+      color: #7f8aa5;
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .request-subject {
+      color: #111827;
+      font-size: 16px;
+      line-height: 24px;
+      font-weight: 700;
+    }
+
+    .request-student {
+      color: #111827;
+      font-size: 14px;
+      line-height: 20px;
+      margin-bottom: 2px;
+    }
+
+    .request-meta {
+      color: #7f8aa5;
+      font-size: 14px;
+      line-height: 20px;
+      margin-bottom: 4px;
+    }
+
+    .request-type {
+      color: #7f8aa5;
+      border-top: 1px solid #d8dce8;
+      padding-top: 4px;
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .request-tabs {
+      display: flex;
+      gap: 14px;
+      border-bottom: 1px solid #d8dce8;
+      margin-bottom: 6px;
+    }
+
+    .request-tab {
+      border: 0;
+      background: transparent;
+      color: #6f7890;
+      font-size: 14px;
+      line-height: 20px;
+      padding: 0 0 6px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .request-tab.active {
+      color: #3f7fff;
+      border-bottom-color: #3f7fff;
+    }
+
+    .request-panel {
+      display: none;
+      color: #111827;
+      font-size: 14px;
+      line-height: 20px;
+    }
+
+    .request-panel.active {
+      display: block;
+    }
+
+    .schedule-teacher,
+    .schedule-time {
+      color: #111827;
+    }
+
+    .palette-card[data-duration="1"],
+    .palette-card[data-duration="2"] {
+      min-height: 0;
+    }
+
+    .slot.match-highlight {
+      background: rgba(58, 103, 255, 0.14);
+      box-shadow: inset 0 0 0 1px rgba(58, 103, 255, 0.28);
+    }
+
+    .dev-style-switch {
+      display: inline-flex;
+      gap: 6px;
+      margin: 0 0 10px;
+      padding: 4px;
+      border: 1px solid #d8dce8;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .dev-style-btn {
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #5d667f;
+      font-size: 12px;
+      line-height: 16px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    .dev-style-btn.active {
+      background: #e9efff;
+      color: #2f5eff;
+      font-weight: 600;
+    }
+
+    .request-actions,
+    .request-notes {
+      display: none;
+    }
+
+    body.cards-alt .palette-card {
+      background: #f5f7fb;
+      border-color: #dbe2f0;
+      padding-inline-end: 12px;
+    }
+
+    body.cards-alt .request-tabs,
+    body.cards-alt .request-panel {
+      display: none !important;
+    }
+
+    body.cards-alt .request-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .request-action-btn {
+      border: 0;
+      background: transparent;
+      color: #2872ea;
+      font-size: 14px;
+      line-height: 20px;
+      padding: 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+    }
+
+    .request-action-btn.active {
+      color: #1f5fcc;
+      font-weight: 600;
+    }
+
+    .request-notes {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid #d8dce8;
+      color: #4c5467;
+      font-size: 13px;
+      line-height: 18px;
+    }
+
+    .palette-card.notes-open .request-notes {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="layout">
+      <section class="calendar">
+        <header class="calendar-toolbar">
+          <div class="view-switch" role="tablist" aria-label="תצוגת לוח שנה">
+            <button class="view-btn active" data-view="week" type="button">שבוע</button>
+            <button class="view-btn" data-view="month" type="button">חודש</button>
+          </div>
+
+          <div class="date-controls">
+            <div id="dateTitle" class="date-title"></div>
+            <label class="field">יום
+              <select id="daySelect"></select>
+            </label>
+            <label class="field">חודש
+              <select id="monthSelect"></select>
+            </label>
+            <label class="field">שנה
+              <select id="yearSelect"></select>
+            </label>
+          </div>
+        </header>
+
+        <div class="calendar-grid">
+          <div id="teachersWrap"></div>
+          <aside class="time-column">
+            <div class="time-header">זמן</div>
+            <div id="timeBody" class="time-body"></div>
+          </aside>
+        </div>
+      </section>
+
+      <aside class="side-panel">
+        <h2 class="side-title">Список просьб</h2>
+        <p class="side-subtitle">Перетаскивай карточки в расписание</p>
+
+        <section class="request-group">
+          <h3 class="request-group-title">Постоянные уроки</h3>
+          <div class="card-palette">
+            <article class="palette-card unread" draggable="true" data-duration="2" data-subject="Английский" data-teacher="Томер Коэн" data-student="Шошана Розенблюм">
+              <div class="request-header">
+                <div class="request-subject">Английский</div>
+                <div class="request-score">100 ← 60</div>
+              </div>
+              <div class="request-student">Шошана Розенблюм</div>
+              <div class="request-frequency">2 раза в неделю</div>
+              <div class="request-meta">8 класс · группа Алеф</div>
+              <div class="request-type">Урок: двойной</div>
+              <div class="request-tabs">
+                <button class="request-tab active" type="button" data-tab-target="schedule">Время</button>
+                <button class="request-tab" type="button" data-tab-target="wishes">Пожелания</button>
+              </div>
+              <div class="request-panel active" data-tab-panel="schedule">
+                <div class="schedule-teacher">Препод: Томер Коэн</div>
+                <div class="schedule-time">א 12:00-17:00 · ב 09:00-12:00</div>
+                <div class="schedule-time">ג 12:00-17:00</div>
+              </div>
+              <div class="request-panel" data-tab-panel="wishes">
+                Нужен разговорный формат, больше практики и разбор домашних ошибок.
+              </div>
+            </article>
+            <article class="palette-card" draggable="true" data-duration="1" data-subject="Алгебра" data-teacher="Ноа Барак" data-student="Рут Амсалем">
+              <div class="request-header">
+                <div class="request-subject">Алгебра</div>
+                <div class="request-score">82 ← 68</div>
+              </div>
+              <div class="request-student">Рут Амсалем</div>
+              <div class="request-frequency">1 раз в неделю</div>
+              <div class="request-meta">9 класс · группа Бет</div>
+              <div class="request-type">Урок: одинарный</div>
+              <div class="request-tabs">
+                <button class="request-tab active" type="button" data-tab-target="schedule">Время</button>
+                <button class="request-tab" type="button" data-tab-target="wishes">Пожелания</button>
+              </div>
+              <div class="request-panel active" data-tab-panel="schedule">
+                <div class="schedule-teacher">Препод: Ноа Барак</div>
+                <div class="schedule-time">ב 14:00-17:00 · ה 10:00-12:00</div>
+              </div>
+              <div class="request-panel" data-tab-panel="wishes">
+                Просит больше задач на проценты и уравнения с объяснением шагов.
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="request-group">
+          <h3 class="request-group-title">Разовые уроки</h3>
+          <div class="card-palette">
+            <article class="palette-card unread" draggable="true" data-duration="1" data-subject="История" data-teacher="Лиат Коэн" data-student="Дина Леви">
+              <div class="request-header">
+                <div class="request-subject">История</div>
+                <div class="request-score">74 ← 63</div>
+              </div>
+              <div class="request-student">Дина Леви</div>
+              <div class="request-frequency">1 встреча</div>
+              <div class="request-meta">7 класс · группа Гимел</div>
+              <div class="request-type">Урок: одинарный</div>
+              <div class="request-tabs">
+                <button class="request-tab active" type="button" data-tab-target="schedule">Время</button>
+                <button class="request-tab" type="button" data-tab-target="wishes">Пожелания</button>
+              </div>
+              <div class="request-panel active" data-tab-panel="schedule">
+                <div class="schedule-teacher">Препод: Лиат Коэн</div>
+                <div class="schedule-time">ד 12:00-15:00</div>
+              </div>
+              <div class="request-panel" data-tab-panel="wishes">
+                Важно повторить даты и события перед контрольной.
+              </div>
+            </article>
+            <article class="palette-card" draggable="true" data-duration="2" data-subject="Физика" data-teacher="Яаков Леви" data-student="Йоав Пелег">
+              <div class="request-header">
+                <div class="request-subject">Физика</div>
+                <div class="request-score">91 ← 69</div>
+              </div>
+              <div class="request-student">Йоав Пелег</div>
+              <div class="request-frequency">2 встречи</div>
+              <div class="request-meta">10 класс · группа Алеф</div>
+              <div class="request-type">Урок: двойной</div>
+              <div class="request-tabs">
+                <button class="request-tab active" type="button" data-tab-target="schedule">Время</button>
+                <button class="request-tab" type="button" data-tab-target="wishes">Пожелания</button>
+              </div>
+              <div class="request-panel active" data-tab-panel="schedule">
+                <div class="schedule-teacher">Препод: Яаков Леви</div>
+                <div class="schedule-time">א 09:00-12:00 · ג 14:00-17:00</div>
+              </div>
+              <div class="request-panel" data-tab-panel="wishes">
+                Хочет больше задач на кинематику и разбор ошибок из теста.
+              </div>
+            </article>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const monthNames = [
+      "ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני",
+      "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"
+    ];
+
+    const teachers = [
+      "רועי לוי",
+      "תמר כהן",
+      "אלון מזרחי",
+      "נועה ברק",
+      "דניאל אברהם",
+      "יעל חדד",
+      "עומר סוויסה",
+      "ליאת כהן",
+      "יואב פרץ",
+      "מיכל שרון"
+    ];
+    const startHour = 8;
+    const endHour = 20;
+    const slotMinutes = 15;
+    const totalSlots = ((endHour - startHour) * 60) / slotMinutes;
+    document.documentElement.style.setProperty("--slots", totalSlots);
+
+    const daySelect = document.getElementById("daySelect");
+    const monthSelect = document.getElementById("monthSelect");
+    const yearSelect = document.getElementById("yearSelect");
+    const dateTitle = document.getElementById("dateTitle");
+    const timeBody = document.getElementById("timeBody");
+    const teachersWrap = document.getElementById("teachersWrap");
+    const calendarGrid = document.querySelector(".calendar-grid");
+    const paletteCards = document.querySelectorAll(".palette-card");
+    let dragPayload = null;
+
+    function fillDateSelectors() {
+      for (let d = 1; d <= 31; d += 1) {
+        daySelect.insertAdjacentHTML("beforeend", `<option value="${d}">${d}</option>`);
+      }
+      for (let m = 0; m < 12; m += 1) {
+        monthSelect.insertAdjacentHTML("beforeend", `<option value="${m}">${monthNames[m]}</option>`);
+      }
+      const currentYear = new Date().getFullYear();
+      for (let y = currentYear - 2; y <= currentYear + 3; y += 1) {
+        yearSelect.insertAdjacentHTML("beforeend", `<option value="${y}">${y}</option>`);
+      }
+    }
+
+    function setCurrentDate() {
+      const now = new Date();
+      daySelect.value = String(now.getDate());
+      monthSelect.value = String(now.getMonth());
+      yearSelect.value = String(now.getFullYear());
+      updateDateTitle();
+    }
+
+    function updateDateTitle() {
+      const day = Number(daySelect.value);
+      const month = Number(monthSelect.value);
+      const year = Number(yearSelect.value);
+      dateTitle.textContent = `${day} ${monthNames[month]} ${year}`;
+    }
+
+    function buildTimeColumn() {
+      let html = "";
+      for (let i = 0; i < totalSlots; i += 1) {
+        const minutesFromStart = i * slotMinutes;
+        const hour = startHour + Math.floor(minutesFromStart / 60);
+        const minute = minutesFromStart % 60;
+        const label = minute === 0 ? `${String(hour).padStart(2, "0")}:00` : "";
+        const muted = minute === 0 ? "" : "muted";
+        html += `<div class="time-slot ${muted}">${label}</div>`;
+      }
+      timeBody.innerHTML = html;
+    }
+
+    function buildTeachersColumns() {
+      let html = "";
+      teachers.forEach((teacher, teacherIndex) => {
+        let slots = "";
+        for (let i = 0; i < totalSlots; i += 1) {
+          const isHourEnd = ((i + 1) * slotMinutes) % 60 === 0;
+          slots += `<div class="slot ${isHourEnd ? "hour" : ""}" data-slot-index="${i}" data-teacher-index="${teacherIndex}"></div>`;
+        }
+        html += `
+          <section class="teacher-column">
+            <div class="teacher-header">${teacher}</div>
+            <div class="teacher-body" data-teacher-index="${teacherIndex}">
+              ${slots}
+              <div class="lesson-layer"></div>
+            </div>
+          </section>
+        `;
+      });
+      teachersWrap.innerHTML = html;
+    }
+
+    function alignScrollToRight() {
+      // Start from the right edge for RTL-first behavior.
+      requestAnimationFrame(() => {
+        calendarGrid.scrollLeft = calendarGrid.scrollWidth;
+      });
+    }
+
+    function getRowHeight() {
+      return Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--slot-h"));
+    }
+
+    function updateLessonLabel(lesson) {
+      const title = lesson.querySelector(".lesson-title");
+      const teacher = lesson.querySelector(".lesson-teacher");
+      const students = lesson.querySelector(".lesson-students");
+      const studentsCount = Number(lesson.dataset.studentsCount || "1");
+      title.textContent = lesson.dataset.subject || "Урок";
+      teacher.textContent = `Препод: ${lesson.dataset.teacher || "—"}`;
+      students.textContent = `Ученики: ${studentsCount}`;
+    }
+
+    function applyLessonPosition(lesson) {
+      const rowHeight = getRowHeight();
+      const slotIndex = Number(lesson.dataset.slotIndex);
+      const duration = Number(lesson.dataset.duration);
+      lesson.style.top = `${slotIndex * rowHeight + 1}px`;
+      lesson.style.height = `${duration * rowHeight - 2}px`;
+    }
+
+    function moveLessonToTeacher(lesson, teacherIndex) {
+      const nextTeacherBody = teachersWrap.querySelector(`.teacher-body[data-teacher-index="${teacherIndex}"]`);
+      if (!nextTeacherBody) {
+        return;
+      }
+      const nextLayer = nextTeacherBody.querySelector(".lesson-layer");
+      if (!nextLayer) {
+        return;
+      }
+      nextLayer.appendChild(lesson);
+      lesson.dataset.teacherIndex = String(teacherIndex);
+    }
+
+    function findLessonBySlot(teacherIndex, slotIndex) {
+      return teachersWrap.querySelector(
+        `.lesson-item[data-teacher-index="${teacherIndex}"][data-slot-index="${slotIndex}"]`
+      );
+    }
+
+    function createLessonCard(teacherIndex, slotIndex, duration, details = {}) {
+      const teacherBody = teachersWrap.querySelector(`.teacher-body[data-teacher-index="${teacherIndex}"]`);
+      if (!teacherBody) {
+        return;
+      }
+      const lessonLayer = teacherBody.querySelector(".lesson-layer");
+      if (!lessonLayer) {
+        return;
+      }
+      const clampedDuration = Math.max(1, Math.min(duration, totalSlots - slotIndex));
+      const lesson = document.createElement("div");
+      lesson.className = "lesson-item";
+      lesson.innerHTML = `
+        <div class="lesson-title"></div>
+        <div class="lesson-teacher"></div>
+        <div class="lesson-students"></div>
+        <div class="lesson-resize-handle" aria-hidden="true"></div>
+      `;
+      lesson.dataset.teacherIndex = String(teacherIndex);
+      lesson.dataset.slotIndex = String(slotIndex);
+      lesson.dataset.duration = String(clampedDuration);
+      lesson.dataset.subject = details.subject || "Урок";
+      lesson.dataset.teacher = details.teacher || "—";
+      lesson.dataset.studentsCount = String(details.studentsCount || 1);
+      updateLessonLabel(lesson);
+      applyLessonPosition(lesson);
+      lessonLayer.appendChild(lesson);
+    }
+
+    function addStudentToLesson(lesson) {
+      const current = Number(lesson.dataset.studentsCount || "1");
+      lesson.dataset.studentsCount = String(current + 1);
+      updateLessonLabel(lesson);
+    }
+
+    function setupLessonInteractions() {
+      let interaction = null;
+
+      document.addEventListener("pointerdown", (event) => {
+        const lesson = event.target.closest(".lesson-item");
+        if (!lesson) {
+          return;
+        }
+        const handle = event.target.closest(".lesson-resize-handle");
+        const mode = handle ? "resize" : "move";
+        interaction = {
+          mode,
+          lesson,
+          startY: event.clientY,
+          originTeacher: Number(lesson.dataset.teacherIndex),
+          originSlot: Number(lesson.dataset.slotIndex),
+          originDuration: Number(lesson.dataset.duration)
+        };
+        lesson.classList.add("dragging");
+        lesson.setPointerCapture(event.pointerId);
+        event.preventDefault();
+      });
+
+      document.addEventListener("pointermove", (event) => {
+        if (!interaction) {
+          return;
+        }
+        const rowHeight = getRowHeight();
+        const slotDelta = Math.round((event.clientY - interaction.startY) / rowHeight);
+        const lesson = interaction.lesson;
+
+        if (interaction.mode === "resize") {
+          const nextDuration = Math.max(1, Math.min(totalSlots - interaction.originSlot, interaction.originDuration + slotDelta));
+          lesson.dataset.duration = String(nextDuration);
+          updateLessonLabel(lesson);
+          applyLessonPosition(lesson);
+          return;
+        }
+
+        const elementUnderPointer = document.elementFromPoint(event.clientX, event.clientY);
+        const hoveredTeacherBody = elementUnderPointer ? elementUnderPointer.closest(".teacher-body") : null;
+        const teacherIndex = hoveredTeacherBody
+          ? Number(hoveredTeacherBody.dataset.teacherIndex)
+          : interaction.originTeacher;
+        const maxStartSlot = totalSlots - Number(lesson.dataset.duration);
+        const nextSlot = Math.max(0, Math.min(maxStartSlot, interaction.originSlot + slotDelta));
+
+        if (teacherIndex !== Number(lesson.dataset.teacherIndex)) {
+          moveLessonToTeacher(lesson, teacherIndex);
+        }
+        lesson.dataset.slotIndex = String(nextSlot);
+        applyLessonPosition(lesson);
+      });
+
+      function finishInteraction(pointerId) {
+        if (!interaction) {
+          return;
+        }
+        interaction.lesson.classList.remove("dragging");
+        if (pointerId !== undefined) {
+          interaction.lesson.releasePointerCapture(pointerId);
+        }
+        interaction = null;
+      }
+
+      document.addEventListener("pointerup", (event) => {
+        finishInteraction(event.pointerId);
+      });
+      document.addEventListener("pointercancel", () => {
+        finishInteraction();
+      });
+    }
+
+    function setupRequestTabs() {
+      document.querySelectorAll(".palette-card").forEach((card) => {
+        const tabs = card.querySelectorAll(".request-tab");
+        const panels = card.querySelectorAll(".request-panel");
+        tabs.forEach((tab) => {
+          tab.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const target = tab.dataset.tabTarget;
+            tabs.forEach((item) => item.classList.toggle("active", item === tab));
+            panels.forEach((panel) => {
+              panel.classList.toggle("active", panel.dataset.tabPanel === target);
+            });
+          });
+        });
+      });
+    }
+
+    function clearScheduleHighlights() {
+      teachersWrap.querySelectorAll(".slot.match-highlight").forEach((slot) => {
+        slot.classList.remove("match-highlight");
+      });
+    }
+
+    function getTeacherIndexForCard(card) {
+      if (card.dataset.teacherIndex) {
+        return Number(card.dataset.teacherIndex);
+      }
+      const subject = card.dataset.subject || "";
+      const indexBySubject = {
+        "Английский": 1,
+        "Алгебра": 3,
+        "История": 7,
+        "Физика": 0
+      };
+      return Number.isInteger(indexBySubject[subject]) ? indexBySubject[subject] : -1;
+    }
+
+    function parseCardTimeRanges(card) {
+      const schedulePanel = card.querySelector('.request-panel[data-tab-panel="schedule"]');
+      if (!schedulePanel) {
+        return [];
+      }
+      const scheduleText = schedulePanel.textContent || "";
+      const ranges = [];
+      const rangeMatches = scheduleText.matchAll(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/g);
+      for (const match of rangeMatches) {
+        const startMinutes = Number(match[1]) * 60 + Number(match[2]);
+        const endMinutes = Number(match[3]) * 60 + Number(match[4]);
+        if (endMinutes <= startMinutes) {
+          continue;
+        }
+        const startSlot = Math.max(0, Math.floor((startMinutes - startHour * 60) / slotMinutes));
+        const endSlot = Math.min(totalSlots, Math.ceil((endMinutes - startHour * 60) / slotMinutes));
+        if (endSlot > startSlot) {
+          ranges.push({ startSlot, endSlot });
+        }
+      }
+      return ranges;
+    }
+
+    function highlightCardSchedule(card) {
+      clearScheduleHighlights();
+      const teacherIndex = getTeacherIndexForCard(card);
+      if (teacherIndex < 0) {
+        return;
+      }
+      const ranges = parseCardTimeRanges(card);
+      if (!ranges.length) {
+        return;
+      }
+      ranges.forEach(({ startSlot, endSlot }) => {
+        for (let slotIndex = startSlot; slotIndex < endSlot; slotIndex += 1) {
+          const slot = teachersWrap.querySelector(`.slot[data-teacher-index="${teacherIndex}"][data-slot-index="${slotIndex}"]`);
+          if (slot) {
+            slot.classList.add("match-highlight");
+          }
+        }
+      });
+    }
+
+    function scrollGridToCardSchedule(card) {
+      const teacherIndex = getTeacherIndexForCard(card);
+      if (teacherIndex < 0) {
+        return;
+      }
+      const ranges = parseCardTimeRanges(card);
+      if (!ranges.length) {
+        return;
+      }
+      const teacherBody = teachersWrap.querySelector(`.teacher-body[data-teacher-index="${teacherIndex}"]`);
+      const teacherColumn = teacherBody ? teacherBody.closest(".teacher-column") : null;
+      if (!teacherBody || !teacherColumn) {
+        return;
+      }
+
+      const startSlot = ranges.reduce((minStart, range) => Math.min(minStart, range.startSlot), ranges[0].startSlot);
+      const rowHeight = getRowHeight();
+      const headerHeight = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--header-h")) || 0;
+      const targetTop = Math.max(0, startSlot * rowHeight - headerHeight - rowHeight * 2);
+      const maxTop = Math.max(0, calendarGrid.scrollHeight - calendarGrid.clientHeight);
+
+      const columnLeft = teacherColumn.offsetLeft;
+      const targetLeft = Math.max(0, columnLeft - 16);
+      const maxLeft = Math.max(0, calendarGrid.scrollWidth - calendarGrid.clientWidth);
+
+      calendarGrid.scrollTo({
+        top: Math.min(targetTop, maxTop),
+        left: Math.min(targetLeft, maxLeft),
+        behavior: "smooth"
+      });
+    }
+
+    function setupAlternativeCardUI() {
+      document.querySelectorAll(".palette-card").forEach((card) => {
+        if (card.querySelector(".request-actions")) {
+          return;
+        }
+        const wishesPanel = card.querySelector('.request-panel[data-tab-panel="wishes"]');
+        const notesText = wishesPanel ? wishesPanel.textContent.trim() : "";
+
+        const actions = document.createElement("div");
+        actions.className = "request-actions";
+        actions.innerHTML = `
+          <button class="request-action-btn js-show-time" type="button">Показать время занятий</button>
+          <button class="request-action-btn js-toggle-notes" type="button">Примечания</button>
+        `;
+
+        const notes = document.createElement("div");
+        notes.className = "request-notes";
+        notes.textContent = notesText || "Примечаний нет.";
+
+        card.append(actions, notes);
+      });
+    }
+
+    function setupCardStyleSwitcher() {
+      const sidePanel = document.querySelector(".side-panel");
+      if (!sidePanel) {
+        return;
+      }
+      const switcher = document.createElement("div");
+      switcher.className = "dev-style-switch";
+      switcher.innerHTML = `
+        <button class="dev-style-btn active" type="button" data-card-style="classic">Classic</button>
+        <button class="dev-style-btn" type="button" data-card-style="alt">Alt</button>
+      `;
+      sidePanel.insertBefore(switcher, sidePanel.querySelector(".request-group"));
+
+      switcher.querySelectorAll(".dev-style-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const mode = btn.dataset.cardStyle;
+          document.body.classList.toggle("cards-alt", mode === "alt");
+          switcher.querySelectorAll(".dev-style-btn").forEach((item) => {
+            item.classList.toggle("active", item === btn);
+          });
+          if (mode !== "alt") {
+            clearScheduleHighlights();
+            document.querySelectorAll(".palette-card").forEach((card) => {
+              card.classList.remove("notes-open", "time-open");
+              card.querySelectorAll(".request-action-btn").forEach((actionBtn) => actionBtn.classList.remove("active"));
+            });
+          }
+        });
+      });
+    }
+
+    function setupAlternativeCardActions() {
+      document.addEventListener("click", (event) => {
+        const notesBtn = event.target.closest(".js-toggle-notes");
+        if (notesBtn) {
+          event.preventDefault();
+          event.stopPropagation();
+          const card = notesBtn.closest(".palette-card");
+          if (!card) {
+            return;
+          }
+          const isOpen = card.classList.toggle("notes-open");
+          notesBtn.classList.toggle("active", isOpen);
+          return;
+        }
+
+        const timeBtn = event.target.closest(".js-show-time");
+        if (!timeBtn) {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        const card = timeBtn.closest(".palette-card");
+        if (!card) {
+          return;
+        }
+        const alreadyOpen = card.classList.contains("time-open");
+        document.querySelectorAll(".palette-card").forEach((item) => {
+          item.classList.remove("time-open");
+          const itemBtn = item.querySelector(".js-show-time");
+          if (itemBtn) {
+            itemBtn.classList.remove("active");
+          }
+        });
+        clearScheduleHighlights();
+        if (!alreadyOpen) {
+          card.classList.add("time-open");
+          timeBtn.classList.add("active");
+          highlightCardSchedule(card);
+          scrollGridToCardSchedule(card);
+        }
+      });
+    }
+
+    function setupDragAndDrop() {
+      function consumeDraggedRequest() {
+        if (dragPayload && dragPayload.sourceCard) {
+          dragPayload.sourceCard.remove();
+        }
+        dragPayload = null;
+      }
+
+      paletteCards.forEach((card) => {
+        card.addEventListener("dragstart", (event) => {
+          const duration = Number(card.dataset.duration);
+          dragPayload = {
+            duration,
+            label: duration === 2 ? "Урок: двойной" : "Урок: одинарный",
+            subject: card.dataset.subject || "Урок",
+            teacher: card.dataset.teacher || "—",
+            student: card.dataset.student || "",
+            sourceCard: card
+          };
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", dragPayload.label);
+        });
+        card.addEventListener("dragend", () => {
+          if (dragPayload && dragPayload.sourceCard !== card) {
+            dragPayload = null;
+          }
+          teachersWrap.querySelectorAll(".drop-hover").forEach((slot) => slot.classList.remove("drop-hover"));
+        });
+      });
+
+      teachersWrap.addEventListener("dragover", (event) => {
+        const slot = event.target.closest(".slot");
+        if (!slot || !dragPayload) {
+          return;
+        }
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        teachersWrap.querySelectorAll(".drop-hover").forEach((item) => item.classList.remove("drop-hover"));
+        slot.classList.add("drop-hover");
+      });
+
+      teachersWrap.addEventListener("dragleave", (event) => {
+        const slot = event.target.closest(".slot");
+        if (slot) {
+          slot.classList.remove("drop-hover");
+        }
+      });
+
+      teachersWrap.addEventListener("drop", (event) => {
+        const slot = event.target.closest(".slot");
+        if (!slot || !dragPayload) {
+          return;
+        }
+        event.preventDefault();
+        slot.classList.remove("drop-hover");
+        const teacherIndex = Number(slot.dataset.teacherIndex);
+        const slotIndex = Number(slot.dataset.slotIndex);
+        const existingLesson = findLessonBySlot(teacherIndex, slotIndex);
+        if (existingLesson) {
+          addStudentToLesson(existingLesson);
+          consumeDraggedRequest();
+          return;
+        }
+        createLessonCard(teacherIndex, slotIndex, dragPayload.duration, {
+          subject: dragPayload.subject,
+          teacher: dragPayload.teacher,
+          studentsCount: 1
+        });
+        consumeDraggedRequest();
+      });
+
+    }
+
+    document.querySelectorAll(".view-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".view-btn").forEach((item) => item.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+
+    [daySelect, monthSelect, yearSelect].forEach((input) => {
+      input.addEventListener("change", updateDateTitle);
+    });
+    window.addEventListener("resize", alignScrollToRight);
+
+    fillDateSelectors();
+    setCurrentDate();
+    buildTimeColumn();
+    buildTeachersColumns();
+    setupRequestTabs();
+    setupAlternativeCardUI();
+    setupCardStyleSwitcher();
+    setupAlternativeCardActions();
+    setupDragAndDrop();
+    setupLessonInteractions();
+    alignScrollToRight();
+  </script>
+</body>
+</html>
