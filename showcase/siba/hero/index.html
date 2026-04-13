@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hero — прототип</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: #fff;
+      overflow-x: hidden;
+    }
+
+    .page {
+      position: relative;
+      min-height: 280vh;
+    }
+
+    .controls {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 3;
+      display: flex;
+      align-items: end;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      font-family: "Onest", sans-serif;
+    }
+
+    .controls-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .controls-group label {
+      font-size: 12px;
+      line-height: 1;
+      color: #4a4a4a;
+    }
+
+    .controls-group input {
+      width: 92px;
+      padding: 8px 10px;
+      border: 1px solid #cfcfcf;
+      border-radius: 8px;
+      font: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .controls-group input:focus {
+      border-color: #9a9a9a;
+    }
+
+    .controls-group input[type="range"] {
+      width: 140px;
+      padding: 0;
+      border: 0;
+    }
+
+    .phase-value {
+      font-size: 12px;
+      color: #4a4a4a;
+      line-height: 1;
+    }
+
+    .controls button {
+      height: 38px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 8px;
+      background: #2a2a2a;
+      color: #fff;
+      font: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .controls button:hover {
+      background: #1f1f1f;
+    }
+
+    .rect-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      display: grid;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      gap: 4px;
+      pointer-events: none;
+      align-content: start;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      opacity: 0;
+      will-change: opacity;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .cell.is-on {
+      opacity: 1;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Onest", sans-serif;
+      font-size: 72px;
+      line-height: 100%;
+      font-weight: 600;
+      color: #2a2a2a;
+      text-align: center;
+      max-width: min(18ch, 92vw);
+    }
+
+    .scroll-spacer {
+      height: 180vh;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="page" id="page">
+    <form class="controls" id="gridControls" autocomplete="off">
+      <div class="controls-group">
+        <label for="colsInput">Колонки</label>
+        <input id="colsInput" type="number" min="1" max="100" step="1" value="10">
+      </div>
+      <div class="controls-group">
+        <label for="rowsInput">Ряды</label>
+        <input id="rowsInput" type="number" min="1" max="100" step="1" value="10">
+      </div>
+      <div class="controls-group">
+        <label for="phaseInput">Сдвиг фазы (0…0.5)</label>
+        <input id="phaseInput" type="range" min="0" max="0.5" step="0.01" value="0">
+        <span class="phase-value" id="phaseValue">0.00</span>
+      </div>
+      <button type="submit">Применить</button>
+    </form>
+    <div class="rect-layer" id="rectLayer" aria-hidden="true"></div>
+    <main>
+      <h1>Заголовок</h1>
+    </main>
+    <div class="scroll-spacer"></div>
+  </div>
+
+  <script>
+    (function () {
+      var cols = 10;
+      var rows = 10;
+      var phaseShift = 0;
+      var INITIAL_VISIBLE = 5;
+      var total = 0;
+      var order = [];
+      var cells = [];
+
+      function shuffle(arr) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var t = a[i];
+          a[i] = a[j];
+          a[j] = t;
+        }
+        return a;
+      }
+
+      var layer = document.getElementById("rectLayer");
+      var controls = document.getElementById("gridControls");
+      var colsInput = document.getElementById("colsInput");
+      var rowsInput = document.getElementById("rowsInput");
+      var phaseInput = document.getElementById("phaseInput");
+      var phaseValue = document.getElementById("phaseValue");
+      var photoPool = [
+        "photos/2wtbwy86p4g2pku4rnkp6wg9uqixxg8s%20(1).jpg",
+        "photos/2wtbwy86p4g2pku4rnkp6wg9uqixxg8s.jpg",
+        "photos/c8i4iklsyxl8hn0rj3meemwtaqcxvom6.jpg",
+        "photos/cxuvqfe8ldtwbyvjt1dw8yv9faz38o9f.jpg",
+        "photos/pkr2ny4q8jbq9036s2zvjp1qm8jhhdt0.jpg",
+        "photos/qjomjhx0dbcwson89pcz3lfwb3p3t1v9.jpg",
+        "photos/ztj0fc8py4cr9szv6hl41ys2hzzhss0p.jpg"
+      ];
+
+      function applyPhaseShift() {
+        for (var idx = 0; idx < total; idx++) {
+          var rowIndex = Math.floor(idx / cols);
+          var shift = (rowIndex % 2 === 0 ? -0.5 : 0.5) * phaseShift;
+          cells[idx].style.transform = "translateX(" + (shift * 100) + "%)";
+        }
+      }
+
+      function rebuildGrid(nextCols, nextRows) {
+        cols = nextCols;
+        rows = nextRows;
+        total = cols * rows;
+
+        layer.style.gridTemplateColumns = "repeat(" + cols + ", minmax(0, 1fr))";
+        layer.innerHTML = "";
+
+        order = shuffle(
+          Array.from({ length: total }, function (_, i) { return i; })
+        );
+
+        for (var i = 0; i < total; i++) {
+          var el = document.createElement("div");
+          el.className = "cell";
+          var randomPhoto = photoPool[Math.floor(Math.random() * photoPool.length)];
+          el.style.backgroundImage = "url('" + randomPhoto + "')";
+          layer.appendChild(el);
+        }
+
+        cells = Array.from(layer.querySelectorAll(".cell"));
+        applyPhaseShift();
+        applyVisibility();
+      }
+
+      function scrollProgress() {
+        var doc = document.documentElement;
+        var maxScroll = doc.scrollHeight - window.innerHeight;
+        if (maxScroll <= 0) return 1;
+        var y = window.scrollY || doc.scrollTop;
+        var endAfter = window.innerHeight * 0.5;
+        var p = y / endAfter;
+        if (p < 0) return 0;
+        if (p > 1) return 1;
+        return p;
+      }
+
+      function applyVisibility() {
+        var p = scrollProgress();
+        var count = Math.round(INITIAL_VISIBLE + (total - INITIAL_VISIBLE) * p);
+        if (count < Math.min(INITIAL_VISIBLE, total)) count = Math.min(INITIAL_VISIBLE, total);
+        if (count > total) count = total;
+
+        var on = {};
+        for (var k = 0; k < count; k++) {
+          on[order[k]] = true;
+        }
+
+        for (var idx = 0; idx < total; idx++) {
+          if (on[idx]) cells[idx].classList.add("is-on");
+          else cells[idx].classList.remove("is-on");
+        }
+      }
+
+      var ticking = false;
+      function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(function () {
+          applyVisibility();
+          ticking = false;
+        });
+      }
+
+      controls.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var nextCols = parseInt(colsInput.value, 10);
+        var nextRows = parseInt(rowsInput.value, 10);
+
+        if (!Number.isFinite(nextCols) || nextCols < 1) nextCols = cols;
+        if (!Number.isFinite(nextRows) || nextRows < 1) nextRows = rows;
+        if (nextCols > 100) nextCols = 100;
+        if (nextRows > 100) nextRows = 100;
+
+        colsInput.value = String(nextCols);
+        rowsInput.value = String(nextRows);
+        rebuildGrid(nextCols, nextRows);
+      });
+
+      phaseInput.addEventListener("input", function () {
+        var nextPhase = parseFloat(phaseInput.value);
+        if (!Number.isFinite(nextPhase) || nextPhase < 0) nextPhase = 0;
+        if (nextPhase > 0.5) nextPhase = 0.5;
+        phaseShift = nextPhase;
+        phaseInput.value = String(nextPhase);
+        phaseValue.textContent = nextPhase.toFixed(2);
+        applyPhaseShift();
+      });
+
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", applyVisibility);
+      phaseValue.textContent = phaseShift.toFixed(2);
+      rebuildGrid(cols, rows);
+      applyVisibility();
+    })();
+  </script>
+</body>
+</html>
