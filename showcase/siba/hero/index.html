@@ -16,24 +16,33 @@
       overflow-x: hidden;
     }
 
+    body.zoom-wheel-mode {
+      overflow: hidden;
+    }
+
+    body.preview-section.zoom-wheel-mode {
+      overflow-y: auto;
+    }
+
     .page {
       position: relative;
-      min-height: 280vh;
+      min-height: 100vh;
+      --grid-top: 0px;
     }
 
     .controls {
       position: fixed;
-      top: 16px;
-      left: 16px;
+      left: 0;
+      right: 0;
+      bottom: 0;
       z-index: 3;
       display: flex;
       align-items: end;
       gap: 10px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.92);
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      flex-wrap: wrap;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: #ffffff;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
       font-family: "Onest", sans-serif;
     }
 
@@ -69,6 +78,38 @@
       border: 0;
     }
 
+    .controls-group input[type="checkbox"] {
+      width: auto;
+      padding: 0;
+      border: 0;
+      accent-color: #2a2a2a;
+    }
+
+    .controls-group select {
+      width: 170px;
+      padding: 8px 10px;
+      border: 1px solid #cfcfcf;
+      border-radius: 8px;
+      font: inherit;
+      font-size: 14px;
+      outline: none;
+      background: #fff;
+    }
+
+    .controls-group textarea {
+      width: 280px;
+      min-height: 92px;
+      padding: 8px 10px;
+      border: 1px solid #cfcfcf;
+      border-radius: 8px;
+      font: inherit;
+      font-size: 12px;
+      line-height: 1.3;
+      outline: none;
+      resize: vertical;
+      background: #fff;
+    }
+
     .phase-value {
       font-size: 12px;
       color: #4a4a4a;
@@ -93,7 +134,10 @@
 
     .rect-layer {
       position: absolute;
-      inset: 0;
+      top: var(--grid-top);
+      left: 0;
+      right: 0;
+      bottom: 0;
       z-index: 0;
       display: grid;
       grid-template-columns: repeat(10, minmax(0, 1fr));
@@ -120,33 +164,101 @@
     main {
       position: relative;
       z-index: 1;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 24px;
+      min-height: 0;
+      height: 0;
+      padding: 0;
     }
 
-    h1 {
+    .hero-copy {
+      display: none;
+      position: relative;
+      z-index: 1;
+      padding: 48px 32px 28px;
+      grid-template-columns: minmax(320px, 1.15fr) minmax(260px, 0.85fr);
+      column-gap: 32px;
+      row-gap: 32px;
+      align-items: start;
+    }
+
+    .hero-copy-title {
       margin: 0;
+      width: 100%;
       font-family: "Onest", sans-serif;
-      font-size: 72px;
-      line-height: 100%;
+      font-size: 32px;
+      line-height: 125%;
       font-weight: 600;
       color: #2a2a2a;
-      text-align: center;
-      max-width: min(18ch, 92vw);
+      letter-spacing: -0.01em;
     }
 
-    .scroll-spacer {
-      height: 180vh;
+    .hero-copy-side {
+      display: grid;
+      gap: 32px;
+      width: 100%;
+    }
+
+    .hero-copy-text {
+      margin: 0;
+      width: 100%;
+      font-family: "Onest", sans-serif;
+      font-size: 20px;
+      line-height: 120%;
+      font-weight: 500;
+      color: #2a2a2a;
+    }
+
+    .preview-section .hero-copy {
+      display: grid;
+      padding-top: 480px;
+      padding-bottom: 28px;
+    }
+
+    @media (max-width: 980px) {
+      .hero-copy {
+        padding: 28px 16px 20px;
+        grid-template-columns: 1fr;
+        row-gap: 32px;
+      }
+
+      .hero-copy-side {
+        max-width: 100%;
+      }
+    }
+
+    .gobo-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
       pointer-events: none;
+      opacity: 0.2;
+      filter: blur(0px);
+      mix-blend-mode: multiply;
+      overflow: visible;
     }
   </style>
 </head>
 <body>
+  <svg class="gobo-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="goboWarp">
+        <feTurbulence id="goboTurbulence" type="fractalNoise" baseFrequency="0.012 0.03" numOctaves="2" seed="7" result="goboNoise"></feTurbulence>
+        <feDisplacementMap id="goboDisplacement" in="SourceGraphic" in2="goboNoise" scale="12" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+    </defs>
+    <g id="goboWarpGroup" filter="url(#goboWarp)">
+      <image id="goboOverlayImage" href="photos/gobo-overlay.png" x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid slice"></image>
+      <rect id="goboTintLayer" x="0" y="0" width="100" height="100" fill="#ffffff" style="mix-blend-mode:screen;"></rect>
+    </g>
+  </svg>
   <div class="page" id="page">
     <form class="controls" id="gridControls" autocomplete="off">
+      <div class="controls-group">
+        <label for="previewModeInput">Режим просмотра</label>
+        <select id="previewModeInput">
+          <option value="fullscreen">A. Полноэкранный</option>
+          <option value="section">Б. Часть страницы</option>
+        </select>
+      </div>
       <div class="controls-group">
         <label for="colsInput">Колонки</label>
         <input id="colsInput" type="number" min="1" max="100" step="1" value="10">
@@ -156,9 +268,17 @@
         <input id="rowsInput" type="number" min="1" max="100" step="1" value="10">
       </div>
       <div class="controls-group">
-        <label for="phaseInput">Сдвиг фазы (0…0.5)</label>
-        <input id="phaseInput" type="range" min="0" max="0.5" step="0.01" value="0">
+        <label for="phaseInput">Фаза (0…1)</label>
+        <input id="phaseInput" type="range" min="0" max="1" step="0.01" value="0">
         <span class="phase-value" id="phaseValue">0.00</span>
+      </div>
+      <div class="controls-group">
+        <label for="speedInput">Скорость (px/s): <span id="speedValue">0.20</span></label>
+        <input id="speedInput" type="range" min="0" max="0.5" step="0.025" value="0.2">
+      </div>
+      <div class="controls-group">
+        <label for="zoomDeltaInput">Дельта зума: <span id="zoomDeltaValue">0.10</span></label>
+        <input id="zoomDeltaInput" type="range" min="0" max="0.5" step="0.01" value="0.1">
       </div>
       <div class="controls-group">
         <label for="fadeDurationInput">Скорость (мс)</label>
@@ -168,13 +288,71 @@
         <label for="fadeEasingInput">Изинг</label>
         <input id="fadeEasingInput" type="text" value="ease">
       </div>
-      <button type="submit">Применить</button>
+      <div class="controls-group">
+        <label for="phaseToggle">Сдвиг фазы</label>
+        <input id="phaseToggle" type="checkbox" checked>
+      </div>
+      <div class="controls-group">
+        <label for="easingToggle">Изинг</label>
+        <input id="easingToggle" type="checkbox" checked>
+      </div>
+      <div class="controls-group">
+        <label for="goboOpacityInput">Гобо прозрачность: <span id="goboOpacityValue">20</span>%</label>
+        <input id="goboOpacityInput" type="range" min="0" max="100" step="1" value="20">
+      </div>
+      <div class="controls-group">
+        <label for="goboBlurInput">Гобо размытие: <span id="goboBlurValue">0</span>px</label>
+        <input id="goboBlurInput" type="range" min="0" max="40" step="0.5" value="0">
+      </div>
+      <div class="controls-group">
+        <label for="goboColorInput">Цвет гобо</label>
+        <input id="goboColorInput" type="color" value="#ffffff">
+      </div>
+      <div class="controls-group">
+        <label for="goboFreqXInput">Гобо turbulence X: <span id="goboFreqXValue">0.012</span></label>
+        <input id="goboFreqXInput" type="range" min="0" max="0.1" step="0.001" value="0.012">
+      </div>
+      <div class="controls-group">
+        <label for="goboFreqYInput">Гобо turbulence Y: <span id="goboFreqYValue">0.030</span></label>
+        <input id="goboFreqYInput" type="range" min="0" max="0.1" step="0.001" value="0.03">
+      </div>
+      <div class="controls-group">
+        <label for="goboOctavesInput">Гобо octaves: <span id="goboOctavesValue">2</span></label>
+        <input id="goboOctavesInput" type="range" min="1" max="6" step="1" value="2">
+      </div>
+      <div class="controls-group">
+        <label for="goboDisplacementInput">Гобо displacement: <span id="goboDisplacementValue">12</span></label>
+        <input id="goboDisplacementInput" type="range" min="0" max="80" step="1" value="12">
+      </div>
+      <div class="controls-group">
+        <label for="goboWarpSpeedInput">Гобо скорость деформации: <span id="goboWarpSpeedValue">0.25</span></label>
+        <input id="goboWarpSpeedInput" type="range" min="0" max="2" step="0.01" value="0.25">
+      </div>
+      <div class="controls-group">
+        <label for="goboWarpAlgoInput">Алгоритм анимации гобо</label>
+        <select id="goboWarpAlgoInput">
+          <option value="flow-noise">Flow noise (равномерный)</option>
+          <option value="sine">Sine (цикличный)</option>
+          <option value="drift-noise">Drift noise (медленный дрейф)</option>
+        </select>
+      </div>
+      <div class="controls-group">
+        <button type="button" id="saveGoboDefaultsBtn">Сохранить как дефолт</button>
+      </div>
+      <div class="controls-group">
+        <label for="goboDefaultsCode">Код дефолта (скопируй в JS при необходимости)</label>
+        <textarea id="goboDefaultsCode" readonly></textarea>
+      </div>
     </form>
+    <section class="hero-copy" id="heroCopy">
+      <h1 class="hero-copy-title">Sibaristica — это неизменное качество свежеобжаренного кофе, в котором вы будете уверены</h1>
+      <div class="hero-copy-side">
+        <p class="hero-copy-text">Две линейки спешелти. Эспрессо для классической молочной базы и фильтр для альтернативного заваривания.</p>
+        <p class="hero-copy-text">Любой формат. Зерно, молотый кофе любого помола или дрип-пакеты собственного производства.</p>
+      </div>
+    </section>
     <div class="rect-layer" id="rectLayer" aria-hidden="true"></div>
-    <main>
-      <h1>Заголовок</h1>
-    </main>
-    <div class="scroll-spacer"></div>
+    <main aria-hidden="true"></main>
   </div>
 
   <script>
@@ -183,15 +361,21 @@
       var rows = 10;
       var phaseShift = 0;
       var INITIAL_VISIBLE = 5;
-      var START_SCALE = 1.2;
-      var END_SCALE = 1;
-      var START_PHASE = 0;
-      var END_PHASE = 0.5;
+      var zoomDelta = 0.1;
       var fadeDuration = 300;
       var fadeEasing = "ease";
+      var zoomProgress = 0;
+      var previewMode = "fullscreen";
+      var baseSpeedPxPerSec = 0.2;
+      var scrollSpeedFactor = 1;
+      var scrollBoostTarget = 1;
+      var lastScrollEventTime = performance.now();
+      var enablePhase = true;
+      var enableEasing = true;
       var total = 0;
       var order = [];
       var cells = [];
+      var lastTick = performance.now();
 
       function shuffle(arr) {
         var a = arr.slice();
@@ -205,13 +389,45 @@
       }
 
       var layer = document.getElementById("rectLayer");
+      var page = document.getElementById("page");
+      var heroCopy = document.getElementById("heroCopy");
       var controls = document.getElementById("gridControls");
+      var previewModeInput = document.getElementById("previewModeInput");
       var colsInput = document.getElementById("colsInput");
       var rowsInput = document.getElementById("rowsInput");
       var phaseInput = document.getElementById("phaseInput");
       var phaseValue = document.getElementById("phaseValue");
+      var speedInput = document.getElementById("speedInput");
+      var speedValue = document.getElementById("speedValue");
+      var zoomDeltaInput = document.getElementById("zoomDeltaInput");
+      var zoomDeltaValue = document.getElementById("zoomDeltaValue");
       var fadeDurationInput = document.getElementById("fadeDurationInput");
       var fadeEasingInput = document.getElementById("fadeEasingInput");
+      var phaseToggle = document.getElementById("phaseToggle");
+      var easingToggle = document.getElementById("easingToggle");
+      var goboOverlay = document.querySelector(".gobo-overlay");
+      var goboTintLayer = document.getElementById("goboTintLayer");
+      var goboWarpGroup = document.getElementById("goboWarpGroup");
+      var goboOpacityInput = document.getElementById("goboOpacityInput");
+      var goboOpacityValue = document.getElementById("goboOpacityValue");
+      var goboBlurInput = document.getElementById("goboBlurInput");
+      var goboBlurValue = document.getElementById("goboBlurValue");
+      var goboColorInput = document.getElementById("goboColorInput");
+      var goboFreqXInput = document.getElementById("goboFreqXInput");
+      var goboFreqXValue = document.getElementById("goboFreqXValue");
+      var goboFreqYInput = document.getElementById("goboFreqYInput");
+      var goboFreqYValue = document.getElementById("goboFreqYValue");
+      var goboOctavesInput = document.getElementById("goboOctavesInput");
+      var goboOctavesValue = document.getElementById("goboOctavesValue");
+      var goboDisplacementInput = document.getElementById("goboDisplacementInput");
+      var goboDisplacementValue = document.getElementById("goboDisplacementValue");
+      var goboWarpSpeedInput = document.getElementById("goboWarpSpeedInput");
+      var goboWarpSpeedValue = document.getElementById("goboWarpSpeedValue");
+      var goboWarpAlgoInput = document.getElementById("goboWarpAlgoInput");
+      var saveGoboDefaultsBtn = document.getElementById("saveGoboDefaultsBtn");
+      var goboDefaultsCode = document.getElementById("goboDefaultsCode");
+      var goboTurbulenceNode = document.getElementById("goboTurbulence");
+      var goboDisplacementNode = document.getElementById("goboDisplacement");
       var photoPool = [
         "photos/2wtbwy86p4g2pku4rnkp6wg9uqixxg8s%20(1).jpg",
         "photos/2wtbwy86p4g2pku4rnkp6wg9uqixxg8s.jpg",
@@ -222,18 +438,234 @@
         "photos/ztj0fc8py4cr9szv6hl41ys2hzzhss0p.jpg"
       ];
 
+      var GOBO_DEFAULTS_STORAGE_KEY = "heroGoboDefaultsV1";
+      var CODE_GOBO_DEFAULTS = {
+        opacity: 20,
+        blur: 0,
+        tint: "#ffffff",
+        turbulenceX: 0.012,
+        turbulenceY: 0.03,
+        octaves: 2,
+        displacement: 12,
+        warpSpeed: 0.25,
+        warpAlgorithm: "flow-noise"
+      };
+
+      function parseAndClampGoboDefaults(raw) {
+        var parsed = {};
+        if (raw && typeof raw === "object") parsed = raw;
+        var out = {};
+        var opacity = Number(parsed.opacity);
+        if (!Number.isFinite(opacity)) opacity = CODE_GOBO_DEFAULTS.opacity;
+        out.opacity = Math.min(100, Math.max(0, opacity));
+        var blur = Number(parsed.blur);
+        if (!Number.isFinite(blur)) blur = CODE_GOBO_DEFAULTS.blur;
+        out.blur = Math.min(40, Math.max(0, blur));
+        var tint = (parsed.tint || "").trim();
+        if (!/^#[0-9a-fA-F]{6}$/.test(tint)) tint = CODE_GOBO_DEFAULTS.tint;
+        out.tint = tint;
+        var turbulenceX = Number(parsed.turbulenceX);
+        if (!Number.isFinite(turbulenceX)) turbulenceX = CODE_GOBO_DEFAULTS.turbulenceX;
+        out.turbulenceX = Math.min(0.1, Math.max(0, turbulenceX));
+        var turbulenceY = Number(parsed.turbulenceY);
+        if (!Number.isFinite(turbulenceY)) turbulenceY = CODE_GOBO_DEFAULTS.turbulenceY;
+        out.turbulenceY = Math.min(0.1, Math.max(0, turbulenceY));
+        var octaves = Number(parsed.octaves);
+        if (!Number.isFinite(octaves)) octaves = CODE_GOBO_DEFAULTS.octaves;
+        out.octaves = Math.round(Math.min(6, Math.max(1, octaves)));
+        var displacement = Number(parsed.displacement);
+        if (!Number.isFinite(displacement)) displacement = CODE_GOBO_DEFAULTS.displacement;
+        out.displacement = Math.min(80, Math.max(0, displacement));
+        var warpSpeed = Number(parsed.warpSpeed);
+        if (!Number.isFinite(warpSpeed)) warpSpeed = CODE_GOBO_DEFAULTS.warpSpeed;
+        out.warpSpeed = Math.min(2, Math.max(0, warpSpeed));
+        var warpAlgorithm = (parsed.warpAlgorithm || "").trim();
+        if (warpAlgorithm !== "sine" && warpAlgorithm !== "flow-noise" && warpAlgorithm !== "drift-noise") {
+          warpAlgorithm = CODE_GOBO_DEFAULTS.warpAlgorithm;
+        }
+        out.warpAlgorithm = warpAlgorithm;
+        return out;
+      }
+
+      function loadPersistedGoboDefaults() {
+        try {
+          var raw = localStorage.getItem(GOBO_DEFAULTS_STORAGE_KEY);
+          if (!raw) return parseAndClampGoboDefaults(CODE_GOBO_DEFAULTS);
+          var parsed = JSON.parse(raw);
+          return parseAndClampGoboDefaults(parsed);
+        } catch (error) {
+          return parseAndClampGoboDefaults(CODE_GOBO_DEFAULTS);
+        }
+      }
+
+      function makeGoboDefaultsSnippet(obj) {
+        return (
+          "var CODE_GOBO_DEFAULTS = {\n" +
+          "  opacity: " + obj.opacity.toFixed(0) + ",\n" +
+          "  blur: " + obj.blur.toFixed(1).replace(/\\.0$/, "") + ",\n" +
+          "  tint: \"" + obj.tint + "\",\n" +
+          "  turbulenceX: " + obj.turbulenceX.toFixed(3) + ",\n" +
+          "  turbulenceY: " + obj.turbulenceY.toFixed(3) + ",\n" +
+          "  octaves: " + obj.octaves + ",\n" +
+          "  displacement: " + obj.displacement.toFixed(1).replace(/\\.0$/, "") + ",\n" +
+          "  warpSpeed: " + obj.warpSpeed.toFixed(2) + ",\n" +
+          "  warpAlgorithm: \"" + obj.warpAlgorithm + "\"\n" +
+          "};"
+        );
+      }
+
+      var loadedGoboDefaults = loadPersistedGoboDefaults();
+      var goboOpacity = loadedGoboDefaults.opacity;
+      var goboBlur = loadedGoboDefaults.blur;
+      var goboTint = loadedGoboDefaults.tint;
+      var goboTurbulenceX = loadedGoboDefaults.turbulenceX;
+      var goboTurbulenceY = loadedGoboDefaults.turbulenceY;
+      var goboOctaves = loadedGoboDefaults.octaves;
+      var goboDisplacement = loadedGoboDefaults.displacement;
+      var goboWarpSpeed = loadedGoboDefaults.warpSpeed;
+      var goboWarpAlgorithm = loadedGoboDefaults.warpAlgorithm;
+      var goboDriftX = 0;
+      var goboDriftY = 0;
+      var goboLastWarpNow = performance.now();
+
+      function updateGoboDefaultsCode() {
+        if (!goboDefaultsCode) return;
+        goboDefaultsCode.value = makeGoboDefaultsSnippet({
+          opacity: goboOpacity,
+          blur: goboBlur,
+          tint: goboTint,
+          turbulenceX: goboTurbulenceX,
+          turbulenceY: goboTurbulenceY,
+          octaves: goboOctaves,
+          displacement: goboDisplacement,
+          warpSpeed: goboWarpSpeed,
+          warpAlgorithm: goboWarpAlgorithm
+        });
+      }
+
+      function fract(value) {
+        return value - Math.floor(value);
+      }
+
+      function hash1(n) {
+        return fract(Math.sin(n * 127.1 + 311.7) * 43758.5453123);
+      }
+
+      function smoothstep01(t) {
+        return t * t * (3 - 2 * t);
+      }
+
+      function valueNoise1D(t) {
+        var i = Math.floor(t);
+        var f = t - i;
+        var a = hash1(i);
+        var b = hash1(i + 1);
+        var u = smoothstep01(f);
+        return a + (b - a) * u;
+      }
+
+      function applyGoboSettings() {
+        if (!goboOverlay) return;
+        goboOverlay.style.opacity = String(goboOpacity / 100);
+        goboOverlay.style.filter = "blur(" + goboBlur + "px)";
+        if (goboWarpGroup) {
+          goboWarpGroup.setAttribute("filter", "url(#goboWarp)");
+        }
+        if (goboTintLayer) {
+          goboTintLayer.setAttribute("fill", goboTint);
+        }
+        if (goboTurbulenceNode) {
+          goboTurbulenceNode.setAttribute("numOctaves", String(goboOctaves));
+          goboTurbulenceNode.setAttribute("baseFrequency", goboTurbulenceX.toFixed(3) + " " + goboTurbulenceY.toFixed(3));
+        }
+        if (goboDisplacementNode) {
+          goboDisplacementNode.setAttribute("scale", String(goboDisplacement));
+        }
+      }
+
+      function animateGoboWarp(now) {
+        if (!goboTurbulenceNode) return;
+        if (goboWarpSpeed <= 0) {
+          goboTurbulenceNode.setAttribute("baseFrequency", goboTurbulenceX.toFixed(3) + " " + goboTurbulenceY.toFixed(3));
+          goboLastWarpNow = now;
+          return;
+        }
+        var dt = (now - goboLastWarpNow) / 1000;
+        if (dt < 0) dt = 0;
+        if (dt > 0.1) dt = 0.1;
+        goboLastWarpNow = now;
+        var t = now * 0.001 * goboWarpSpeed;
+        var fx = goboTurbulenceX;
+        var fy = goboTurbulenceY;
+
+        if (goboWarpAlgorithm === "sine") {
+          fx = goboTurbulenceX * (1 + 0.28 * Math.sin(t));
+          fy = goboTurbulenceY * (1 + 0.28 * Math.cos(t * 0.87));
+        } else if (goboWarpAlgorithm === "drift-noise") {
+          var nx = valueNoise1D(t * 0.5 + 13.7) * 2 - 1;
+          var ny = valueNoise1D(t * 0.45 + 77.1) * 2 - 1;
+          var driftResponsiveness = Math.min(1, dt * 6);
+          goboDriftX += (nx - goboDriftX) * driftResponsiveness;
+          goboDriftY += (ny - goboDriftY) * driftResponsiveness;
+          fx = goboTurbulenceX * (1 + goboDriftX * 0.34);
+          fy = goboTurbulenceY * (1 + goboDriftY * 0.34);
+        } else {
+          var n1 = valueNoise1D(t * 0.9 + 19.31) * 2 - 1;
+          var n2 = valueNoise1D(t * 1.11 + 91.73) * 2 - 1;
+          var n3 = valueNoise1D(t * 1.7 + 7.21) * 2 - 1;
+          var n4 = valueNoise1D(t * 1.33 + 41.56) * 2 - 1;
+          var flowX = 0.65 * n1 + 0.35 * n3;
+          var flowY = 0.65 * n2 + 0.35 * n4;
+          fx = goboTurbulenceX * (1 + flowX * 0.22);
+          fy = goboTurbulenceY * (1 + flowY * 0.22);
+        }
+        if (fx < 0) fx = 0;
+        if (fy < 0) fy = 0;
+        goboTurbulenceNode.setAttribute("baseFrequency", fx.toFixed(3) + " " + fy.toFixed(3));
+      }
+
       function applyPhaseShift() {
+        var cellWidth = cols > 0 ? layer.clientWidth / cols : 0;
+        var maxRowShift = cellWidth * 0.35;
         for (var idx = 0; idx < total; idx++) {
           var rowIndex = Math.floor(idx / cols);
-          var shift = (rowIndex % 2 === 0 ? -0.5 : 0.5) * phaseShift;
-          cells[idx].style.transform = "translateX(" + (shift * 100) + "%)";
+          var rowStartPhase = rows > 1 ? (rowIndex / (rows - 1)) * Math.PI : 0;
+          var phaseAngle = rowStartPhase + phaseShift * Math.PI * 2;
+          var direction = rowIndex % 2 === 0 ? 1 : -1;
+          var shift = Math.sin(phaseAngle) * maxRowShift * direction;
+          cells[idx].style.transform = "translateX(" + shift + "px)";
         }
       }
 
       function applyCellFadeSettings() {
         for (var idx = 0; idx < total; idx++) {
-          cells[idx].style.transition = "opacity " + fadeDuration + "ms " + fadeEasing;
+          if (enableEasing) {
+            cells[idx].style.transition = "opacity " + fadeDuration + "ms " + fadeEasing;
+          } else {
+            cells[idx].style.transition = "none";
+          }
         }
+      }
+
+      function updatePageHeight() {
+        var copyHeight = 0;
+        if (previewMode === "section") {
+          copyHeight = heroCopy.offsetHeight + 8;
+        }
+        page.style.setProperty("--grid-top", copyHeight + "px");
+        if (previewMode === "section") {
+          // Keep empty space after the grid, not between copy and grid.
+          var viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+          if (viewportWidth <= 0) return;
+          var cellSize = cols > 0 ? (viewportWidth - (cols - 1) * 4) / cols : 0;
+          if (cellSize < 0) cellSize = 0;
+          var gridHeight = rows * cellSize + Math.max(0, rows - 1) * 4;
+          var afterGridSpace = window.innerHeight;
+          var targetHeight = Math.max(window.innerHeight, Math.round(copyHeight + gridHeight + afterGridSpace));
+          page.style.height = targetHeight + "px";
+          return;
+        }
+        page.style.height = Math.max(window.innerHeight, copyHeight + 1) + "px";
       }
 
       function rebuildGrid(nextCols, nextRows) {
@@ -257,30 +689,22 @@
         }
 
         cells = Array.from(layer.querySelectorAll(".cell"));
+        updatePageHeight();
         applyCellFadeSettings();
         applyPhaseShift();
         applyVisibility();
       }
 
       function scrollProgress() {
-        var doc = document.documentElement;
-        var maxScroll = doc.scrollHeight - window.innerHeight;
-        if (maxScroll <= 0) return 1;
-        var y = window.scrollY || doc.scrollTop;
-        var endAfter = window.innerHeight * 0.5;
-        var p = y / endAfter;
-        if (p < 0) return 0;
-        if (p > 1) return 1;
-        return p;
+        return zoomProgress;
       }
 
       function applyVisibility() {
         var p = scrollProgress();
-        var scale = START_SCALE + (END_SCALE - START_SCALE) * p;
+        var scale = (1 + zoomDelta) - zoomDelta * p;
         layer.style.transform = "scale(" + scale + ")";
-        phaseShift = START_PHASE + (END_PHASE - START_PHASE) * p;
-        phaseInput.value = String(phaseShift);
-        phaseValue.textContent = phaseShift.toFixed(2);
+        phaseInput.value = String((((phaseShift % 1) + 1) % 1).toFixed(2));
+        phaseValue.textContent = (((phaseShift % 1) + 1) % 1).toFixed(2);
         applyPhaseShift();
         var count = Math.round(INITIAL_VISIBLE + (total - INITIAL_VISIBLE) * p);
         if (count < Math.min(INITIAL_VISIBLE, total)) count = Math.min(INITIAL_VISIBLE, total);
@@ -297,18 +721,37 @@
         }
       }
 
-      var ticking = false;
-      function onScroll() {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(function () {
-          applyVisibility();
-          ticking = false;
-        });
+      function animate(now) {
+        var dt = (now - lastTick) / 1000;
+        if (dt < 0) dt = 0;
+        if (dt > 0.1) dt = 0.1;
+        lastTick = now;
+
+        if (now - lastScrollEventTime > 120) {
+          scrollBoostTarget = 1;
+        }
+        var smooth = Math.min(1, dt * 8);
+        scrollSpeedFactor += (scrollBoostTarget - scrollSpeedFactor) * smooth;
+
+        if (enablePhase) {
+          var cellWidth = cols > 0 ? layer.clientWidth / cols : 0;
+          var phaseDivisor = Math.max(1, cellWidth * 0.08);
+          if (cellWidth > 0) {
+            var effectiveSpeed = baseSpeedPxPerSec * scrollSpeedFactor;
+            var phaseSpeed = effectiveSpeed / phaseDivisor;
+            phaseShift += phaseSpeed * dt;
+            applyPhaseShift();
+            phaseInput.value = String((((phaseShift % 1) + 1) % 1).toFixed(2));
+            phaseValue.textContent = (((phaseShift % 1) + 1) % 1).toFixed(2);
+          }
+        }
+        animateGoboWarp(now);
+
+        requestAnimationFrame(animate);
       }
 
-      controls.addEventListener("submit", function (event) {
-        event.preventDefault();
+      function applyControls() {
+        var nextPreviewMode = previewModeInput.value === "section" ? "section" : "fullscreen";
         var nextCols = parseInt(colsInput.value, 10);
         var nextRows = parseInt(rowsInput.value, 10);
 
@@ -316,38 +759,225 @@
         if (!Number.isFinite(nextRows) || nextRows < 1) nextRows = rows;
         if (nextCols > 100) nextCols = 100;
         if (nextRows > 100) nextRows = 100;
+        if (nextPreviewMode === "section") nextRows = 3;
+        var nextSpeed = parseFloat(speedInput.value);
+        if (!Number.isFinite(nextSpeed) || nextSpeed < 0) nextSpeed = baseSpeedPxPerSec;
+        if (nextSpeed > 0.5) nextSpeed = 0.5;
+        var nextZoomDelta = parseFloat(zoomDeltaInput.value);
+        if (!Number.isFinite(nextZoomDelta) || nextZoomDelta < 0) nextZoomDelta = zoomDelta;
+        if (nextZoomDelta > 0.5) nextZoomDelta = 0.5;
         var nextFadeDuration = parseInt(fadeDurationInput.value, 10);
         if (!Number.isFinite(nextFadeDuration) || nextFadeDuration < 0) nextFadeDuration = fadeDuration;
         if (nextFadeDuration > 3000) nextFadeDuration = 3000;
         var nextFadeEasing = (fadeEasingInput.value || "").trim();
         if (!nextFadeEasing) nextFadeEasing = "ease";
+        var nextEnablePhase = !!phaseToggle.checked;
+        var nextEnableEasing = !!easingToggle.checked;
 
+        previewModeInput.value = nextPreviewMode;
         colsInput.value = String(nextCols);
         rowsInput.value = String(nextRows);
+        rowsInput.disabled = nextPreviewMode === "section";
+        speedInput.value = String(nextSpeed);
+        speedValue.textContent = nextSpeed.toFixed(3);
+        zoomDeltaInput.value = String(nextZoomDelta);
+        zoomDeltaValue.textContent = nextZoomDelta.toFixed(2);
         fadeDurationInput.value = String(nextFadeDuration);
         fadeEasingInput.value = nextFadeEasing;
+        phaseToggle.checked = nextEnablePhase;
+        easingToggle.checked = nextEnableEasing;
+        previewMode = nextPreviewMode;
+        baseSpeedPxPerSec = nextSpeed;
+        zoomDelta = nextZoomDelta;
         fadeDuration = nextFadeDuration;
         fadeEasing = nextFadeEasing;
+        enablePhase = nextEnablePhase;
+        enableEasing = nextEnableEasing;
+        document.body.classList.toggle("preview-section", previewMode === "section");
+        document.body.classList.add("zoom-wheel-mode");
+        window.scrollTo(0, 0);
         rebuildGrid(nextCols, nextRows);
-      });
+      }
 
       phaseInput.addEventListener("input", function () {
         var nextPhase = parseFloat(phaseInput.value);
         if (!Number.isFinite(nextPhase) || nextPhase < 0) nextPhase = 0;
-        if (nextPhase > 0.5) nextPhase = 0.5;
+        if (nextPhase > 1) nextPhase = 1;
         phaseShift = nextPhase;
         phaseInput.value = String(nextPhase);
         phaseValue.textContent = nextPhase.toFixed(2);
         applyPhaseShift();
       });
 
-      window.addEventListener("scroll", onScroll, { passive: true });
-      window.addEventListener("resize", applyVisibility);
+      previewModeInput.addEventListener("change", applyControls);
+      colsInput.addEventListener("input", applyControls);
+      rowsInput.addEventListener("input", applyControls);
+      speedInput.addEventListener("input", applyControls);
+      zoomDeltaInput.addEventListener("input", applyControls);
+      fadeDurationInput.addEventListener("input", applyControls);
+      fadeEasingInput.addEventListener("input", applyControls);
+      phaseToggle.addEventListener("change", applyControls);
+      easingToggle.addEventListener("change", applyControls);
+      goboOpacityInput.addEventListener("input", function () {
+        var nextOpacity = parseInt(goboOpacityInput.value, 10);
+        if (!Number.isFinite(nextOpacity) || nextOpacity < 0) nextOpacity = 0;
+        if (nextOpacity > 100) nextOpacity = 100;
+        goboOpacity = nextOpacity;
+        goboOpacityInput.value = String(nextOpacity);
+        goboOpacityValue.textContent = String(nextOpacity);
+        applyGoboSettings();
+        updateGoboDefaultsCode();
+      });
+      goboBlurInput.addEventListener("input", function () {
+        var nextBlur = parseFloat(goboBlurInput.value);
+        if (!Number.isFinite(nextBlur) || nextBlur < 0) nextBlur = 0;
+        if (nextBlur > 40) nextBlur = 40;
+        goboBlur = nextBlur;
+        goboBlurInput.value = String(nextBlur);
+        goboBlurValue.textContent = nextBlur.toFixed(1).replace(/\.0$/, "");
+        applyGoboSettings();
+        updateGoboDefaultsCode();
+      });
+      goboColorInput.addEventListener("input", function () {
+        var nextColor = (goboColorInput.value || "").trim();
+        if (!/^#[0-9a-fA-F]{6}$/.test(nextColor)) nextColor = "#ffffff";
+        goboTint = nextColor;
+        goboColorInput.value = nextColor;
+        applyGoboSettings();
+        updateGoboDefaultsCode();
+      });
+      goboFreqXInput.addEventListener("input", function () {
+        var nextValue = parseFloat(goboFreqXInput.value);
+        if (!Number.isFinite(nextValue) || nextValue < 0) nextValue = 0;
+        if (nextValue > 0.1) nextValue = 0.1;
+        goboTurbulenceX = nextValue;
+        goboFreqXInput.value = String(nextValue);
+        goboFreqXValue.textContent = nextValue.toFixed(3);
+        applyGoboSettings();
+        updateGoboDefaultsCode();
+      });
+      goboFreqYInput.addEventListener("input", function () {
+        var nextValue = parseFloat(goboFreqYInput.value);
+        if (!Number.isFinite(nextValue) || nextValue < 0) nextValue = 0;
+        if (nextValue > 0.1) nextValue = 0.1;
+        goboTurbulenceY = nextValue;
+        goboFreqYInput.value = String(nextValue);
+        goboFreqYValue.textContent = nextValue.toFixed(3);
+        applyGoboSettings();
+        updateGoboDefaultsCode();
+      });
+      goboOctavesInput.addEventListener("input", function () {
+        var nextValue = parseInt(goboOctavesInput.value, 10);
+        if (!Number.isFinite(nextValue) || nextValue < 1) nextValue = 1;
+        if (nextValue > 6) nextValue = 6;
+        goboOctaves = nextValue;
+        goboOctavesInput.value = String(nextValue);
+        goboOctavesValue.textContent = String(nextValue);
+        applyGoboSettings();
+        updateGoboDefaultsCode();
+      });
+      goboDisplacementInput.addEventListener("input", function () {
+        var nextValue = parseFloat(goboDisplacementInput.value);
+        if (!Number.isFinite(nextValue) || nextValue < 0) nextValue = 0;
+        if (nextValue > 80) nextValue = 80;
+        goboDisplacement = nextValue;
+        goboDisplacementInput.value = String(nextValue);
+        goboDisplacementValue.textContent = nextValue.toFixed(1).replace(/\.0$/, "");
+        applyGoboSettings();
+        updateGoboDefaultsCode();
+      });
+      goboWarpSpeedInput.addEventListener("input", function () {
+        var nextValue = parseFloat(goboWarpSpeedInput.value);
+        if (!Number.isFinite(nextValue) || nextValue < 0) nextValue = 0;
+        if (nextValue > 2) nextValue = 2;
+        goboWarpSpeed = nextValue;
+        goboWarpSpeedInput.value = String(nextValue);
+        goboWarpSpeedValue.textContent = nextValue.toFixed(2);
+        updateGoboDefaultsCode();
+      });
+      goboWarpAlgoInput.addEventListener("change", function () {
+        var nextValue = goboWarpAlgoInput.value;
+        if (nextValue !== "sine" && nextValue !== "flow-noise" && nextValue !== "drift-noise") {
+          nextValue = "flow-noise";
+        }
+        goboWarpAlgorithm = nextValue;
+        goboDriftX = 0;
+        goboDriftY = 0;
+        goboWarpAlgoInput.value = nextValue;
+        updateGoboDefaultsCode();
+      });
+      saveGoboDefaultsBtn.addEventListener("click", function () {
+        var defaultsToSave = {
+          opacity: goboOpacity,
+          blur: goboBlur,
+          tint: goboTint,
+          turbulenceX: goboTurbulenceX,
+          turbulenceY: goboTurbulenceY,
+          octaves: goboOctaves,
+          displacement: goboDisplacement,
+          warpSpeed: goboWarpSpeed,
+          warpAlgorithm: goboWarpAlgorithm
+        };
+        try {
+          localStorage.setItem(GOBO_DEFAULTS_STORAGE_KEY, JSON.stringify(defaultsToSave));
+        } catch (error) {
+          // Keep UI working even if storage is unavailable.
+        }
+        updateGoboDefaultsCode();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(goboDefaultsCode.value).catch(function () {});
+        }
+      });
+
+      window.addEventListener("wheel", function (event) {
+        if (previewMode !== "section") {
+          event.preventDefault();
+        }
+        var next = zoomProgress + event.deltaY * 0.0008;
+        if (next < 0) next = 0;
+        if (next > 1) next = 1;
+        zoomProgress = next;
+        applyVisibility();
+      }, { passive: false });
+
+      window.addEventListener("resize", function () {
+        updatePageHeight();
+        applyVisibility();
+      });
       phaseValue.textContent = phaseShift.toFixed(2);
+      previewModeInput.value = previewMode;
+      speedInput.value = String(baseSpeedPxPerSec);
+      speedValue.textContent = baseSpeedPxPerSec.toFixed(3);
+      zoomDeltaInput.value = String(zoomDelta);
+      zoomDeltaValue.textContent = zoomDelta.toFixed(2);
       fadeDurationInput.value = String(fadeDuration);
       fadeEasingInput.value = fadeEasing;
+      phaseToggle.checked = enablePhase;
+      easingToggle.checked = enableEasing;
+      goboOpacityInput.value = String(goboOpacity);
+      goboOpacityValue.textContent = String(goboOpacity);
+      goboBlurInput.value = String(goboBlur);
+      goboBlurValue.textContent = goboBlur.toFixed(1).replace(/\.0$/, "");
+      goboColorInput.value = goboTint;
+      goboFreqXInput.value = String(goboTurbulenceX);
+      goboFreqXValue.textContent = goboTurbulenceX.toFixed(3);
+      goboFreqYInput.value = String(goboTurbulenceY);
+      goboFreqYValue.textContent = goboTurbulenceY.toFixed(3);
+      goboOctavesInput.value = String(goboOctaves);
+      goboOctavesValue.textContent = String(goboOctaves);
+      goboDisplacementInput.value = String(goboDisplacement);
+      goboDisplacementValue.textContent = goboDisplacement.toFixed(1).replace(/\.0$/, "");
+      goboWarpSpeedInput.value = String(goboWarpSpeed);
+      goboWarpSpeedValue.textContent = goboWarpSpeed.toFixed(2);
+      goboWarpAlgoInput.value = goboWarpAlgorithm;
+      document.body.classList.toggle("preview-section", previewMode === "section");
+      document.body.classList.add("zoom-wheel-mode");
+      rowsInput.disabled = previewMode === "section";
       rebuildGrid(cols, rows);
       applyVisibility();
+      applyGoboSettings();
+      updateGoboDefaultsCode();
+      requestAnimationFrame(animate);
     })();
   </script>
 </body>
