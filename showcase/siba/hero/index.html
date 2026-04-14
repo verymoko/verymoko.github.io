@@ -100,6 +100,8 @@
       gap: 4px;
       pointer-events: none;
       align-content: start;
+      transform-origin: center center;
+      will-change: transform;
     }
 
     .cell {
@@ -158,6 +160,14 @@
         <input id="phaseInput" type="range" min="0" max="0.5" step="0.01" value="0">
         <span class="phase-value" id="phaseValue">0.00</span>
       </div>
+      <div class="controls-group">
+        <label for="fadeDurationInput">Скорость (мс)</label>
+        <input id="fadeDurationInput" type="number" min="0" max="3000" step="50" value="300">
+      </div>
+      <div class="controls-group">
+        <label for="fadeEasingInput">Изинг</label>
+        <input id="fadeEasingInput" type="text" value="ease">
+      </div>
       <button type="submit">Применить</button>
     </form>
     <div class="rect-layer" id="rectLayer" aria-hidden="true"></div>
@@ -173,6 +183,12 @@
       var rows = 10;
       var phaseShift = 0;
       var INITIAL_VISIBLE = 5;
+      var START_SCALE = 1.2;
+      var END_SCALE = 1;
+      var START_PHASE = 0;
+      var END_PHASE = 0.5;
+      var fadeDuration = 300;
+      var fadeEasing = "ease";
       var total = 0;
       var order = [];
       var cells = [];
@@ -194,6 +210,8 @@
       var rowsInput = document.getElementById("rowsInput");
       var phaseInput = document.getElementById("phaseInput");
       var phaseValue = document.getElementById("phaseValue");
+      var fadeDurationInput = document.getElementById("fadeDurationInput");
+      var fadeEasingInput = document.getElementById("fadeEasingInput");
       var photoPool = [
         "photos/2wtbwy86p4g2pku4rnkp6wg9uqixxg8s%20(1).jpg",
         "photos/2wtbwy86p4g2pku4rnkp6wg9uqixxg8s.jpg",
@@ -209,6 +227,12 @@
           var rowIndex = Math.floor(idx / cols);
           var shift = (rowIndex % 2 === 0 ? -0.5 : 0.5) * phaseShift;
           cells[idx].style.transform = "translateX(" + (shift * 100) + "%)";
+        }
+      }
+
+      function applyCellFadeSettings() {
+        for (var idx = 0; idx < total; idx++) {
+          cells[idx].style.transition = "opacity " + fadeDuration + "ms " + fadeEasing;
         }
       }
 
@@ -233,6 +257,7 @@
         }
 
         cells = Array.from(layer.querySelectorAll(".cell"));
+        applyCellFadeSettings();
         applyPhaseShift();
         applyVisibility();
       }
@@ -251,6 +276,12 @@
 
       function applyVisibility() {
         var p = scrollProgress();
+        var scale = START_SCALE + (END_SCALE - START_SCALE) * p;
+        layer.style.transform = "scale(" + scale + ")";
+        phaseShift = START_PHASE + (END_PHASE - START_PHASE) * p;
+        phaseInput.value = String(phaseShift);
+        phaseValue.textContent = phaseShift.toFixed(2);
+        applyPhaseShift();
         var count = Math.round(INITIAL_VISIBLE + (total - INITIAL_VISIBLE) * p);
         if (count < Math.min(INITIAL_VISIBLE, total)) count = Math.min(INITIAL_VISIBLE, total);
         if (count > total) count = total;
@@ -285,9 +316,18 @@
         if (!Number.isFinite(nextRows) || nextRows < 1) nextRows = rows;
         if (nextCols > 100) nextCols = 100;
         if (nextRows > 100) nextRows = 100;
+        var nextFadeDuration = parseInt(fadeDurationInput.value, 10);
+        if (!Number.isFinite(nextFadeDuration) || nextFadeDuration < 0) nextFadeDuration = fadeDuration;
+        if (nextFadeDuration > 3000) nextFadeDuration = 3000;
+        var nextFadeEasing = (fadeEasingInput.value || "").trim();
+        if (!nextFadeEasing) nextFadeEasing = "ease";
 
         colsInput.value = String(nextCols);
         rowsInput.value = String(nextRows);
+        fadeDurationInput.value = String(nextFadeDuration);
+        fadeEasingInput.value = nextFadeEasing;
+        fadeDuration = nextFadeDuration;
+        fadeEasing = nextFadeEasing;
         rebuildGrid(nextCols, nextRows);
       });
 
@@ -304,6 +344,8 @@
       window.addEventListener("scroll", onScroll, { passive: true });
       window.addEventListener("resize", applyVisibility);
       phaseValue.textContent = phaseShift.toFixed(2);
+      fadeDurationInput.value = String(fadeDuration);
+      fadeEasingInput.value = fadeEasing;
       rebuildGrid(cols, rows);
       applyVisibility();
     })();
