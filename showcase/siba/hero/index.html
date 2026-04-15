@@ -96,20 +96,6 @@
       background: #fff;
     }
 
-    .controls-group textarea {
-      width: 280px;
-      min-height: 92px;
-      padding: 8px 10px;
-      border: 1px solid #cfcfcf;
-      border-radius: 8px;
-      font: inherit;
-      font-size: 12px;
-      line-height: 1.3;
-      outline: none;
-      resize: vertical;
-      background: #fff;
-    }
-
     .phase-value {
       font-size: 12px;
       color: #4a4a4a;
@@ -339,10 +325,6 @@
       <div class="controls-group">
         <button type="button" id="saveGoboDefaultsBtn">Сохранить как дефолт</button>
       </div>
-      <div class="controls-group">
-        <label for="goboDefaultsCode">Код дефолта (скопируй в JS при необходимости)</label>
-        <textarea id="goboDefaultsCode" readonly></textarea>
-      </div>
     </form>
     <section class="hero-copy" id="heroCopy">
       <h1 class="hero-copy-title">Sibaristica — это неизменное качество свежеобжаренного кофе, в котором вы будете уверены</h1>
@@ -425,7 +407,6 @@
       var goboWarpSpeedValue = document.getElementById("goboWarpSpeedValue");
       var goboWarpAlgoInput = document.getElementById("goboWarpAlgoInput");
       var saveGoboDefaultsBtn = document.getElementById("saveGoboDefaultsBtn");
-      var goboDefaultsCode = document.getElementById("goboDefaultsCode");
       var goboTurbulenceNode = document.getElementById("goboTurbulence");
       var goboDisplacementNode = document.getElementById("goboDisplacement");
       var photoPool = [
@@ -498,22 +479,6 @@
         }
       }
 
-      function makeGoboDefaultsSnippet(obj) {
-        return (
-          "var CODE_GOBO_DEFAULTS = {\n" +
-          "  opacity: " + obj.opacity.toFixed(0) + ",\n" +
-          "  blur: " + obj.blur.toFixed(1).replace(/\\.0$/, "") + ",\n" +
-          "  tint: \"" + obj.tint + "\",\n" +
-          "  turbulenceX: " + obj.turbulenceX.toFixed(3) + ",\n" +
-          "  turbulenceY: " + obj.turbulenceY.toFixed(3) + ",\n" +
-          "  octaves: " + obj.octaves + ",\n" +
-          "  displacement: " + obj.displacement.toFixed(1).replace(/\\.0$/, "") + ",\n" +
-          "  warpSpeed: " + obj.warpSpeed.toFixed(2) + ",\n" +
-          "  warpAlgorithm: \"" + obj.warpAlgorithm + "\"\n" +
-          "};"
-        );
-      }
-
       var loadedGoboDefaults = loadPersistedGoboDefaults();
       var goboOpacity = loadedGoboDefaults.opacity;
       var goboBlur = loadedGoboDefaults.blur;
@@ -527,21 +492,6 @@
       var goboDriftX = 0;
       var goboDriftY = 0;
       var goboLastWarpNow = performance.now();
-
-      function updateGoboDefaultsCode() {
-        if (!goboDefaultsCode) return;
-        goboDefaultsCode.value = makeGoboDefaultsSnippet({
-          opacity: goboOpacity,
-          blur: goboBlur,
-          tint: goboTint,
-          turbulenceX: goboTurbulenceX,
-          turbulenceY: goboTurbulenceY,
-          octaves: goboOctaves,
-          displacement: goboDisplacement,
-          warpSpeed: goboWarpSpeed,
-          warpAlgorithm: goboWarpAlgorithm
-        });
-      }
 
       function fract(value) {
         return value - Math.floor(value);
@@ -826,7 +776,6 @@
         goboOpacityInput.value = String(nextOpacity);
         goboOpacityValue.textContent = String(nextOpacity);
         applyGoboSettings();
-        updateGoboDefaultsCode();
       });
       goboBlurInput.addEventListener("input", function () {
         var nextBlur = parseFloat(goboBlurInput.value);
@@ -836,7 +785,6 @@
         goboBlurInput.value = String(nextBlur);
         goboBlurValue.textContent = nextBlur.toFixed(1).replace(/\.0$/, "");
         applyGoboSettings();
-        updateGoboDefaultsCode();
       });
       goboColorInput.addEventListener("input", function () {
         var nextColor = (goboColorInput.value || "").trim();
@@ -844,7 +792,6 @@
         goboTint = nextColor;
         goboColorInput.value = nextColor;
         applyGoboSettings();
-        updateGoboDefaultsCode();
       });
       goboFreqXInput.addEventListener("input", function () {
         var nextValue = parseFloat(goboFreqXInput.value);
@@ -854,7 +801,6 @@
         goboFreqXInput.value = String(nextValue);
         goboFreqXValue.textContent = nextValue.toFixed(3);
         applyGoboSettings();
-        updateGoboDefaultsCode();
       });
       goboFreqYInput.addEventListener("input", function () {
         var nextValue = parseFloat(goboFreqYInput.value);
@@ -864,7 +810,6 @@
         goboFreqYInput.value = String(nextValue);
         goboFreqYValue.textContent = nextValue.toFixed(3);
         applyGoboSettings();
-        updateGoboDefaultsCode();
       });
       goboOctavesInput.addEventListener("input", function () {
         var nextValue = parseInt(goboOctavesInput.value, 10);
@@ -874,7 +819,6 @@
         goboOctavesInput.value = String(nextValue);
         goboOctavesValue.textContent = String(nextValue);
         applyGoboSettings();
-        updateGoboDefaultsCode();
       });
       goboDisplacementInput.addEventListener("input", function () {
         var nextValue = parseFloat(goboDisplacementInput.value);
@@ -884,7 +828,6 @@
         goboDisplacementInput.value = String(nextValue);
         goboDisplacementValue.textContent = nextValue.toFixed(1).replace(/\.0$/, "");
         applyGoboSettings();
-        updateGoboDefaultsCode();
       });
       goboWarpSpeedInput.addEventListener("input", function () {
         var nextValue = parseFloat(goboWarpSpeedInput.value);
@@ -893,7 +836,6 @@
         goboWarpSpeed = nextValue;
         goboWarpSpeedInput.value = String(nextValue);
         goboWarpSpeedValue.textContent = nextValue.toFixed(2);
-        updateGoboDefaultsCode();
       });
       goboWarpAlgoInput.addEventListener("change", function () {
         var nextValue = goboWarpAlgoInput.value;
@@ -904,7 +846,6 @@
         goboDriftX = 0;
         goboDriftY = 0;
         goboWarpAlgoInput.value = nextValue;
-        updateGoboDefaultsCode();
       });
       saveGoboDefaultsBtn.addEventListener("click", function () {
         var defaultsToSave = {
@@ -922,10 +863,6 @@
           localStorage.setItem(GOBO_DEFAULTS_STORAGE_KEY, JSON.stringify(defaultsToSave));
         } catch (error) {
           // Keep UI working even if storage is unavailable.
-        }
-        updateGoboDefaultsCode();
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(goboDefaultsCode.value).catch(function () {});
         }
       });
 
@@ -976,7 +913,6 @@
       rebuildGrid(cols, rows);
       applyVisibility();
       applyGoboSettings();
-      updateGoboDefaultsCode();
       requestAnimationFrame(animate);
     })();
   </script>
