@@ -73,36 +73,208 @@
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
+      position: relative;
     }
 
-    .date-title {
-      font-size: 22px;
-      font-weight: 700;
-      margin-inline-start: 6px;
-      min-width: 220px;
-    }
-
-    .field {
+    .date-nav {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      color: var(--muted);
-      font-size: 13px;
     }
 
-    .field select {
+    .date-nav-btn {
       border: 1px solid var(--line-strong);
       border-radius: 9px;
       background: #fff;
       color: var(--text);
-      padding: 7px 8px;
-      font-size: 14px;
+      padding: 6px 10px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .date-nav-btn:hover {
+      border-color: #c9d0e4;
+    }
+
+    .date-title {
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 22px;
+      font-weight: 700;
+      margin-inline-start: 6px;
+      min-width: 220px;
+      padding: 6px 8px;
+      text-align: right;
+    }
+
+    .date-title:hover,
+    .date-title:focus-visible {
+      border-color: #c9d0e4;
       outline: none;
     }
 
-    .field select:focus {
+    .date-picker {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      z-index: 24;
+      width: 290px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 12px 28px rgba(16, 24, 40, 0.12);
+      padding: 10px;
+    }
+
+    .date-picker[hidden] {
+      display: none;
+    }
+
+    .date-picker-head {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    .date-picker-month {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .date-picker-nav {
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--text);
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+    }
+
+    .date-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      direction: ltr;
+    }
+
+    .date-picker-weekday {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      padding: 4px 0;
+    }
+
+    .date-picker-day {
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text);
+      height: 30px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .date-picker-day:hover {
+      border-color: #c9d0e4;
+      background: #f7f9ff;
+    }
+
+    .date-picker-day.out-month {
+      color: #a4a9b6;
+    }
+
+    .date-picker-day.current {
+      border-color: var(--accent);
+      background: #eef3ff;
+      font-weight: 700;
+    }
+
+    .date-picker-day.week-active {
+      background: #e7efff;
+      border-color: #d8e5ff;
+    }
+
+    .date-picker-day.week-hover {
+      background: #f1f5ff;
+      border-color: #d8e5ff;
+    }
+
+    .date-picker-day.week-start {
+      border-top-right-radius: 999px;
+      border-bottom-right-radius: 999px;
+    }
+
+    .date-picker-day.week-end {
+      border-top-left-radius: 999px;
+      border-bottom-left-radius: 999px;
+    }
+
+    .teacher-filter {
+      position: relative;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .teacher-filter summary {
+      list-style: none;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--text);
+      padding: 7px 10px;
+      font-size: 14px;
+      cursor: pointer;
+      min-width: 220px;
+      user-select: none;
+    }
+
+    .teacher-filter summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .teacher-filter[open] summary {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(58, 103, 255, 0.14);
+    }
+
+    .teacher-filter-panel {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      z-index: 20;
+      width: 280px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: 0 12px 28px rgba(16, 24, 40, 0.12);
+      padding: 10px;
+      max-height: 280px;
+      overflow: auto;
+    }
+
+    .teacher-filter-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text);
+      padding: 4px 2px;
+      direction: rtl;
+    }
+
+    .teacher-filter-option + .teacher-filter-option {
+      border-top: 1px solid #f0f2f8;
+    }
+
+    .teacher-filter-option input {
+      margin: 0;
     }
 
     .view-switch {
@@ -140,8 +312,37 @@
       position: relative;
     }
 
-    .calendar-grid > * {
-      direction: ltr;
+    .zoom-toolbar {
+      border-top: 1px solid var(--line);
+      padding: 10px 16px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      background: #fff;
+    }
+
+    .zoom-switch {
+      display: inline-flex;
+      background: #eef1f9;
+      padding: 4px;
+      border-radius: 10px;
+      gap: 4px;
+    }
+
+    .zoom-btn {
+      border: 0;
+      background: transparent;
+      color: #5c6272;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .zoom-btn.active {
+      background: #fff;
+      color: var(--text);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.1);
     }
 
     #teachersWrap {
@@ -149,6 +350,7 @@
       flex-direction: row;
       align-items: stretch;
       width: max-content;
+      direction: ltr;
     }
 
     .teacher-column {
@@ -156,6 +358,10 @@
       min-width: var(--teacher-col-w);
       border-right: 1px solid var(--line);
       background: #fff;
+    }
+
+    .teacher-column.hidden {
+      display: none;
     }
 
     .teacher-header,
@@ -201,6 +407,7 @@
       right: 0;
       z-index: 3;
       flex-shrink: 0;
+      direction: ltr;
     }
 
     .time-slot {
@@ -242,6 +449,16 @@
       touch-action: none;
       overflow: hidden;
       padding: 6px 8px 10px;
+      direction: ltr;
+    }
+
+    .calendar.fit-zoom .lesson-item {
+      left: 2px;
+      right: 2px;
+      padding: 2px 3px 4px;
+      border-radius: 5px;
+      font-size: 9px;
+      line-height: 1.1;
     }
 
     .lesson-item.dragging {
@@ -307,242 +524,213 @@
       font-size: 13px;
     }
 
-    .request-group {
-      margin-bottom: 18px;
-    }
-
-    .request-group-title {
-      margin: 0 0 10px;
-      font-size: 14px;
-      font-weight: 700;
-      color: #3b4254;
-    }
-
-    .card-palette {
+    .student-list {
       display: grid;
-      gap: 12px;
-      justify-content: stretch;
+      gap: 10px;
     }
 
-    .palette-card {
+    .student-card {
       width: 100%;
       max-width: var(--request-card-w);
       margin-inline-start: auto;
-      border: 1px solid #ccd3e5;
-      border-radius: 14px;
-      background: #eef0f4;
-      color: #2f3a55;
-      font-size: 14px;
-      line-height: 20px;
+      border: 1px solid #d8dce8;
+      border-radius: 12px;
+      background: #fff;
       cursor: grab;
       user-select: none;
-      padding: 10px 12px;
-      padding-inline-end: 28px;
-      position: relative;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    .palette-card:active {
-      cursor: grabbing;
+    .student-request-item .student-card {
+      margin-inline-start: 0;
+      max-width: 100%;
     }
 
-    .palette-card.unread::after {
-      content: "";
-      position: absolute;
-      inset-block-start: 10px;
-      inset-inline-end: 10px;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #3f7fff;
-      z-index: 2;
-      pointer-events: none;
+    .student-request-item[open] .student-card {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
     }
 
-    .request-score {
-      color: #111827;
-      font-size: 14px;
-      line-height: 20px;
-      font-weight: 700;
-      direction: ltr;
-      text-align: left;
+    .student-request-item summary {
+      list-style: none;
+      cursor: pointer;
+      display: block;
     }
 
-    .request-header {
+    .student-request-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .student-main {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      margin-bottom: 2px;
+      width: 100%;
     }
 
-    .request-frequency {
-      color: #7f8aa5;
-      font-size: 14px;
-      line-height: 20px;
-      font-weight: 500;
-      margin-bottom: 2px;
+    .student-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
     }
 
-    .request-subject {
-      color: #111827;
-      font-size: 16px;
-      line-height: 24px;
+    .student-request-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #4b587a;
+      flex-shrink: 0;
+    }
+
+    .student-request-count {
+      border: 1px solid #d1daf9;
+      background: #eef2ff;
+      color: #2f4db8;
+      border-radius: 999px;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 8px;
+      font-size: 12px;
       font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .request-student {
+    .student-request-chevron {
+      font-size: 12px;
+      transition: transform 0.2s ease;
+    }
+
+    .student-request-item[open] .student-request-chevron {
+      transform: rotate(180deg);
+    }
+
+    .student-requests {
+      border: 1px solid #d8dce8;
+      border-top: 0;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      background: #fbfcff;
+      padding: 8px;
+      display: grid;
+      gap: 8px;
+      max-width: var(--request-card-w);
+      margin-inline-start: auto;
+    }
+
+    .request-card {
+      border: 1px solid #e3e8f7;
+      border-radius: 14px;
+      background: #f7f8fc;
+      padding: 10px 12px;
+    }
+
+    .request-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .request-score {
+      font-size: 12px;
+      font-weight: 700;
       color: #111827;
-      font-size: 14px;
-      line-height: 20px;
-      margin-bottom: 2px;
+      white-space: nowrap;
+    }
+
+    .request-main {
+      min-width: 0;
+      text-align: right;
+    }
+
+    .request-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+
+    .request-teacher {
+      font-size: 12px;
+      color: #1f273d;
+      margin: 2px 0 0;
     }
 
     .request-meta {
-      color: #7f8aa5;
-      font-size: 14px;
-      line-height: 20px;
-      margin-bottom: 4px;
+      font-size: 12px;
+      color: #67708a;
+      margin: 2px 0 0;
+      line-height: 1.35;
     }
 
     .request-type {
-      color: #7f8aa5;
-      border-top: 1px solid #d8dce8;
-      padding-top: 4px;
-      font-size: 14px;
-      line-height: 20px;
-      font-weight: 500;
-      margin-bottom: 6px;
-    }
-
-    .request-tabs {
-      display: flex;
-      gap: 14px;
-      border-bottom: 1px solid #d8dce8;
-      margin-bottom: 6px;
-    }
-
-    .request-tab {
-      border: 0;
-      background: transparent;
-      color: #6f7890;
-      font-size: 14px;
-      line-height: 20px;
-      padding: 0 0 6px;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-    }
-
-    .request-tab.active {
-      color: #3f7fff;
-      border-bottom-color: #3f7fff;
-    }
-
-    .request-panel {
-      display: none;
-      color: #111827;
-      font-size: 14px;
-      line-height: 20px;
-    }
-
-    .request-panel.active {
-      display: block;
-    }
-
-    .schedule-teacher,
-    .schedule-time {
-      color: #111827;
-    }
-
-    .palette-card[data-duration="1"],
-    .palette-card[data-duration="2"] {
-      min-height: 0;
-    }
-
-    .slot.match-highlight {
-      background: rgba(58, 103, 255, 0.14);
-      box-shadow: inset 0 0 0 1px rgba(58, 103, 255, 0.28);
-    }
-
-    .dev-style-switch {
-      display: inline-flex;
-      gap: 6px;
-      margin: 0 0 10px;
-      padding: 4px;
-      border: 1px solid #d8dce8;
-      border-radius: 10px;
-      background: #fff;
-    }
-
-    .dev-style-btn {
-      border: 0;
-      border-radius: 8px;
-      background: transparent;
-      color: #5d667f;
+      margin: 10px 0 0;
+      padding-top: 10px;
+      border-top: 1px solid #dde2ef;
       font-size: 12px;
-      line-height: 16px;
-      padding: 6px 10px;
-      cursor: pointer;
+      color: #6b7280;
+      text-align: center;
     }
 
-    .dev-style-btn.active {
-      background: #e9efff;
-      color: #2f5eff;
-      font-weight: 600;
-    }
-
-    .request-actions,
-    .request-notes {
-      display: none;
-    }
-
-    body.cards-alt .palette-card {
-      background: #f5f7fb;
-      border-color: #dbe2f0;
-      padding-inline-end: 12px;
-    }
-
-    body.cards-alt .request-tabs,
-    body.cards-alt .request-panel {
-      display: none !important;
-    }
-
-    body.cards-alt .request-actions {
+    .request-actions {
       display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 8px;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 10px;
+      font-size: 12px;
     }
 
-    .request-action-btn {
+    .request-link {
       border: 0;
       background: transparent;
-      color: #2872ea;
-      font-size: 14px;
-      line-height: 20px;
+      color: #3563ff;
+      font: inherit;
       padding: 0;
       cursor: pointer;
+    }
+
+    .student-card:active {
+      cursor: grabbing;
+    }
+
+    .student-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #dde3f2;
+      color: #4b587a;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      text-decoration: none;
-    }
-
-    .request-action-btn.active {
-      color: #1f5fcc;
-      font-weight: 600;
-    }
-
-    .request-notes {
-      margin-top: 6px;
-      padding-top: 6px;
-      border-top: 1px solid #d8dce8;
-      color: #4c5467;
+      justify-content: center;
       font-size: 13px;
-      line-height: 18px;
+      font-weight: 700;
+      flex-shrink: 0;
     }
 
-    .palette-card.notes-open .request-notes {
-      display: block;
+    .student-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      line-height: 1.35;
+    }
+
+    .student-class {
+      font-size: 12px;
+      color: #7a7f8d;
+      line-height: 1.3;
+      margin-top: 2px;
+    }
+
+    .lesson-item.drop-hover {
+      box-shadow: 0 0 0 2px rgba(58, 103, 255, 0.45);
     }
   </style>
 </head>
@@ -552,21 +740,35 @@
       <section class="calendar">
         <header class="calendar-toolbar">
           <div class="view-switch" role="tablist" aria-label="תצוגת לוח שנה">
-            <button class="view-btn active" data-view="week" type="button">שבוע</button>
-            <button class="view-btn" data-view="month" type="button">חודש</button>
+            <button class="view-btn active" data-view="day" type="button">יום</button>
+            <button class="view-btn" data-view="week" type="button">שבוע</button>
           </div>
 
           <div class="date-controls">
-            <div id="dateTitle" class="date-title"></div>
-            <label class="field">יום
-              <select id="daySelect"></select>
-            </label>
-            <label class="field">חודש
-              <select id="monthSelect"></select>
-            </label>
-            <label class="field">שנה
-              <select id="yearSelect"></select>
-            </label>
+            <button id="dateTitle" class="date-title" type="button" aria-live="polite" aria-haspopup="dialog" aria-expanded="false"></button>
+            <div class="date-nav">
+              <button id="prevDateBtn" class="date-nav-btn" type="button">הקודם</button>
+              <button id="todayBtn" class="date-nav-btn" type="button">היום</button>
+              <button id="nextDateBtn" class="date-nav-btn" type="button">הבא</button>
+            </div>
+            <div id="datePicker" class="date-picker" hidden>
+              <div class="date-picker-head">
+                <button id="datePickerNextBtn" class="date-picker-nav" type="button" aria-label="חודש הבא">›</button>
+                <div id="datePickerMonthLabel" class="date-picker-month"></div>
+                <button id="datePickerPrevBtn" class="date-picker-nav" type="button" aria-label="חודש קודם">‹</button>
+              </div>
+              <div class="date-picker-grid" id="datePickerGrid"></div>
+            </div>
+            <details id="teacherFilter" class="teacher-filter">
+              <summary id="teacherFilterSummary">מורים: הכל</summary>
+              <div class="teacher-filter-panel">
+                <label class="teacher-filter-option">
+                  <input type="checkbox" id="teacherFilterAll" checked>
+                  כל המורים
+                </label>
+                <div id="teacherFilterList"></div>
+              </div>
+            </details>
           </div>
         </header>
 
@@ -577,108 +779,122 @@
             <div id="timeBody" class="time-body"></div>
           </aside>
         </div>
+        <footer class="zoom-toolbar">
+          <div class="zoom-switch" role="tablist" aria-label="רמת זום">
+            <button class="zoom-btn active" data-zoom="standard" type="button">זום רגיל</button>
+            <button class="zoom-btn" data-zoom="fit" type="button">התאמה מלאה</button>
+          </div>
+        </footer>
       </section>
 
       <aside class="side-panel">
-        <h2 class="side-title">Список просьб</h2>
-        <p class="side-subtitle">Перетаскивай карточки в расписание</p>
+        <h2 class="side-title">Добавить учеников</h2>
+        <p class="side-subtitle">Перетащите карточку ученика на карточку урока</p>
+        <div class="student-list">
+          <details class="student-request-item" open>
+            <summary>
+              <article class="student-card" draggable="true" data-student="Шошана Розенблюм" data-class="8 класс · группа Алеф">
+                <div class="student-main">
+                  <div class="student-meta">
+                    <div class="student-avatar">ШР</div>
+                    <div>
+                      <div class="student-name">Шошана Розенблюм</div>
+                      <div class="student-class">8 класс · группа Алеф</div>
+                    </div>
+                  </div>
+                  <div class="student-request-toggle">
+                    <span class="student-request-count">2</span>
+                    <span class="student-request-chevron">⌄</span>
+                  </div>
+                </div>
+              </article>
+            </summary>
+            <div class="student-requests">
+              <article class="request-card">
+                <div class="request-head">
+                  <div class="request-main">
+                    <h4 class="request-title">Алгебра</h4>
+                    <p class="request-teacher">Рут Амсалем</p>
+                    <p class="request-meta">раз в неделю 1</p>
+                  </div>
+                  <div class="request-score">82 ← 68</div>
+                </div>
+                <p class="request-type">Урок: одинарный</p>
+                <div class="request-actions">
+                  <button class="request-link" type="button">Примечания</button>
+                  <button class="request-link" type="button">Показать время занятий</button>
+                </div>
+              </article>
+              <article class="request-card">
+                <div class="request-head">
+                  <div class="request-main">
+                    <h4 class="request-title">Физика</h4>
+                    <p class="request-teacher">Шошана Розенблюм</p>
+                    <p class="request-meta">раз в неделю 2</p>
+                  </div>
+                  <div class="request-score">76 ← 61</div>
+                </div>
+                <p class="request-type">Урок: двойной</p>
+                <div class="request-actions">
+                  <button class="request-link" type="button">Примечания</button>
+                  <button class="request-link" type="button">Показать время занятий</button>
+                </div>
+              </article>
+            </div>
+          </details>
 
-        <section class="request-group">
-          <h3 class="request-group-title">Постоянные уроки</h3>
-          <div class="card-palette">
-            <article class="palette-card unread" draggable="true" data-duration="2" data-subject="Английский" data-teacher="Томер Коэн" data-student="Шошана Розенблюм">
-              <div class="request-header">
-                <div class="request-subject">Английский</div>
-                <div class="request-score">100 ← 60</div>
-              </div>
-              <div class="request-student">Шошана Розенблюм</div>
-              <div class="request-frequency">2 раза в неделю</div>
-              <div class="request-meta">8 класс · группа Алеф</div>
-              <div class="request-type">Урок: двойной</div>
-              <div class="request-tabs">
-                <button class="request-tab active" type="button" data-tab-target="schedule">Время</button>
-                <button class="request-tab" type="button" data-tab-target="wishes">Пожелания</button>
-              </div>
-              <div class="request-panel active" data-tab-panel="schedule">
-                <div class="schedule-teacher">Препод: Томер Коэн</div>
-                <div class="schedule-time">א 12:00-17:00 · ב 09:00-12:00</div>
-                <div class="schedule-time">ג 12:00-17:00</div>
-              </div>
-              <div class="request-panel" data-tab-panel="wishes">
-                Нужен разговорный формат, больше практики и разбор домашних ошибок.
-              </div>
-            </article>
-            <article class="palette-card" draggable="true" data-duration="1" data-subject="Алгебра" data-teacher="Ноа Барак" data-student="Рут Амсалем">
-              <div class="request-header">
-                <div class="request-subject">Алгебра</div>
-                <div class="request-score">82 ← 68</div>
-              </div>
-              <div class="request-student">Рут Амсалем</div>
-              <div class="request-frequency">1 раз в неделю</div>
-              <div class="request-meta">9 класс · группа Бет</div>
-              <div class="request-type">Урок: одинарный</div>
-              <div class="request-tabs">
-                <button class="request-tab active" type="button" data-tab-target="schedule">Время</button>
-                <button class="request-tab" type="button" data-tab-target="wishes">Пожелания</button>
-              </div>
-              <div class="request-panel active" data-tab-panel="schedule">
-                <div class="schedule-teacher">Препод: Ноа Барак</div>
-                <div class="schedule-time">ב 14:00-17:00 · ה 10:00-12:00</div>
-              </div>
-              <div class="request-panel" data-tab-panel="wishes">
-                Просит больше задач на проценты и уравнения с объяснением шагов.
-              </div>
-            </article>
-          </div>
-        </section>
+          <details class="student-request-item">
+            <summary>
+              <article class="student-card" draggable="true" data-student="Рут Амсалем" data-class="9 класс · группа Бет">
+                <div class="student-main">
+                  <div class="student-meta">
+                    <div class="student-avatar">РА</div>
+                    <div>
+                      <div class="student-name">Рут Амсалем</div>
+                      <div class="student-class">9 класс · группа Бет</div>
+                    </div>
+                  </div>
+                  <div class="student-request-toggle">
+                    <span class="student-request-count">1</span>
+                    <span class="student-request-chevron">⌄</span>
+                  </div>
+                </div>
+              </article>
+            </summary>
+            <div class="student-requests">
+              <article class="request-card">
+                <div class="request-head">
+                  <div class="request-main">
+                    <h4 class="request-title">Английский</h4>
+                    <p class="request-teacher">Рут Амсалем</p>
+                    <p class="request-meta">раз в неделю 1</p>
+                  </div>
+                  <div class="request-score">79 ← 65</div>
+                </div>
+                <p class="request-type">Урок: одинарный</p>
+                <div class="request-actions">
+                  <button class="request-link" type="button">Примечания</button>
+                  <button class="request-link" type="button">Показать время занятий</button>
+                </div>
+              </article>
+            </div>
+          </details>
 
-        <section class="request-group">
-          <h3 class="request-group-title">Разовые уроки</h3>
-          <div class="card-palette">
-            <article class="palette-card unread" draggable="true" data-duration="1" data-subject="История" data-teacher="Лиат Коэн" data-student="Дина Леви">
-              <div class="request-header">
-                <div class="request-subject">История</div>
-                <div class="request-score">74 ← 63</div>
-              </div>
-              <div class="request-student">Дина Леви</div>
-              <div class="request-frequency">1 встреча</div>
-              <div class="request-meta">7 класс · группа Гимел</div>
-              <div class="request-type">Урок: одинарный</div>
-              <div class="request-tabs">
-                <button class="request-tab active" type="button" data-tab-target="schedule">Время</button>
-                <button class="request-tab" type="button" data-tab-target="wishes">Пожелания</button>
-              </div>
-              <div class="request-panel active" data-tab-panel="schedule">
-                <div class="schedule-teacher">Препод: Лиат Коэн</div>
-                <div class="schedule-time">ד 12:00-15:00</div>
-              </div>
-              <div class="request-panel" data-tab-panel="wishes">
-                Важно повторить даты и события перед контрольной.
-              </div>
-            </article>
-            <article class="palette-card" draggable="true" data-duration="2" data-subject="Физика" data-teacher="Яаков Леви" data-student="Йоав Пелег">
-              <div class="request-header">
-                <div class="request-subject">Физика</div>
-                <div class="request-score">91 ← 69</div>
-              </div>
-              <div class="request-student">Йоав Пелег</div>
-              <div class="request-frequency">2 встречи</div>
-              <div class="request-meta">10 класс · группа Алеф</div>
-              <div class="request-type">Урок: двойной</div>
-              <div class="request-tabs">
-                <button class="request-tab active" type="button" data-tab-target="schedule">Время</button>
-                <button class="request-tab" type="button" data-tab-target="wishes">Пожелания</button>
-              </div>
-              <div class="request-panel active" data-tab-panel="schedule">
-                <div class="schedule-teacher">Препод: Яаков Леви</div>
-                <div class="schedule-time">א 09:00-12:00 · ג 14:00-17:00</div>
-              </div>
-              <div class="request-panel" data-tab-panel="wishes">
-                Хочет больше задач на кинематику и разбор ошибок из теста.
-              </div>
-            </article>
-          </div>
-        </section>
+          <article class="student-card" draggable="true" data-student="Дина Леви" data-class="7 класс · группа Гимел">
+            <div class="student-avatar">ДЛ</div>
+            <div>
+              <div class="student-name">Дина Леви</div>
+              <div class="student-class">7 класс · группа Гимел</div>
+            </div>
+          </article>
+          <article class="student-card" draggable="true" data-student="Йоав Пелег" data-class="10 класс · группа Алеф">
+            <div class="student-avatar">ЙП</div>
+            <div>
+              <div class="student-name">Йоав Пелег</div>
+              <div class="student-class">10 класс · группа Алеф</div>
+            </div>
+          </article>
+        </div>
       </aside>
     </div>
   </div>
@@ -701,48 +917,255 @@
       "יואב פרץ",
       "מיכל שרון"
     ];
+    const weekDays = [
+      "ראשון",
+      "שני",
+      "שלישי",
+      "רביעי",
+      "חמישי",
+      "שישי",
+      "שבת"
+    ];
     const startHour = 8;
     const endHour = 20;
     const slotMinutes = 15;
     const totalSlots = ((endHour - startHour) * 60) / slotMinutes;
     document.documentElement.style.setProperty("--slots", totalSlots);
 
-    const daySelect = document.getElementById("daySelect");
-    const monthSelect = document.getElementById("monthSelect");
-    const yearSelect = document.getElementById("yearSelect");
     const dateTitle = document.getElementById("dateTitle");
+    const dateControls = document.querySelector(".date-controls");
+    const prevDateBtn = document.getElementById("prevDateBtn");
+    const todayBtn = document.getElementById("todayBtn");
+    const nextDateBtn = document.getElementById("nextDateBtn");
+    const datePicker = document.getElementById("datePicker");
+    const datePickerGrid = document.getElementById("datePickerGrid");
+    const datePickerMonthLabel = document.getElementById("datePickerMonthLabel");
+    const datePickerPrevBtn = document.getElementById("datePickerPrevBtn");
+    const datePickerNextBtn = document.getElementById("datePickerNextBtn");
     const timeBody = document.getElementById("timeBody");
     const teachersWrap = document.getElementById("teachersWrap");
     const calendarGrid = document.querySelector(".calendar-grid");
-    const paletteCards = document.querySelectorAll(".palette-card");
+    const teacherFilter = document.getElementById("teacherFilter");
+    const teacherFilterSummary = document.getElementById("teacherFilterSummary");
+    const teacherFilterAll = document.getElementById("teacherFilterAll");
+    const teacherFilterList = document.getElementById("teacherFilterList");
+    const paletteCards = document.querySelectorAll(".student-card");
+    const zoomButtons = document.querySelectorAll(".zoom-btn");
+    const selectedTeacherIndexes = new Set(teachers.map((_, index) => index));
+    const defaultLayout = {
+      slotHeight: 22,
+      teacherWidth: 280,
+      timeWidth: 88
+    };
+    let currentView = "day";
+    let currentZoom = "standard";
     let dragPayload = null;
+    let selectedDate = new Date();
+    let datePickerMonthDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+    let hoveredWeekDate = null;
 
-    function fillDateSelectors() {
-      for (let d = 1; d <= 31; d += 1) {
-        daySelect.insertAdjacentHTML("beforeend", `<option value="${d}">${d}</option>`);
+    function getWeekStart(date) {
+      const weekStartDate = new Date(date);
+      weekStartDate.setHours(0, 0, 0, 0);
+      weekStartDate.setDate(weekStartDate.getDate() - weekStartDate.getDay());
+      return weekStartDate;
+    }
+
+    function normalizeDate(date) {
+      const normalizedDate = new Date(date);
+      normalizedDate.setHours(0, 0, 0, 0);
+      return normalizedDate;
+    }
+
+    function isSameDate(a, b) {
+      return normalizeDate(a).getTime() === normalizeDate(b).getTime();
+    }
+
+    function isDateInCurrentWeek(date) {
+      if (currentView !== "week") {
+        return false;
       }
-      for (let m = 0; m < 12; m += 1) {
-        monthSelect.insertAdjacentHTML("beforeend", `<option value="${m}">${monthNames[m]}</option>`);
+      const weekStartDate = getWeekStart(selectedDate);
+      const weekEndDate = new Date(weekStartDate);
+      weekEndDate.setDate(weekStartDate.getDate() + 6);
+      const normalizedDate = normalizeDate(date);
+      return normalizedDate >= weekStartDate && normalizedDate <= weekEndDate;
+    }
+
+    function isDateInHoveredWeek(date) {
+      if (currentView !== "week" || !hoveredWeekDate) {
+        return false;
       }
-      const currentYear = new Date().getFullYear();
-      for (let y = currentYear - 2; y <= currentYear + 3; y += 1) {
-        yearSelect.insertAdjacentHTML("beforeend", `<option value="${y}">${y}</option>`);
-      }
+      const weekStartDate = getWeekStart(hoveredWeekDate);
+      const weekEndDate = new Date(weekStartDate);
+      weekEndDate.setDate(weekStartDate.getDate() + 6);
+      const normalizedDate = normalizeDate(date);
+      return normalizedDate >= weekStartDate && normalizedDate <= weekEndDate;
+    }
+
+    function setSelectedDate(date) {
+      selectedDate = new Date(date);
+      updateDateTitle();
+      renderDatePicker();
     }
 
     function setCurrentDate() {
-      const now = new Date();
-      daySelect.value = String(now.getDate());
-      monthSelect.value = String(now.getMonth());
-      yearSelect.value = String(now.getFullYear());
-      updateDateTitle();
+      setSelectedDate(new Date());
     }
 
     function updateDateTitle() {
-      const day = Number(daySelect.value);
-      const month = Number(monthSelect.value);
-      const year = Number(yearSelect.value);
-      dateTitle.textContent = `${day} ${monthNames[month]} ${year}`;
+      if (currentView === "week") {
+        const weekStartDate = new Date(selectedDate);
+        weekStartDate.setDate(selectedDate.getDate() - selectedDate.getDay());
+        const weekEndDate = new Date(weekStartDate);
+        weekEndDate.setDate(weekStartDate.getDate() + 6);
+        const sameMonth = weekStartDate.getMonth() === weekEndDate.getMonth();
+        const sameYear = weekStartDate.getFullYear() === weekEndDate.getFullYear();
+        if (sameMonth && sameYear) {
+          dateTitle.textContent = `${weekStartDate.getDate()}–${weekEndDate.getDate()} ${monthNames[weekStartDate.getMonth()]} ${weekStartDate.getFullYear()}`;
+        } else {
+          dateTitle.textContent = `${weekStartDate.getDate()} ${monthNames[weekStartDate.getMonth()]} ${weekStartDate.getFullYear()} – ${weekEndDate.getDate()} ${monthNames[weekEndDate.getMonth()]} ${weekEndDate.getFullYear()}`;
+        }
+        return;
+      }
+      dateTitle.textContent = `${weekDays[selectedDate.getDay()]} ${selectedDate.getDate()} ${monthNames[selectedDate.getMonth()]} ${selectedDate.getFullYear()}`;
+    }
+
+    function renderDatePicker() {
+      if (!datePicker || !datePickerGrid || !datePickerMonthLabel) {
+        return;
+      }
+      const monthStart = new Date(datePickerMonthDate.getFullYear(), datePickerMonthDate.getMonth(), 1);
+      const gridStart = new Date(monthStart);
+      gridStart.setDate(monthStart.getDate() - monthStart.getDay());
+
+      datePickerMonthLabel.textContent = `${monthNames[monthStart.getMonth()]} ${monthStart.getFullYear()}`;
+
+      const weekdayMarkup = weekDays.map((dayName) =>
+        `<div class="date-picker-weekday">${dayName.slice(0, 1)}</div>`
+      ).join("");
+
+      let daysMarkup = "";
+      for (let i = 0; i < 42; i += 1) {
+        const dayDate = new Date(gridStart);
+        dayDate.setDate(gridStart.getDate() + i);
+        const isCurrentMonth = dayDate.getMonth() === monthStart.getMonth();
+        const isCurrentDay = isSameDate(dayDate, selectedDate);
+        const inWeekRange = isDateInCurrentWeek(dayDate);
+        const inHoveredWeekRange = isDateInHoveredWeek(dayDate);
+        const dayOfWeek = dayDate.getDay();
+        const classNames = [
+          "date-picker-day",
+          isCurrentMonth ? "" : "out-month",
+          isCurrentDay ? "current" : "",
+          inWeekRange ? "week-active" : "",
+          !inWeekRange && inHoveredWeekRange ? "week-hover" : "",
+          inWeekRange && dayOfWeek === 0 ? "week-start" : "",
+          inWeekRange && dayOfWeek === 6 ? "week-end" : "",
+          !inWeekRange && inHoveredWeekRange && dayOfWeek === 0 ? "week-start" : "",
+          !inWeekRange && inHoveredWeekRange && dayOfWeek === 6 ? "week-end" : ""
+        ].filter(Boolean).join(" ");
+        daysMarkup += `<button class="${classNames}" type="button" data-picker-date="${dayDate.toISOString()}">${dayDate.getDate()}</button>`;
+      }
+      datePickerGrid.innerHTML = `${weekdayMarkup}${daysMarkup}`;
+    }
+
+    function openDatePicker() {
+      datePickerMonthDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+      hoveredWeekDate = null;
+      renderDatePicker();
+      datePicker.hidden = false;
+      dateTitle.setAttribute("aria-expanded", "true");
+    }
+
+    function closeDatePicker() {
+      datePicker.hidden = true;
+      hoveredWeekDate = null;
+      dateTitle.setAttribute("aria-expanded", "false");
+    }
+
+    function setupDatePicker() {
+      dateTitle.addEventListener("click", () => {
+        if (datePicker.hidden) {
+          openDatePicker();
+          return;
+        }
+        closeDatePicker();
+      });
+
+      datePickerPrevBtn.addEventListener("click", () => {
+        datePickerMonthDate.setMonth(datePickerMonthDate.getMonth() - 1);
+        renderDatePicker();
+      });
+      datePickerNextBtn.addEventListener("click", () => {
+        datePickerMonthDate.setMonth(datePickerMonthDate.getMonth() + 1);
+        renderDatePicker();
+      });
+
+      datePickerGrid.addEventListener("click", (event) => {
+        const dayBtn = event.target.closest(".date-picker-day");
+        if (!dayBtn) {
+          return;
+        }
+        const dateRaw = dayBtn.dataset.pickerDate;
+        if (!dateRaw) {
+          return;
+        }
+        setSelectedDate(new Date(dateRaw));
+        if (currentView === "week") {
+          setCalendarView("week");
+        }
+        closeDatePicker();
+      });
+
+      datePickerGrid.addEventListener("mouseover", (event) => {
+        if (currentView !== "week") {
+          return;
+        }
+        const dayBtn = event.target.closest(".date-picker-day");
+        if (!dayBtn) {
+          return;
+        }
+        const dateRaw = dayBtn.dataset.pickerDate;
+        if (!dateRaw) {
+          return;
+        }
+        hoveredWeekDate = new Date(dateRaw);
+        renderDatePicker();
+      });
+
+      datePickerGrid.addEventListener("mouseleave", () => {
+        if (!hoveredWeekDate) {
+          return;
+        }
+        hoveredWeekDate = null;
+        renderDatePicker();
+      });
+
+      document.addEventListener("click", (event) => {
+        if (datePicker.hidden) {
+          return;
+        }
+        if (dateControls.contains(event.target)) {
+          return;
+        }
+        closeDatePicker();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !datePicker.hidden) {
+          closeDatePicker();
+        }
+      });
+    }
+
+    function addDaysToSelectedDate(daysDelta) {
+      const nextDate = new Date(selectedDate);
+      nextDate.setDate(nextDate.getDate() + daysDelta);
+      setSelectedDate(nextDate);
+      if (currentView === "week") {
+        setCalendarView("week");
+      }
     }
 
     function buildTimeColumn() {
@@ -777,12 +1200,201 @@
         `;
       });
       teachersWrap.innerHTML = html;
+      applyTeacherFilter();
+    }
+
+    function buildWeekColumns() {
+      const weekStartDate = new Date(selectedDate);
+      weekStartDate.setDate(selectedDate.getDate() - selectedDate.getDay());
+      let html = "";
+      for (let displayIndex = 0; displayIndex < weekDays.length; displayIndex += 1) {
+        const dayIndex = weekDays.length - 1 - displayIndex;
+        const dayDate = new Date(weekStartDate);
+        dayDate.setDate(weekStartDate.getDate() + dayIndex);
+        const dayName = `${weekDays[dayIndex]} ${dayDate.getDate()}`;
+        let slots = "";
+        for (let i = 0; i < totalSlots; i += 1) {
+          const isHourEnd = ((i + 1) * slotMinutes) % 60 === 0;
+          slots += `<div class="slot ${isHourEnd ? "hour" : ""}" data-slot-index="${i}" data-teacher-index="${dayIndex}"></div>`;
+        }
+        html += `
+          <section class="teacher-column">
+            <div class="teacher-header">${dayName}</div>
+            <div class="teacher-body" data-teacher-index="${dayIndex}">
+              ${slots}
+              <div class="lesson-layer"></div>
+            </div>
+          </section>
+        `;
+      }
+      teachersWrap.innerHTML = html;
+    }
+
+    function updateTeacherFilterSummary() {
+      const selectedCount = selectedTeacherIndexes.size;
+      if (selectedCount === teachers.length) {
+        teacherFilterSummary.textContent = "מורים: הכל";
+        return;
+      }
+      if (selectedCount === 0) {
+        teacherFilterSummary.textContent = "מורים: לא נבחרו";
+        return;
+      }
+      teacherFilterSummary.textContent = `מורים: ${selectedCount}`;
+    }
+
+    function updateTeacherFilterAllState() {
+      const selectedCount = selectedTeacherIndexes.size;
+      teacherFilterAll.checked = selectedCount === teachers.length;
+      teacherFilterAll.indeterminate = selectedCount > 0 && selectedCount < teachers.length;
+    }
+
+    function applyTeacherFilter() {
+      if (currentView === "day") {
+        teachersWrap.querySelectorAll(".teacher-column").forEach((column, teacherIndex) => {
+          const isVisible = selectedTeacherIndexes.has(teacherIndex);
+          column.classList.toggle("hidden", !isVisible);
+        });
+      } else {
+        const selectedTeacherNames = new Set(
+          Array.from(selectedTeacherIndexes).map((teacherIndex) => teachers[teacherIndex])
+        );
+        teachersWrap.querySelectorAll(".lesson-item").forEach((lesson) => {
+          const teacherName = lesson.dataset.teacher || "";
+          lesson.style.display = selectedTeacherNames.has(teacherName) ? "" : "none";
+        });
+      }
+      updateTeacherFilterSummary();
+      updateTeacherFilterAllState();
+      applyZoomLayout();
+    }
+
+    function setupTeacherFilter() {
+      const optionsMarkup = teachers.map((teacher, index) => `
+        <label class="teacher-filter-option">
+          <input type="checkbox" class="teacher-filter-item" value="${index}" checked>
+          ${teacher}
+        </label>
+      `).join("");
+      teacherFilterList.innerHTML = optionsMarkup;
+
+      teacherFilterList.addEventListener("change", (event) => {
+        const input = event.target.closest(".teacher-filter-item");
+        if (!input) {
+          return;
+        }
+        const teacherIndex = Number(input.value);
+        if (input.checked) {
+          selectedTeacherIndexes.add(teacherIndex);
+        } else {
+          selectedTeacherIndexes.delete(teacherIndex);
+        }
+        applyTeacherFilter();
+      });
+
+      teacherFilterAll.addEventListener("change", () => {
+        selectedTeacherIndexes.clear();
+        if (teacherFilterAll.checked) {
+          teachers.forEach((_, index) => selectedTeacherIndexes.add(index));
+        }
+        teacherFilterList.querySelectorAll(".teacher-filter-item").forEach((input) => {
+          input.checked = selectedTeacherIndexes.has(Number(input.value));
+        });
+        applyTeacherFilter();
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!teacherFilter.open) {
+          return;
+        }
+        if (!teacherFilter.contains(event.target)) {
+          teacherFilter.removeAttribute("open");
+        }
+      });
+
+      applyTeacherFilter();
     }
 
     function alignScrollToRight() {
       // Start from the right edge for RTL-first behavior.
       requestAnimationFrame(() => {
         calendarGrid.scrollLeft = calendarGrid.scrollWidth;
+      });
+    }
+
+    function getVisibleColumnCount() {
+      const columns = teachersWrap.querySelectorAll(".teacher-column");
+      if (currentView === "week") {
+        return columns.length || weekDays.length;
+      }
+      const visibleColumns = teachersWrap.querySelectorAll(".teacher-column:not(.hidden)");
+      return visibleColumns.length || 1;
+    }
+
+    function applyZoomLayout() {
+      if (currentZoom === "standard") {
+        document.documentElement.style.setProperty("--slot-h", `${defaultLayout.slotHeight}px`);
+        document.documentElement.style.setProperty("--teacher-col-w", `${defaultLayout.teacherWidth}px`);
+        document.documentElement.style.setProperty("--time-col-w", `${defaultLayout.timeWidth}px`);
+        document.querySelector(".calendar")?.classList.remove("fit-zoom");
+        calendarGrid.style.overflow = "auto";
+        return;
+      }
+
+      const columnCount = Math.max(1, getVisibleColumnCount());
+      const gridWidth = calendarGrid.clientWidth;
+      const gridHeight = calendarGrid.clientHeight;
+      if (!gridWidth || !gridHeight) {
+        return;
+      }
+
+      const fitTimeWidth = 44;
+      const horizontalReserve = columnCount + 6;
+      const verticalReserve = 8;
+      const fitTeacherWidth = Math.max(48, Math.floor((gridWidth - fitTimeWidth - horizontalReserve) / columnCount));
+      const fitSlotHeight = Math.max(4, Math.floor((gridHeight - 56 - verticalReserve) / totalSlots));
+
+      document.documentElement.style.setProperty("--time-col-w", `${fitTimeWidth}px`);
+      document.documentElement.style.setProperty("--teacher-col-w", `${fitTeacherWidth}px`);
+      document.documentElement.style.setProperty("--slot-h", `${fitSlotHeight}px`);
+      document.querySelector(".calendar")?.classList.add("fit-zoom");
+      calendarGrid.style.overflow = "auto";
+    }
+
+    function clearScheduleHighlights() {
+      // Legacy no-op. Highlight logic was removed with request cards UI.
+    }
+
+    function setZoomMode(mode) {
+      currentZoom = mode;
+      zoomButtons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.zoom === mode);
+      });
+      applyZoomLayout();
+      clearScheduleHighlights();
+      alignScrollToRight();
+    }
+
+    function setupZoomControls() {
+      zoomButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          setZoomMode(btn.dataset.zoom || "standard");
+        });
+      });
+    }
+
+    function setupDateNavigation() {
+      prevDateBtn.addEventListener("click", () => {
+        addDaysToSelectedDate(currentView === "week" ? -7 : -1);
+      });
+      nextDateBtn.addEventListener("click", () => {
+        addDaysToSelectedDate(currentView === "week" ? 7 : 1);
+      });
+      todayBtn.addEventListener("click", () => {
+        setCurrentDate();
+        if (currentView === "week") {
+          setCalendarView("week");
+        }
       });
     }
 
@@ -854,6 +1466,98 @@
       updateLessonLabel(lesson);
       applyLessonPosition(lesson);
       lessonLayer.appendChild(lesson);
+    }
+
+    function timeToSlot(timeLabel) {
+      const [hourRaw, minuteRaw] = timeLabel.split(":");
+      const hour = Number(hourRaw);
+      const minute = Number(minuteRaw);
+      const minutesFromStart = (hour - startHour) * 60 + minute;
+      return Math.floor(minutesFromStart / slotMinutes);
+    }
+
+    function seedDayLessons() {
+      const seededLessons = [
+        { teacherIndex: 0, time: "08:00", duration: 4, subject: "Математика (Пн)", studentsCount: 2 },
+        { teacherIndex: 1, time: "08:30", duration: 6, subject: "Английский (Пн)", studentsCount: 1 },
+        { teacherIndex: 2, time: "09:15", duration: 4, subject: "Физика (Вт)", studentsCount: 2 },
+        { teacherIndex: 3, time: "10:00", duration: 8, subject: "Алгебра (Вт)", studentsCount: 3 },
+        { teacherIndex: 4, time: "10:30", duration: 4, subject: "Химия (Ср)", studentsCount: 1 },
+        { teacherIndex: 5, time: "11:15", duration: 6, subject: "Биология (Ср)", studentsCount: 2 },
+        { teacherIndex: 6, time: "12:00", duration: 4, subject: "История (Чт)", studentsCount: 1 },
+        { teacherIndex: 7, time: "12:30", duration: 8, subject: "Литература (Чт)", studentsCount: 2 },
+        { teacherIndex: 8, time: "13:15", duration: 4, subject: "География (Пт)", studentsCount: 1 },
+        { teacherIndex: 9, time: "14:00", duration: 6, subject: "Программирование (Пт)", studentsCount: 2 },
+        { teacherIndex: 0, time: "14:30", duration: 4, subject: "Математика (Вс)", studentsCount: 3 },
+        { teacherIndex: 1, time: "15:15", duration: 6, subject: "Разговорный английский (Вс)", studentsCount: 2 },
+        { teacherIndex: 2, time: "16:00", duration: 4, subject: "Лабораторная по физике (Пн)", studentsCount: 1 },
+        { teacherIndex: 3, time: "16:30", duration: 8, subject: "Геометрия (Вт)", studentsCount: 2 },
+        { teacherIndex: 4, time: "17:15", duration: 4, subject: "Органическая химия (Ср)", studentsCount: 1 },
+        { teacherIndex: 5, time: "17:45", duration: 6, subject: "Анатомия (Ср)", studentsCount: 2 },
+        { teacherIndex: 6, time: "18:00", duration: 4, subject: "История искусств (Чт)", studentsCount: 1 },
+        { teacherIndex: 7, time: "18:30", duration: 4, subject: "Русский язык (Чт)", studentsCount: 2 },
+        { teacherIndex: 8, time: "19:00", duration: 4, subject: "Картография (Пт)", studentsCount: 1 },
+        { teacherIndex: 9, time: "19:15", duration: 3, subject: "Алгоритмы (Сб)", studentsCount: 2 }
+      ];
+
+      seededLessons.forEach((lesson) => {
+        createLessonCard(lesson.teacherIndex, timeToSlot(lesson.time), lesson.duration, {
+          subject: lesson.subject,
+          teacher: teachers[lesson.teacherIndex],
+          studentsCount: lesson.studentsCount
+        });
+      });
+    }
+
+    function seedWeekLessons() {
+      const seededLessons = [
+        { dayIndex: 0, time: "09:00", duration: 4, subject: "Математика", teacherIndex: 0, studentsCount: 2 },
+        { dayIndex: 0, time: "12:00", duration: 6, subject: "Английский", teacherIndex: 1, studentsCount: 1 },
+        { dayIndex: 0, time: "16:30", duration: 4, subject: "Физика", teacherIndex: 2, studentsCount: 2 },
+        { dayIndex: 1, time: "08:30", duration: 4, subject: "Алгебра", teacherIndex: 3, studentsCount: 2 },
+        { dayIndex: 1, time: "11:30", duration: 4, subject: "Химия", teacherIndex: 4, studentsCount: 1 },
+        { dayIndex: 1, time: "15:00", duration: 6, subject: "Биология", teacherIndex: 5, studentsCount: 2 },
+        { dayIndex: 2, time: "09:15", duration: 4, subject: "История", teacherIndex: 6, studentsCount: 1 },
+        { dayIndex: 2, time: "12:30", duration: 4, subject: "Литература", teacherIndex: 7, studentsCount: 2 },
+        { dayIndex: 2, time: "17:00", duration: 4, subject: "География", teacherIndex: 8, studentsCount: 1 },
+        { dayIndex: 3, time: "08:00", duration: 6, subject: "Программирование", teacherIndex: 9, studentsCount: 2 },
+        { dayIndex: 3, time: "13:00", duration: 4, subject: "Геометрия", teacherIndex: 3, studentsCount: 2 },
+        { dayIndex: 3, time: "18:00", duration: 3, subject: "Алгоритмы", teacherIndex: 9, studentsCount: 2 },
+        { dayIndex: 4, time: "09:30", duration: 4, subject: "Разговорный английский", teacherIndex: 1, studentsCount: 1 },
+        { dayIndex: 4, time: "12:00", duration: 4, subject: "Органическая химия", teacherIndex: 4, studentsCount: 1 },
+        { dayIndex: 4, time: "16:15", duration: 6, subject: "История искусств", teacherIndex: 6, studentsCount: 1 },
+        { dayIndex: 5, time: "10:00", duration: 4, subject: "Русский язык", teacherIndex: 7, studentsCount: 2 },
+        { dayIndex: 5, time: "13:30", duration: 4, subject: "Лабораторная по физике", teacherIndex: 2, studentsCount: 1 },
+        { dayIndex: 5, time: "17:30", duration: 4, subject: "Картография", teacherIndex: 8, studentsCount: 1 },
+        { dayIndex: 6, time: "11:00", duration: 4, subject: "Анатомия", teacherIndex: 5, studentsCount: 2 },
+        { dayIndex: 6, time: "15:30", duration: 4, subject: "Практика по математике", teacherIndex: 0, studentsCount: 3 }
+      ];
+
+      seededLessons.forEach((lesson) => {
+        createLessonCard(lesson.dayIndex, timeToSlot(lesson.time), lesson.duration, {
+          subject: lesson.subject,
+          teacher: teachers[lesson.teacherIndex],
+          studentsCount: lesson.studentsCount
+        });
+      });
+    }
+
+    function setCalendarView(view) {
+      const isWeekView = view === "week";
+      currentView = view;
+      clearScheduleHighlights();
+      if (isWeekView) {
+        buildWeekColumns();
+        seedWeekLessons();
+      } else {
+        buildTeachersColumns();
+        seedDayLessons();
+      }
+      applyTeacherFilter();
+      updateDateTitle();
+      renderDatePicker();
+      applyZoomLayout();
+      alignScrollToRight();
     }
 
     function addStudentToLesson(lesson) {
@@ -935,284 +1639,55 @@
       });
     }
 
-    function setupRequestTabs() {
-      document.querySelectorAll(".palette-card").forEach((card) => {
-        const tabs = card.querySelectorAll(".request-tab");
-        const panels = card.querySelectorAll(".request-panel");
-        tabs.forEach((tab) => {
-          tab.addEventListener("click", (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            const target = tab.dataset.tabTarget;
-            tabs.forEach((item) => item.classList.toggle("active", item === tab));
-            panels.forEach((panel) => {
-              panel.classList.toggle("active", panel.dataset.tabPanel === target);
-            });
-          });
-        });
-      });
-    }
-
-    function clearScheduleHighlights() {
-      teachersWrap.querySelectorAll(".slot.match-highlight").forEach((slot) => {
-        slot.classList.remove("match-highlight");
-      });
-    }
-
-    function getTeacherIndexForCard(card) {
-      if (card.dataset.teacherIndex) {
-        return Number(card.dataset.teacherIndex);
-      }
-      const subject = card.dataset.subject || "";
-      const indexBySubject = {
-        "Английский": 1,
-        "Алгебра": 3,
-        "История": 7,
-        "Физика": 0
-      };
-      return Number.isInteger(indexBySubject[subject]) ? indexBySubject[subject] : -1;
-    }
-
-    function parseCardTimeRanges(card) {
-      const schedulePanel = card.querySelector('.request-panel[data-tab-panel="schedule"]');
-      if (!schedulePanel) {
-        return [];
-      }
-      const scheduleText = schedulePanel.textContent || "";
-      const ranges = [];
-      const rangeMatches = scheduleText.matchAll(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/g);
-      for (const match of rangeMatches) {
-        const startMinutes = Number(match[1]) * 60 + Number(match[2]);
-        const endMinutes = Number(match[3]) * 60 + Number(match[4]);
-        if (endMinutes <= startMinutes) {
-          continue;
-        }
-        const startSlot = Math.max(0, Math.floor((startMinutes - startHour * 60) / slotMinutes));
-        const endSlot = Math.min(totalSlots, Math.ceil((endMinutes - startHour * 60) / slotMinutes));
-        if (endSlot > startSlot) {
-          ranges.push({ startSlot, endSlot });
-        }
-      }
-      return ranges;
-    }
-
-    function highlightCardSchedule(card) {
-      clearScheduleHighlights();
-      const teacherIndex = getTeacherIndexForCard(card);
-      if (teacherIndex < 0) {
-        return;
-      }
-      const ranges = parseCardTimeRanges(card);
-      if (!ranges.length) {
-        return;
-      }
-      ranges.forEach(({ startSlot, endSlot }) => {
-        for (let slotIndex = startSlot; slotIndex < endSlot; slotIndex += 1) {
-          const slot = teachersWrap.querySelector(`.slot[data-teacher-index="${teacherIndex}"][data-slot-index="${slotIndex}"]`);
-          if (slot) {
-            slot.classList.add("match-highlight");
-          }
-        }
-      });
-    }
-
-    function scrollGridToCardSchedule(card) {
-      const teacherIndex = getTeacherIndexForCard(card);
-      if (teacherIndex < 0) {
-        return;
-      }
-      const ranges = parseCardTimeRanges(card);
-      if (!ranges.length) {
-        return;
-      }
-      const teacherBody = teachersWrap.querySelector(`.teacher-body[data-teacher-index="${teacherIndex}"]`);
-      const teacherColumn = teacherBody ? teacherBody.closest(".teacher-column") : null;
-      if (!teacherBody || !teacherColumn) {
-        return;
-      }
-
-      const startSlot = ranges.reduce((minStart, range) => Math.min(minStart, range.startSlot), ranges[0].startSlot);
-      const rowHeight = getRowHeight();
-      const headerHeight = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--header-h")) || 0;
-      const targetTop = Math.max(0, startSlot * rowHeight - headerHeight - rowHeight * 2);
-      const maxTop = Math.max(0, calendarGrid.scrollHeight - calendarGrid.clientHeight);
-
-      const columnLeft = teacherColumn.offsetLeft;
-      const targetLeft = Math.max(0, columnLeft - 16);
-      const maxLeft = Math.max(0, calendarGrid.scrollWidth - calendarGrid.clientWidth);
-
-      calendarGrid.scrollTo({
-        top: Math.min(targetTop, maxTop),
-        left: Math.min(targetLeft, maxLeft),
-        behavior: "smooth"
-      });
-    }
-
-    function setupAlternativeCardUI() {
-      document.querySelectorAll(".palette-card").forEach((card) => {
-        if (card.querySelector(".request-actions")) {
-          return;
-        }
-        const wishesPanel = card.querySelector('.request-panel[data-tab-panel="wishes"]');
-        const notesText = wishesPanel ? wishesPanel.textContent.trim() : "";
-
-        const actions = document.createElement("div");
-        actions.className = "request-actions";
-        actions.innerHTML = `
-          <button class="request-action-btn js-show-time" type="button">Показать время занятий</button>
-          <button class="request-action-btn js-toggle-notes" type="button">Примечания</button>
-        `;
-
-        const notes = document.createElement("div");
-        notes.className = "request-notes";
-        notes.textContent = notesText || "Примечаний нет.";
-
-        card.append(actions, notes);
-      });
-    }
-
-    function setupCardStyleSwitcher() {
-      const sidePanel = document.querySelector(".side-panel");
-      if (!sidePanel) {
-        return;
-      }
-      const switcher = document.createElement("div");
-      switcher.className = "dev-style-switch";
-      switcher.innerHTML = `
-        <button class="dev-style-btn active" type="button" data-card-style="classic">Classic</button>
-        <button class="dev-style-btn" type="button" data-card-style="alt">Alt</button>
-      `;
-      sidePanel.insertBefore(switcher, sidePanel.querySelector(".request-group"));
-
-      switcher.querySelectorAll(".dev-style-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const mode = btn.dataset.cardStyle;
-          document.body.classList.toggle("cards-alt", mode === "alt");
-          switcher.querySelectorAll(".dev-style-btn").forEach((item) => {
-            item.classList.toggle("active", item === btn);
-          });
-          if (mode !== "alt") {
-            clearScheduleHighlights();
-            document.querySelectorAll(".palette-card").forEach((card) => {
-              card.classList.remove("notes-open", "time-open");
-              card.querySelectorAll(".request-action-btn").forEach((actionBtn) => actionBtn.classList.remove("active"));
-            });
-          }
-        });
-      });
-    }
-
-    function setupAlternativeCardActions() {
-      document.addEventListener("click", (event) => {
-        const notesBtn = event.target.closest(".js-toggle-notes");
-        if (notesBtn) {
-          event.preventDefault();
-          event.stopPropagation();
-          const card = notesBtn.closest(".palette-card");
-          if (!card) {
-            return;
-          }
-          const isOpen = card.classList.toggle("notes-open");
-          notesBtn.classList.toggle("active", isOpen);
-          return;
-        }
-
-        const timeBtn = event.target.closest(".js-show-time");
-        if (!timeBtn) {
-          return;
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        const card = timeBtn.closest(".palette-card");
-        if (!card) {
-          return;
-        }
-        const alreadyOpen = card.classList.contains("time-open");
-        document.querySelectorAll(".palette-card").forEach((item) => {
-          item.classList.remove("time-open");
-          const itemBtn = item.querySelector(".js-show-time");
-          if (itemBtn) {
-            itemBtn.classList.remove("active");
-          }
-        });
-        clearScheduleHighlights();
-        if (!alreadyOpen) {
-          card.classList.add("time-open");
-          timeBtn.classList.add("active");
-          highlightCardSchedule(card);
-          scrollGridToCardSchedule(card);
-        }
-      });
-    }
-
     function setupDragAndDrop() {
       function consumeDraggedRequest() {
-        if (dragPayload && dragPayload.sourceCard) {
-          dragPayload.sourceCard.remove();
-        }
         dragPayload = null;
       }
 
       paletteCards.forEach((card) => {
         card.addEventListener("dragstart", (event) => {
-          const duration = Number(card.dataset.duration);
           dragPayload = {
-            duration,
-            label: duration === 2 ? "Урок: двойной" : "Урок: одинарный",
-            subject: card.dataset.subject || "Урок",
-            teacher: card.dataset.teacher || "—",
             student: card.dataset.student || "",
+            className: card.dataset.class || "",
             sourceCard: card
           };
           event.dataTransfer.effectAllowed = "move";
-          event.dataTransfer.setData("text/plain", dragPayload.label);
+          event.dataTransfer.setData("text/plain", dragPayload.student);
         });
         card.addEventListener("dragend", () => {
           if (dragPayload && dragPayload.sourceCard !== card) {
             dragPayload = null;
           }
-          teachersWrap.querySelectorAll(".drop-hover").forEach((slot) => slot.classList.remove("drop-hover"));
+          teachersWrap.querySelectorAll(".lesson-item.drop-hover").forEach((lesson) => lesson.classList.remove("drop-hover"));
         });
       });
 
       teachersWrap.addEventListener("dragover", (event) => {
-        const slot = event.target.closest(".slot");
-        if (!slot || !dragPayload) {
+        const lesson = event.target.closest(".lesson-item");
+        if (!lesson || !dragPayload) {
           return;
         }
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
-        teachersWrap.querySelectorAll(".drop-hover").forEach((item) => item.classList.remove("drop-hover"));
-        slot.classList.add("drop-hover");
+        teachersWrap.querySelectorAll(".lesson-item.drop-hover").forEach((item) => item.classList.remove("drop-hover"));
+        lesson.classList.add("drop-hover");
       });
 
       teachersWrap.addEventListener("dragleave", (event) => {
-        const slot = event.target.closest(".slot");
-        if (slot) {
-          slot.classList.remove("drop-hover");
+        const lesson = event.target.closest(".lesson-item");
+        if (lesson) {
+          lesson.classList.remove("drop-hover");
         }
       });
 
       teachersWrap.addEventListener("drop", (event) => {
-        const slot = event.target.closest(".slot");
-        if (!slot || !dragPayload) {
+        const lesson = event.target.closest(".lesson-item");
+        if (!lesson || !dragPayload) {
           return;
         }
         event.preventDefault();
-        slot.classList.remove("drop-hover");
-        const teacherIndex = Number(slot.dataset.teacherIndex);
-        const slotIndex = Number(slot.dataset.slotIndex);
-        const existingLesson = findLessonBySlot(teacherIndex, slotIndex);
-        if (existingLesson) {
-          addStudentToLesson(existingLesson);
-          consumeDraggedRequest();
-          return;
-        }
-        createLessonCard(teacherIndex, slotIndex, dragPayload.duration, {
-          subject: dragPayload.subject,
-          teacher: dragPayload.teacher,
-          studentsCount: 1
-        });
+        lesson.classList.remove("drop-hover");
+        addStudentToLesson(lesson);
         consumeDraggedRequest();
       });
 
@@ -1222,22 +1697,22 @@
       btn.addEventListener("click", () => {
         document.querySelectorAll(".view-btn").forEach((item) => item.classList.remove("active"));
         btn.classList.add("active");
+        setCalendarView(btn.dataset.view === "week" ? "week" : "day");
       });
     });
 
-    [daySelect, monthSelect, yearSelect].forEach((input) => {
-      input.addEventListener("change", updateDateTitle);
+    window.addEventListener("resize", () => {
+      applyZoomLayout();
+      alignScrollToRight();
     });
-    window.addEventListener("resize", alignScrollToRight);
 
-    fillDateSelectors();
     setCurrentDate();
     buildTimeColumn();
-    buildTeachersColumns();
-    setupRequestTabs();
-    setupAlternativeCardUI();
-    setupCardStyleSwitcher();
-    setupAlternativeCardActions();
+    setupDateNavigation();
+    setupDatePicker();
+    setupZoomControls();
+    setupTeacherFilter();
+    setCalendarView("day");
     setupDragAndDrop();
     setupLessonInteractions();
     alignScrollToRight();
