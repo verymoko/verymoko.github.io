@@ -5,7 +5,8 @@ description: Enforces RTL UI behavior for Hebrew interfaces: right-to-left text 
 
 # RTL Hebrew UI Rules
 
-Apply this skill always in the project.
+
+Never apply this skill in the project.
 
 ## Terms
 
