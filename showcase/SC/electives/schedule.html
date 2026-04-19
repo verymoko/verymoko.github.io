@@ -196,16 +196,40 @@
       min-width: 0;
     }
 
+    /* Неделя «в экран»: равномерная почасовая сетка + отдельно усиленные линии только между днями */
     .board.week.week-zoom-fit .track {
       width: 100%;
       min-width: 0;
+      background-color: #fafbff;
       background-image:
-        repeating-linear-gradient(
+        linear-gradient(
           to right,
-          rgba(58, 103, 255, 0.04) 0,
-          rgba(58, 103, 255, 0.04) calc(100% / var(--day-span) - 2px),
-          transparent calc(100% / var(--day-span) - 2px),
-          transparent calc(100% / var(--day-span))
+          transparent 0,
+          transparent calc(100% / var(--day-span) - 1px),
+          var(--line-strong) calc(100% / var(--day-span) - 1px),
+          var(--line-strong) calc(100% / var(--day-span)),
+          transparent calc(100% / var(--day-span)),
+          transparent calc(2 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(2 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(2 * 100% / var(--day-span)),
+          transparent calc(2 * 100% / var(--day-span)),
+          transparent calc(3 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(3 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(3 * 100% / var(--day-span)),
+          transparent calc(3 * 100% / var(--day-span)),
+          transparent calc(4 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(4 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(4 * 100% / var(--day-span)),
+          transparent calc(4 * 100% / var(--day-span)),
+          transparent calc(5 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(5 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(5 * 100% / var(--day-span)),
+          transparent calc(5 * 100% / var(--day-span)),
+          transparent calc(6 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(6 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(6 * 100% / var(--day-span)),
+          transparent calc(6 * 100% / var(--day-span)),
+          transparent 100%
         ),
         repeating-linear-gradient(
           to right,
@@ -273,7 +297,7 @@
       font-size: 13px;
       font-weight: 700;
       padding: 8px 6px;
-      border-left: 1px solid var(--line-strong);
+      border-left: 1px solid var(--line);
       color: var(--text);
     }
 
@@ -299,6 +323,10 @@
       border-left-color: var(--line-strong);
       color: var(--text);
       font-weight: 600;
+    }
+
+    .board.week .hour-cell.hour-tick {
+      border-left-color: var(--line);
     }
 
     .names-col {
@@ -369,14 +397,38 @@
       );
     }
 
+    /* Неделя (стандарт, px): равномерная почасовая сетка + усиленные линии только между днями */
     .board.week .track {
+      background-color: #fafbff;
       background-image:
-        repeating-linear-gradient(
+        linear-gradient(
           to right,
-          rgba(58, 103, 255, 0.04) 0,
-          rgba(58, 103, 255, 0.04) calc(var(--day-band-w) - 2px),
-          transparent calc(var(--day-band-w) - 2px),
-          transparent var(--day-band-w)
+          transparent 0,
+          transparent calc(1 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(1 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(1 * var(--day-band-w)),
+          transparent calc(1 * var(--day-band-w)),
+          transparent calc(2 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(2 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(2 * var(--day-band-w)),
+          transparent calc(2 * var(--day-band-w)),
+          transparent calc(3 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(3 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(3 * var(--day-band-w)),
+          transparent calc(3 * var(--day-band-w)),
+          transparent calc(4 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(4 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(4 * var(--day-band-w)),
+          transparent calc(4 * var(--day-band-w)),
+          transparent calc(5 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(5 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(5 * var(--day-band-w)),
+          transparent calc(5 * var(--day-band-w)),
+          transparent calc(6 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(6 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(6 * var(--day-band-w)),
+          transparent calc(6 * var(--day-band-w)),
+          transparent 100%
         ),
         repeating-linear-gradient(
           to right,
