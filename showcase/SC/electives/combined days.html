@@ -37,91 +37,6 @@
       flex-direction: column;
     }
 
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 14px 18px;
-      background: var(--card);
-      border-bottom: 1px solid var(--line);
-    }
-
-    .toolbar-actions {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-    }
-
-    #weekZoomBar {
-      margin-left: auto;
-    }
-
-    .view-switch {
-      display: inline-flex;
-      background: #eef1f9;
-      padding: 4px;
-      border-radius: 10px;
-      gap: 4px;
-    }
-
-    .view-switch button {
-      border: 0;
-      background: transparent;
-      color: #5c6272;
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    .view-switch button.active {
-      background: #fff;
-      color: var(--text);
-      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.1);
-    }
-
-    .date-nav {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .date-nav button {
-      border: 1px solid var(--line-strong);
-      border-radius: 9px;
-      background: #fff;
-      color: var(--text);
-      padding: 6px 12px;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    .date-nav button:hover {
-      border-color: #c9d0e4;
-    }
-
-    /*
-      Фиксированная зона под дату: хватает на диапазон вроде «30 сентября — 5 октября 2026»
-      (длинные названия месяцев в родительном падеже), чтобы блок ←Сегодня→ не прыгал.
-    */
-    .date-title {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 700;
-      line-height: 1.25;
-      flex: 0 0 36ch;
-      width: 36ch;
-      max-width: 100%;
-      text-align: start;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
     .board-wrap {
       flex: 1;
       min-height: 0;
@@ -140,34 +55,148 @@
       min-width: 100%;
     }
 
-    /* Режим «День»: временная шкала и дорожки на всю ширину окна */
-    .board.day {
-      width: 100%;
-      max-width: 100%;
-      grid-template-columns: var(--teacher-col-w) minmax(0, 1fr);
+    .left-stack {
+      grid-row: 1 / -1;
+      grid-column: 1;
+      display: flex;
+      flex-direction: column;
+      align-self: start;
+      width: var(--teacher-col-w);
+      min-width: var(--teacher-col-w);
+      position: sticky;
+      left: 0;
+      top: 0;
+      z-index: 13;
+      background: var(--card);
+      border-right: 1px solid var(--line-strong);
+      box-shadow: 4px 0 12px rgba(16, 24, 40, 0.06);
     }
 
-    .board.day .timeline-day-mode {
-      width: 100%;
-      min-width: 0;
+    .month-cal {
+      padding: 10px 6px 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--card);
     }
 
-    .board.day .hour-cell.hour-tick {
-      flex: 1 1 0;
-      min-width: 0;
-      width: auto;
+    .month-cal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      margin-bottom: 8px;
     }
 
-    .board.day .track {
-      width: 100%;
-      min-width: 0;
-      background-image: repeating-linear-gradient(
-        to right,
-        transparent 0,
-        transparent calc(100% / var(--hours) - 1px),
-        var(--line) calc(100% / var(--hours) - 1px),
-        var(--line) calc(100% / var(--hours))
-      );
+    .month-cal-head h2 {
+      margin: 0;
+      font-size: 0.82rem;
+      font-weight: 700;
+      flex: 1;
+      text-align: center;
+      line-height: 1.2;
+      color: var(--text);
+    }
+
+    .month-cal-nav {
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      font-size: 1rem;
+      line-height: 1;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .month-cal-nav:hover {
+      border-color: #c9d0e4;
+    }
+
+    .month-cal-grid {
+      display: grid;
+      grid-template-columns: 26px repeat(7, minmax(0, 1fr));
+      gap: 2px 1px;
+      align-items: stretch;
+    }
+
+    .month-cal-corner {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: center;
+      padding: 2px 0;
+      align-self: end;
+    }
+
+    .month-cal-wd {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: center;
+      padding: 2px 0;
+    }
+
+    .month-cal-weekno {
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      padding: 4px 0;
+      cursor: pointer;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .month-cal-weekno:hover {
+      background: rgba(58, 103, 255, 0.08);
+    }
+
+    .month-cal-weekno.is-fit-week {
+      background: rgba(58, 103, 255, 0.14);
+      color: #2848c4;
+    }
+
+    .month-cal-day {
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      padding: 5px 0;
+      cursor: pointer;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .month-cal-day:hover {
+      background: #eef1f9;
+    }
+
+    .month-cal-day.other-month {
+      color: #b4b8c4;
+      font-weight: 500;
+    }
+
+    .month-cal-day.is-today {
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 1px 3px rgba(58, 103, 255, 0.35);
+    }
+
+    .month-cal-day.is-today:hover {
+      filter: brightness(1.05);
+    }
+
+    .month-cal-day.in-schedule-week {
+      outline: 1px solid rgba(58, 103, 255, 0.35);
+      outline-offset: -1px;
+    }
+
+    .month-cal-day.is-today.in-schedule-week {
+      outline-color: rgba(255, 255, 255, 0.5);
     }
 
     /*
@@ -241,12 +270,6 @@
     }
 
     .corner {
-      grid-row: 1;
-      grid-column: 1;
-      position: sticky;
-      left: 0;
-      top: 0;
-      z-index: 12;
       height: auto;
       min-height: var(--header-h);
       display: flex;
@@ -256,9 +279,7 @@
       font-weight: 600;
       color: var(--muted);
       background: var(--card);
-      border-right: 1px solid var(--line-strong);
       border-bottom: 1px solid var(--line);
-      box-shadow: 4px 0 8px rgba(16, 24, 40, 0.04);
     }
 
     .timeline {
@@ -330,14 +351,9 @@
     }
 
     .names-col {
-      grid-row: 2;
-      grid-column: 1;
-      position: sticky;
-      left: 0;
-      z-index: 10;
+      flex: 1;
+      min-height: 0;
       background: var(--card);
-      border-right: 1px solid var(--line-strong);
-      box-shadow: 4px 0 12px rgba(16, 24, 40, 0.06);
     }
 
     .teacher-name {
@@ -502,104 +518,18 @@
       text-overflow: ellipsis;
     }
 
-    .week-zoom-toolbar {
-      display: inline-flex;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .week-zoom-toolbar[hidden] {
-      display: none !important;
-      margin-left: 0 !important;
-    }
-
-    .week-fit-switch {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      user-select: none;
-      font-size: 13px;
-      color: var(--text);
-    }
-
-    .week-fit-switch-text {
-      font-weight: 500;
-    }
-
-    .week-fit-switch-input {
-      position: absolute;
-      opacity: 0;
-      width: 0;
-      height: 0;
-      margin: 0;
-    }
-
-    .week-fit-switch-track {
-      position: relative;
-      width: 44px;
-      height: 26px;
-      flex-shrink: 0;
-      border-radius: 13px;
-      background: #d8dce6;
-      transition: background 0.2s ease;
-    }
-
-    .week-fit-switch-track::after {
-      content: "";
-      position: absolute;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: #fff;
-      top: 2px;
-      left: 2px;
-      transition: transform 0.2s ease;
-      box-shadow: 0 1px 3px rgba(16, 24, 40, 0.2);
-    }
-
-    .week-fit-switch-input:focus-visible + .week-fit-switch-track {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-
-    .week-fit-switch-input:checked + .week-fit-switch-track {
-      background: var(--accent);
-    }
-
-    .week-fit-switch-input:checked + .week-fit-switch-track::after {
-      transform: translateX(18px);
-    }
   </style>
 </head>
 <body>
   <div class="page">
-    <header class="toolbar">
-      <div class="toolbar-actions">
-        <div class="view-switch" role="group" aria-label="Режим отображения">
-          <button type="button" id="btnDay" class="active">День</button>
-          <button type="button" id="btnWeek">Неделя</button>
-        </div>
-        <h1 class="date-title" id="dateTitle"></h1>
-        <div class="date-nav">
-          <button type="button" id="btnPrev" aria-label="Назад">←</button>
-          <button type="button" id="btnToday">Сегодня</button>
-          <button type="button" id="btnNext" aria-label="Вперёд">→</button>
-        </div>
-        <div class="week-zoom-toolbar" id="weekZoomBar" hidden>
-          <label class="week-fit-switch">
-            <span class="week-fit-switch-text">Уместить в экран</span>
-            <input type="checkbox" class="week-fit-switch-input" id="weekZoomFitSwitch" />
-            <span class="week-fit-switch-track" aria-hidden="true"></span>
-          </label>
-        </div>
-      </div>
-    </header>
     <div class="board-wrap" id="boardWrap">
-      <div class="board" id="board">
-        <div class="corner">Преподаватель</div>
+      <div class="board week" id="board">
+        <div class="left-stack">
+          <div class="month-cal" id="monthCalendar" aria-label="Календарь месяца"></div>
+          <div class="corner">Преподаватель</div>
+          <div class="names-col" id="namesCol"></div>
+        </div>
         <div class="timeline" id="timeline"></div>
-        <div class="names-col" id="namesCol"></div>
         <div class="tracks" id="tracks"></div>
       </div>
     </div>
@@ -613,9 +543,9 @@
 
     const WEEK_DAYS_SHORT = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
-    const MONTH_NAMES = [
-      "января", "февраля", "марта", "апреля", "мая", "июня",
-      "июля", "августа", "сентября", "октября", "ноября", "декабря"
+    const MONTH_NAMES_NOM = [
+      "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+      "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
     ];
 
     const teachers = [
@@ -686,30 +616,15 @@
       { teacher: 4, day: 6, start: "14:00", end: "15:00", title: "Консультация", place: "каб. 8" }
     ];
 
-    let mode = "day";
-    let anchorDate = startOfDay(new Date());
-
-    /** Неделя: «стандарт» — фиксированная ширина часа; «в экран» — подгонка под ширину без меток часов */
-    let weekZoomMode = "default";
-    const DEFAULT_WEEK_HOUR_W = 56;
-
-    const board = document.getElementById("board");
-    const timeline = document.getElementById("timeline");
-    const namesCol = document.getElementById("namesCol");
-    const tracks = document.getElementById("tracks");
-
-    const btnDay = document.getElementById("btnDay");
-    const btnWeek = document.getElementById("btnWeek");
-    const btnPrev = document.getElementById("btnPrev");
-    const btnNext = document.getElementById("btnNext");
-    const btnToday = document.getElementById("btnToday");
-    const dateTitle = document.getElementById("dateTitle");
-    const weekZoomBar = document.getElementById("weekZoomBar");
-    const weekZoomFitSwitch = document.getElementById("weekZoomFitSwitch");
-
     function startOfDay(d) {
       const x = new Date(d);
       x.setHours(0, 0, 0, 0);
+      return x;
+    }
+
+    function startOfMonth(d) {
+      const x = startOfDay(d);
+      x.setDate(1);
       return x;
     }
 
@@ -722,11 +637,56 @@
       return x;
     }
 
-    /** Наш формат дня: пн=0 … вс=6 */
+    /** Пн = 0 … Вс = 6 */
     function isoDayIndex(date) {
-      const dow = date.getDay();
+      const dow = startOfDay(date).getDay();
       return dow === 0 ? 6 : dow - 1;
     }
+
+    function sameCalendarDay(a, b) {
+      return startOfDay(a).getTime() === startOfDay(b).getTime();
+    }
+
+    /** ISO 8601: номер недели по понедельнику строки */
+    function isoWeekNumber(mondayDate) {
+      const date = new Date(startOfDay(mondayDate).getTime());
+      const day = (date.getDay() + 6) % 7;
+      date.setDate(date.getDate() - day + 3);
+      const firstThursday = date.getTime();
+      date.setMonth(0, 4);
+      if (date.getDay() !== 4) {
+        date.setMonth(0, 4 + ((4 - date.getDay() + 7) % 7));
+      }
+      return 1 + Math.round((firstThursday - date.getTime()) / 604800000);
+    }
+
+    function isInScheduleWeek(cellDate, scheduleWeekStart) {
+      const x = startOfDay(cellDate);
+      for (let i = 0; i < 7; i += 1) {
+        const y = new Date(scheduleWeekStart);
+        y.setDate(scheduleWeekStart.getDate() + i);
+        if (sameCalendarDay(x, y)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    let anchorDate = startOfDay(new Date());
+
+    /** Неделя: «стандарт» — фиксированная ширина часа; «в экран» — подгонка под ширину (по клику на номер недели в календаре) */
+    let weekZoomMode = "default";
+    const DEFAULT_WEEK_HOUR_W = 56;
+
+    /** Месяц, отображаемый в мини-календаре (стрелки ‹ ›) */
+    let visibleMonth = startOfMonth(anchorDate);
+
+    const board = document.getElementById("board");
+    const boardWrap = document.getElementById("boardWrap");
+    const timeline = document.getElementById("timeline");
+    const namesCol = document.getElementById("namesCol");
+    const tracks = document.getElementById("tracks");
+    const monthCalendar = document.getElementById("monthCalendar");
 
     function parseTime(s) {
       const [h, m] = s.split(":").map(Number);
@@ -775,74 +735,121 @@
       return wrap;
     }
 
-    function updateWeekZoomUi() {
-      const show = mode === "week";
-      weekZoomBar.hidden = !show;
-      const fit = show && weekZoomMode === "fit";
-      weekZoomFitSwitch.checked = fit;
+    function dayColumnWidthPx() {
+      const track = tracks.querySelector(".track");
+      if (!track || track.clientWidth <= 0) {
+        return 0;
+      }
+      return track.clientWidth / 7;
+    }
+
+    function scrollBoardToDay(dayIndex, smooth) {
+      const w = dayColumnWidthPx();
+      if (w <= 0) {
+        return;
+      }
+      const d = Math.min(6, Math.max(0, dayIndex));
+      const maxScroll = Math.max(0, boardWrap.scrollWidth - boardWrap.clientWidth);
+      const target = Math.min(d * w, maxScroll);
+      boardWrap.scrollTo({ left: target, behavior: smooth ? "smooth" : "auto" });
+    }
+
+    function renderMonthCalendar() {
+      const root = monthCalendar;
+      if (!root) {
+        return;
+      }
+      root.innerHTML = "";
+      const y = visibleMonth.getFullYear();
+      const m = visibleMonth.getMonth();
+      const scheduleWeekStart = mondayOfWeek(anchorDate);
+      const today = startOfDay(new Date());
+
+      const head = document.createElement("div");
+      head.className = "month-cal-head";
+      const prevB = document.createElement("button");
+      prevB.type = "button";
+      prevB.className = "month-cal-nav";
+      prevB.dataset.nav = "prev";
+      prevB.setAttribute("aria-label", "Предыдущий месяц");
+      prevB.textContent = "‹";
+      const title = document.createElement("h2");
+      title.textContent = `${MONTH_NAMES_NOM[m]} ${y}`;
+      const nextB = document.createElement("button");
+      nextB.type = "button";
+      nextB.className = "month-cal-nav";
+      nextB.dataset.nav = "next";
+      nextB.setAttribute("aria-label", "Следующий месяц");
+      nextB.textContent = "›";
+      head.appendChild(prevB);
+      head.appendChild(title);
+      head.appendChild(nextB);
+      root.appendChild(head);
+
+      const grid = document.createElement("div");
+      grid.className = "month-cal-grid";
+      const corner = document.createElement("div");
+      corner.className = "month-cal-corner";
+      corner.setAttribute("aria-hidden", "true");
+      grid.appendChild(corner);
+      for (let i = 0; i < 7; i += 1) {
+        const wd = document.createElement("div");
+        wd.className = "month-cal-wd";
+        wd.textContent = WEEK_DAYS_SHORT[i];
+        grid.appendChild(wd);
+      }
+
+      const first = new Date(y, m, 1);
+      const dow = first.getDay();
+      const back = (dow + 6) % 7;
+      const gridStart = new Date(y, m, 1 - back);
+      const fitWeekMondayTs = mondayOfWeek(anchorDate).getTime();
+
+      for (let row = 0; row < 6; row += 1) {
+        const monday = new Date(gridStart);
+        monday.setDate(gridStart.getDate() + row * 7);
+        const weekNo = isoWeekNumber(monday);
+        const wbtn = document.createElement("button");
+        wbtn.type = "button";
+        wbtn.className = "month-cal-weekno";
+        wbtn.textContent = String(weekNo);
+        wbtn.title = `Неделя ${weekNo}: уместить эту неделю в экран`;
+        wbtn.dataset.monday = String(startOfDay(monday).getTime());
+        if (weekZoomMode === "fit" && startOfDay(monday).getTime() === fitWeekMondayTs) {
+          wbtn.classList.add("is-fit-week");
+        }
+        grid.appendChild(wbtn);
+        for (let c = 0; c < 7; c += 1) {
+          const cell = new Date(monday);
+          cell.setDate(monday.getDate() + c);
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "month-cal-day";
+          b.textContent = String(cell.getDate());
+          b.dataset.day = String(startOfDay(cell).getTime());
+          if (cell.getMonth() !== m) {
+            b.classList.add("other-month");
+          }
+          if (sameCalendarDay(cell, today)) {
+            b.classList.add("is-today");
+          }
+          if (isInScheduleWeek(cell, scheduleWeekStart)) {
+            b.classList.add("in-schedule-week");
+          }
+          grid.appendChild(b);
+        }
+      }
+      root.appendChild(grid);
     }
 
     function render() {
-      board.classList.toggle("week", mode === "week");
-      board.classList.toggle("day", mode === "day");
-      board.classList.toggle("week-zoom-fit", mode === "week" && weekZoomMode === "fit");
-      btnDay.classList.toggle("active", mode === "day");
-      btnWeek.classList.toggle("active", mode === "week");
-      updateWeekZoomUi();
+      board.classList.add("week");
+      board.classList.remove("day");
+      board.classList.toggle("week-zoom-fit", weekZoomMode === "fit");
 
       const weekStart = mondayOfWeek(anchorDate);
+      const targetDayIndex = Math.min(6, Math.max(0, isoDayIndex(anchorDate)));
 
-      if (mode === "day") {
-        board.style.setProperty("--hours", String(HOURS));
-        board.style.setProperty("--day-span", "1");
-        board.style.removeProperty("--day-band-w");
-        board.style.removeProperty("--hour-w");
-        const d = startOfDay(anchorDate);
-        const title = `${WEEK_DAYS_SHORT[isoDayIndex(d)]}, ${d.getDate()} ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
-        dateTitle.textContent = title;
-
-        timeline.innerHTML = "";
-        const row = document.createElement("div");
-        row.className = "timeline-day-mode";
-        for (let h = START_HOUR; h < END_HOUR; h += 1) {
-          const cell = document.createElement("div");
-          cell.className = "hour-cell hour-tick";
-          cell.textContent = `${String(h).padStart(2, "0")}:00`;
-          row.appendChild(cell);
-        }
-        timeline.appendChild(row);
-
-        namesCol.innerHTML = "";
-        tracks.innerHTML = "";
-        const dayIdx = isoDayIndex(d);
-
-        teachers.forEach((name, ti) => {
-          const dayLessons = lessons.filter((L) => L.teacher === ti && L.day === dayIdx);
-          const dayMin = totalMinutesForLessons(dayLessons);
-          const hoursLabel = `За день: ${formatHoursSubtitle(dayMin)}`;
-          namesCol.appendChild(buildTeacherNameEl(name, hoursLabel));
-
-          const track = document.createElement("div");
-          track.className = "track";
-          dayLessons.forEach((L, li) => {
-            const el = document.createElement("div");
-            el.className = `lesson-card b${(ti % 4) + 1}`;
-            const startM = minutesFromScheduleStart(L.start);
-            const endM = minutesFromScheduleStart(L.end);
-            const leftPct = (startM / MINUTES_PER_DAY) * 100;
-            const widthPct = ((endM - startM) / MINUTES_PER_DAY) * 100;
-            el.style.left = `${leftPct}%`;
-            el.style.width = `${widthPct}%`;
-            el.style.setProperty("--slot-pct", String(widthPct));
-            el.innerHTML = `<div class="lesson-title">${escapeHtml(L.title)}</div><div class="lesson-meta">${escapeHtml(L.start)}–${escapeHtml(L.end)} · ${escapeHtml(L.place)}</div>`;
-            track.appendChild(el);
-          });
-          tracks.appendChild(track);
-        });
-        return;
-      }
-
-      /* Неделя */
       board.style.setProperty("--hours", String(HOURS));
       board.style.setProperty("--day-span", "7");
       let dayBandW = "";
@@ -854,14 +861,6 @@
         board.style.removeProperty("--hour-w");
         board.style.removeProperty("--day-band-w");
       }
-
-      const mon = weekStart;
-      const sun = new Date(mon.getTime() + 6 * 86400000);
-      const weekRange =
-        mon.getMonth() === sun.getMonth()
-          ? `${mon.getDate()}–${sun.getDate()} ${MONTH_NAMES[mon.getMonth()]} ${mon.getFullYear()}`
-          : `${mon.getDate()} ${MONTH_NAMES[mon.getMonth()]} — ${sun.getDate()} ${MONTH_NAMES[sun.getMonth()]} ${sun.getFullYear()}`;
-      dateTitle.textContent = weekRange;
 
       timeline.innerHTML = "";
       const weekRoot = document.createElement("div");
@@ -925,6 +924,14 @@
         });
         tracks.appendChild(track);
       });
+
+      renderMonthCalendar();
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          scrollBoardToDay(targetDayIndex, false);
+        });
+      });
     }
 
     function escapeHtml(s) {
@@ -935,46 +942,37 @@
         .replace(/"/g, "&quot;");
     }
 
-    btnDay.addEventListener("click", () => {
-      mode = "day";
-      render();
-    });
-
-    btnWeek.addEventListener("click", () => {
-      mode = "week";
-      render();
-    });
-
-    weekZoomFitSwitch.addEventListener("change", () => {
-      weekZoomMode = weekZoomFitSwitch.checked ? "fit" : "default";
-      render();
-    });
-
-    btnToday.addEventListener("click", () => {
-      anchorDate = new Date();
-      render();
-    });
-
-    btnPrev.addEventListener("click", () => {
-      const d = new Date(anchorDate);
-      if (mode === "day") {
-        d.setDate(d.getDate() - 1);
-      } else {
-        d.setDate(d.getDate() - 7);
+    monthCalendar.addEventListener("click", (e) => {
+      const el = e.target instanceof HTMLElement ? e.target : null;
+      if (!el) {
+        return;
       }
-      anchorDate = d;
-      render();
-    });
-
-    btnNext.addEventListener("click", () => {
-      const d = new Date(anchorDate);
-      if (mode === "day") {
-        d.setDate(d.getDate() + 1);
-      } else {
-        d.setDate(d.getDate() + 7);
+      const navBtn = el.closest("button[data-nav]");
+      if (navBtn) {
+        if (navBtn.dataset.nav === "prev") {
+          visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
+          renderMonthCalendar();
+        } else if (navBtn.dataset.nav === "next") {
+          visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
+          renderMonthCalendar();
+        }
+        return;
       }
-      anchorDate = d;
-      render();
+      const wk = el.closest("button.month-cal-weekno");
+      if (wk && wk.dataset.monday != null) {
+        anchorDate = startOfDay(new Date(Number(wk.dataset.monday)));
+        weekZoomMode = "fit";
+        visibleMonth = startOfMonth(anchorDate);
+        render();
+        return;
+      }
+      const db = el.closest("button.month-cal-day");
+      if (db && db.dataset.day != null) {
+        anchorDate = startOfDay(new Date(Number(db.dataset.day)));
+        weekZoomMode = "default";
+        visibleMonth = startOfMonth(anchorDate);
+        render();
+      }
     });
 
     render();
