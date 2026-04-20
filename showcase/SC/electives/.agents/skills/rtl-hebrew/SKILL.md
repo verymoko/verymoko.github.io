@@ -1,12 +1,22 @@
 ---
 name: rtl-hebrew
-description: Enforces RTL UI behavior for Hebrew interfaces: right-to-left text and hierarchy, right-origin scales, left-side vertical scrollbar, and default camera alignment to the right. Use when building or reviewing layout, scrolling, positioning, navigation, or measurements for RTL pages, Hebrew content, or bidirectional UI logic.
+description: Applies RTL UI behavior for Hebrew interfaces when Hebrew/RTL is explicitly requested or implied by context.
 ---
 
 # RTL Hebrew UI Rules
 
 
-Never apply this skill in the project.
+## Activation Rules
+
+Apply this skill only when the target UI language is Hebrew or the user explicitly requests RTL behavior.
+
+Do not apply this skill for Russian or other non-RTL interfaces unless the user explicitly asks for RTL.
+
+Project-specific defaults:
+- `index.html`: apply by default (Hebrew/RTL concept).
+- `schedule.html` and `combined days.html`: do not apply by default.
+
+If language or direction is ambiguous, ask the user to confirm before applying RTL rules.
 
 ## Terms
 
