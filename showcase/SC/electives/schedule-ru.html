@@ -193,6 +193,7 @@
       border: 1px solid #d8dce8;
       border-radius: 12px;
       background: #fff;
+      box-shadow: 0 2px 8px rgba(16, 24, 40, 0.08);
       padding: 10px;
       display: flex;
       align-items: center;
@@ -207,8 +208,9 @@
     }
 
     .student-request-item[open] .student-card {
-      border: 0;
-      border-radius: 0;
+      border: 1px solid #d8dce8;
+      border-radius: 12px;
+      margin: 0;
     }
 
     .student-main {
@@ -260,11 +262,11 @@
     }
 
     .student-requests {
-      border-top: 1px solid #d8dce8;
+      border-top: 0;
       padding: 0;
       display: grid;
-      gap: 8px;
-      padding: 8px 10px 10px;
+      gap: 6px;
+      padding: 6px 10px 8px;
     }
 
     .request-card {
@@ -274,6 +276,25 @@
       padding: 0;
     }
 
+    .request-card + .request-card {
+      border-top: 1px solid #e3e8f7;
+      padding-top: 8px;
+      margin-top: 2px;
+    }
+
+    .request-head {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .request-title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
     .request-title {
       margin: 0;
       font-size: 13px;
@@ -281,11 +302,90 @@
       color: #111827;
     }
 
+    .request-goal {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1f2e70;
+      white-space: nowrap;
+    }
+
+    .request-teacher {
+      margin: 0;
+      font-size: 12px;
+      color: #1f273d;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .request-teacher-avatar {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #dde3f2;
+      color: #4b587a;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
     .request-meta {
       margin: 2px 0 0;
       font-size: 12px;
       color: #67708a;
       line-height: 1.35;
+    }
+
+    .request-summary {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: #67708a;
+      line-height: 1.35;
+    }
+
+    .request-actions {
+      margin-top: 8px;
+      padding-top: 0;
+      border-top: 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .request-link {
+      border: 0;
+      background: transparent;
+      color: #3563ff;
+      font: inherit;
+      font-size: 12px;
+      padding: 0;
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 2px;
+    }
+
+    .request-link.active {
+      color: #1f2e70;
+      text-decoration-style: solid;
+      font-weight: 700;
+    }
+
+    .request-notes {
+      margin-top: 8px;
+      padding-top: 0;
+      border-top: 0;
+      font-size: 12px;
+      color: #4a5268;
+      display: none;
+      line-height: 1.35;
+    }
+
+    .request-card.notes-open .request-notes {
+      display: block;
     }
 
     .student-avatar {
@@ -445,6 +545,28 @@
       border-right: 1px solid var(--line-strong);
       border-bottom: 1px solid var(--line);
       box-shadow: 4px 0 8px rgba(16, 24, 40, 0.04);
+      gap: 6px;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      line-height: 1.2;
+    }
+
+    .corner-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .teacher-sort {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.2;
+      padding: 4px 24px 4px 8px;
     }
 
     .timeline {
@@ -536,6 +658,16 @@
       padding: 8px 12px;
       border-bottom: 1px solid var(--line);
       box-sizing: border-box;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .teacher-name:active {
+      cursor: grabbing;
+    }
+
+    .teacher-name.drag-over {
+      box-shadow: inset 0 2px 0 var(--accent);
     }
 
     .teacher-name-main {
@@ -630,6 +762,11 @@
       overflow: visible;
     }
 
+    .track:has(.request-slot-highlight:hover) {
+      z-index: 40;
+      overflow: visible;
+    }
+
     .lesson-card {
       position: absolute;
       top: 6px;
@@ -676,6 +813,58 @@
     .lesson-card.b2 { border-color: #2d9c6e; background: #dff5ec; color: #12402d; }
     .lesson-card.b3 { border-color: #b05ec8; background: #f4e8f8; color: #4a2560; }
     .lesson-card.b4 { border-color: #d9772e; background: #fcefe0; color: #5c3610; }
+    .lesson-card.empty-slot {
+      border-color: #c7cedd;
+      background: #edf1f7;
+      color: #4a5568;
+    }
+
+    .board.week.week-zoom-fit.request-focus-active .lesson-card {
+      opacity: 0.38;
+      filter: saturate(0.7);
+    }
+
+    .request-slot-highlight {
+      position: absolute;
+      top: 6px;
+      bottom: 6px;
+      border-radius: 8px;
+      background: rgba(53, 99, 255, 0.16);
+      outline: 1px dashed rgba(53, 99, 255, 0.5);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .request-slot-highlight[data-tooltip] {
+      pointer-events: auto;
+      cursor: default;
+    }
+
+    .request-slot-highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 8px);
+      transform: translateX(-50%);
+      background: #111827;
+      color: #fff;
+      font-size: 11px;
+      line-height: 1.2;
+      white-space: nowrap;
+      padding: 4px 8px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(16, 24, 40, 0.18);
+      z-index: 2000;
+    }
+
+    .teacher-name.is-request-focus-teacher {
+      box-shadow: inset 0 0 0 2px rgba(53, 99, 255, 0.38);
+      background: #eef3ff;
+    }
+
+    .track.is-request-focus-teacher {
+      background-color: #f4f7ff;
+    }
 
     .lesson-title {
       font-weight: 700;
@@ -769,6 +958,120 @@
     .week-fit-switch-input:checked + .week-fit-switch-track::after {
       transform: translateX(18px);
     }
+
+    .return-view-btn {
+      position: fixed;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      z-index: 120;
+      border: 0;
+      border-radius: 999px;
+      background: #111827;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1;
+      padding: 11px 16px;
+      box-shadow: 0 6px 20px rgba(16, 24, 40, 0.28);
+      cursor: pointer;
+    }
+
+    .return-view-btn:hover {
+      background: #1f2937;
+    }
+
+    .subject-picker-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 24, 39, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 16px;
+    }
+
+    .subject-picker-backdrop[hidden] {
+      display: none;
+    }
+
+    .subject-picker {
+      width: min(460px, 100%);
+      max-height: min(75vh, 620px);
+      overflow: auto;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #d8dce8;
+      box-shadow: 0 14px 36px rgba(16, 24, 40, 0.28);
+      padding: 14px;
+    }
+
+    .subject-picker-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0 0 10px;
+      color: #111827;
+    }
+
+    .subject-picker-group + .subject-picker-group {
+      margin-top: 10px;
+    }
+
+    .subject-picker-group-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #5c667d;
+      margin: 0 0 6px;
+    }
+
+    .subject-picker-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #1f273d;
+      font-size: 13px;
+      margin-top: 6px;
+      cursor: pointer;
+    }
+
+    .subject-picker-option input[type="radio"] {
+      margin: 0;
+    }
+
+    .subject-picker-option-text {
+      line-height: 1.3;
+    }
+
+    .subject-picker-assign {
+      margin-top: 12px;
+      border: 0;
+      border-radius: 9px;
+      background: #111827;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+
+    .subject-picker-assign:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    .subject-picker-cancel {
+      margin-top: 10px;
+      border: 0;
+      background: transparent;
+      color: #3563ff;
+      font-size: 13px;
+      padding: 0;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
   </style>
 </head>
 <body>
@@ -797,7 +1100,14 @@
     <div class="main-layout">
       <div class="board-wrap" id="boardWrap">
         <div class="board" id="board">
-          <div class="corner">Преподаватель</div>
+          <div class="corner">
+            <span class="corner-title">Преподаватель</span>
+            <select id="teacherSort" class="teacher-sort" aria-label="Сортировка преподавателей по занятости">
+              <option value="busy-first">Сначала занятые</option>
+              <option value="free-first">Сначала свободные</option>
+              <option value="custom">Произвольный порядок</option>
+            </select>
+          </div>
           <div class="timeline" id="timeline"></div>
           <div class="names-col" id="namesCol"></div>
           <div class="tracks" id="tracks"></div>
@@ -825,15 +1135,39 @@
               </article>
             </summary>
             <div class="student-requests">
-              <article class="request-card">
-                <h4 class="request-title">Алгебра</h4>
-                <p class="request-meta">Раз в неделю: 1</p>
-                <p class="request-meta">Формат: одинарный урок</p>
+              <article class="request-card" data-request-id="shoshana-algebra" data-teacher-index="0" data-days="0,2,4" data-time-start="14:00" data-time-end="19:00" data-duration-minutes="60">
+                <div class="request-head">
+                  <div class="request-title-row">
+                    <h4 class="request-title">Алгебра</h4>
+                    <span class="request-goal">82→100</span>
+                  </div>
+                  <p class="request-teacher">
+                    <span class="request-teacher-avatar" aria-hidden="true">ЕС</span>
+                    Елена Викторовна Соколова
+                  </p>
+                </div>
+                <p class="request-summary">Одиночный, 1 раз в неделю</p>
+                <div class="request-actions">
+                  <button class="request-link" type="button" data-action="show-slots">Показать желаемое время</button>
+                  <button class="request-link" type="button" data-action="notes">Примечания</button>
+                </div>
+                <div class="request-notes">Удобно после 15:00, лучше в понедельник или среду. До 14:00 занята секциями.</div>
               </article>
-              <article class="request-card">
-                <h4 class="request-title">Физика</h4>
-                <p class="request-meta">Раз в неделю: 2</p>
-                <p class="request-meta">Формат: двойной урок</p>
+              <article class="request-card" data-request-id="shoshana-physics" data-teacher-index="1" data-days="1,3" data-time-start="13:00" data-time-end="18:30" data-duration-minutes="120">
+                <div class="request-head">
+                  <div class="request-title-row">
+                    <h4 class="request-title">Физика</h4>
+                    <span class="request-goal">76→100</span>
+                  </div>
+                  <p class="request-teacher">
+                    <span class="request-teacher-avatar" aria-hidden="true">МП</span>
+                    Михаил Андреевич Петров
+                  </p>
+                </div>
+                <p class="request-summary">Двойной, 2 раза в неделю</p>
+                <div class="request-actions">
+                  <button class="request-link" type="button" data-action="show-slots">Показать желаемое время</button>
+                </div>
               </article>
             </div>
           </details>
@@ -857,10 +1191,23 @@
               </article>
             </summary>
             <div class="student-requests">
-              <article class="request-card">
-                <h4 class="request-title">Английский</h4>
-                <p class="request-meta">Раз в неделю: 1</p>
-                <p class="request-meta">Формат: одинарный урок</p>
+              <article class="request-card" data-request-id="rut-english" data-teacher-index="4" data-days="1,3,6" data-time-start="10:00" data-time-end="16:30" data-duration-minutes="60">
+                <div class="request-head">
+                  <div class="request-title-row">
+                    <h4 class="request-title">Английский</h4>
+                    <span class="request-goal">79→100</span>
+                  </div>
+                  <p class="request-teacher">
+                    <span class="request-teacher-avatar" aria-hidden="true">ОН</span>
+                    Ольга Павловна Никитина
+                  </p>
+                </div>
+                <p class="request-summary">Одиночный, 1 раз в неделю</p>
+                <div class="request-actions">
+                  <button class="request-link" type="button" data-action="show-slots">Показать желаемое время</button>
+                  <button class="request-link" type="button" data-action="notes">Примечания</button>
+                </div>
+                <div class="request-notes">Желательно в первой половине дня в будни, кроме пятницы.</div>
               </article>
             </div>
           </details>
@@ -881,6 +1228,15 @@
           </article>
         </div>
       </aside>
+    </div>
+  </div>
+  <button id="returnViewBtn" class="return-view-btn" type="button" hidden>Вернуться к прежнему виду</button>
+  <div id="subjectPickerBackdrop" class="subject-picker-backdrop" hidden>
+    <div class="subject-picker" role="dialog" aria-modal="true" aria-labelledby="subjectPickerTitle">
+      <h3 id="subjectPickerTitle" class="subject-picker-title">Выберите предмет для слота</h3>
+      <div id="subjectPickerGroups"></div>
+      <button id="subjectPickerAssign" class="subject-picker-assign" type="button" disabled>Назначить урок</button>
+      <button id="subjectPickerCancel" class="subject-picker-cancel" type="button">Отмена</button>
     </div>
   </div>
 
@@ -967,6 +1323,8 @@
 
     let mode = "day";
     let anchorDate = startOfDay(new Date());
+    let teacherSortMode = "busy-first";
+    let customTeacherOrder = teachers.map((_, idx) => idx);
 
     /** Неделя: «стандарт» — фиксированная ширина часа; «в экран» — подгонка под ширину без меток часов */
     let weekZoomMode = "default";
@@ -985,8 +1343,20 @@
     const dateTitle = document.getElementById("dateTitle");
     const weekZoomBar = document.getElementById("weekZoomBar");
     const weekZoomFitSwitch = document.getElementById("weekZoomFitSwitch");
+    const teacherSort = document.getElementById("teacherSort");
+    const returnViewBtn = document.getElementById("returnViewBtn");
+    const subjectPickerBackdrop = document.getElementById("subjectPickerBackdrop");
+    const subjectPickerGroups = document.getElementById("subjectPickerGroups");
+    const subjectPickerAssign = document.getElementById("subjectPickerAssign");
+    const subjectPickerCancel = document.getElementById("subjectPickerCancel");
+    const studentsSidebarList = document.querySelector(".students-sidebar-list");
     const lessonStudentsByKey = new Map();
+    const lessonSubjectByKey = new Map();
     const DRAG_STUDENT_MIME = "application/x-student";
+    let activeRequestId = null;
+    let returnViewState = null;
+    let subjectPickerResolver = null;
+    let subjectPickerValue = "";
 
     function startOfDay(d) {
       const x = new Date(d);
@@ -1042,9 +1412,11 @@
       return `${h} ч ${m} мин`;
     }
 
-    function buildTeacherNameEl(displayName, hoursLabel) {
+    function buildTeacherNameEl(displayName, hoursLabel, teacherIndex) {
       const wrap = document.createElement("div");
       wrap.className = "teacher-name";
+      wrap.draggable = true;
+      wrap.dataset.teacherIndex = String(teacherIndex);
       const main = document.createElement("span");
       main.className = "teacher-name-main";
       main.textContent = displayName;
@@ -1054,6 +1426,90 @@
       wrap.appendChild(main);
       wrap.appendChild(sub);
       return wrap;
+    }
+
+    function ensureCustomTeacherOrder() {
+      if (customTeacherOrder.length !== teachers.length) {
+        const known = new Set(customTeacherOrder);
+        const missing = teachers.map((_, idx) => idx).filter((idx) => !known.has(idx));
+        customTeacherOrder = [...customTeacherOrder.filter((idx) => idx >= 0 && idx < teachers.length), ...missing];
+      }
+    }
+
+    function getTeacherOrder(dayIdx = null) {
+      ensureCustomTeacherOrder();
+      const stats = teachers.map((name, teacherIndex) => {
+        const teacherLessons = dayIdx === null
+          ? lessons.filter((L) => L.teacher === teacherIndex)
+          : lessons.filter((L) => L.teacher === teacherIndex && L.day === dayIdx);
+        return {
+          name,
+          teacherIndex,
+          teacherLessons,
+          totalMinutes: totalMinutesForLessons(teacherLessons)
+        };
+      });
+
+      if (teacherSortMode === "custom") {
+        const rank = new Map(customTeacherOrder.map((teacherIndex, pos) => [teacherIndex, pos]));
+        stats.sort((a, b) => (rank.get(a.teacherIndex) ?? 0) - (rank.get(b.teacherIndex) ?? 0));
+        return stats;
+      }
+
+      const direction = teacherSortMode === "busy-first" ? -1 : 1;
+      stats.sort((a, b) => {
+        if (a.totalMinutes !== b.totalMinutes) {
+          return (a.totalMinutes - b.totalMinutes) * direction;
+        }
+        return a.teacherIndex - b.teacherIndex;
+      });
+      return stats;
+    }
+
+    function moveTeacherInCustomOrder(sourceTeacherIndex, targetTeacherIndex) {
+      if (sourceTeacherIndex === targetTeacherIndex) return;
+      ensureCustomTeacherOrder();
+      const sourcePos = customTeacherOrder.indexOf(sourceTeacherIndex);
+      const targetPos = customTeacherOrder.indexOf(targetTeacherIndex);
+      if (sourcePos < 0 || targetPos < 0) return;
+      customTeacherOrder.splice(sourcePos, 1);
+      const nextTargetPos = customTeacherOrder.indexOf(targetTeacherIndex);
+      customTeacherOrder.splice(nextTargetPos, 0, sourceTeacherIndex);
+    }
+
+    function attachTeacherRowDropHandlers(el) {
+      el.addEventListener("dragstart", (event) => {
+        if (teacherSortMode !== "custom") {
+          event.preventDefault();
+          return;
+        }
+        const teacherIndex = Number(el.dataset.teacherIndex);
+        if (!event.dataTransfer || Number.isNaN(teacherIndex)) return;
+        event.dataTransfer.setData("text/plain", String(teacherIndex));
+        event.dataTransfer.effectAllowed = "move";
+      });
+
+      el.addEventListener("dragover", (event) => {
+        if (teacherSortMode !== "custom") return;
+        event.preventDefault();
+        el.classList.add("drag-over");
+      });
+
+      el.addEventListener("dragleave", () => {
+        el.classList.remove("drag-over");
+      });
+
+      el.addEventListener("drop", (event) => {
+        el.classList.remove("drag-over");
+        if (teacherSortMode !== "custom") return;
+        event.preventDefault();
+        const raw = event.dataTransfer ? event.dataTransfer.getData("text/plain") : "";
+        const sourceTeacherIndex = Number(raw);
+        const targetTeacherIndex = Number(el.dataset.teacherIndex);
+        if (Number.isNaN(sourceTeacherIndex) || Number.isNaN(targetTeacherIndex)) return;
+        moveTeacherInCustomOrder(sourceTeacherIndex, targetTeacherIndex);
+        render();
+      });
     }
 
     function updateWeekZoomUi() {
@@ -1067,15 +1523,174 @@
       return `${L.teacher}|${L.day}|${L.start}|${L.end}|${L.title}|${L.place}`;
     }
 
+    function isLessonOccupied(lessonKey) {
+      let hash = 0;
+      for (let i = 0; i < lessonKey.length; i += 1) {
+        hash = (hash + lessonKey.charCodeAt(i) * (i + 1)) % 9973;
+      }
+      return hash % 3 !== 0;
+    }
+
     function getStudentsForLesson(lessonKey) {
       return lessonStudentsByKey.get(lessonKey) || [];
     }
 
     function setLessonCardContent(el, titleText, metaText, lessonKey) {
       const assigned = getStudentsForLesson(lessonKey);
-      const studentsText = assigned.length > 0 ? `Ученики: ${assigned.join(", ")}` : "Ученики: —";
-      el.innerHTML = `<div class="lesson-title">${escapeHtml(titleText)}</div><div class="lesson-meta">${escapeHtml(metaText)}</div><div class="lesson-students">${escapeHtml(studentsText)}</div>`;
+      const studentsText = `👤 ${assigned.length} / 15`;
+      const hasSubject = el.dataset.hasSubject === "1";
+      const titleHtml = hasSubject ? `<div class="lesson-title">${escapeHtml(titleText)}</div>` : "";
+      el.innerHTML = `${titleHtml}<div class="lesson-meta">${escapeHtml(metaText)}</div><div class="lesson-students">${escapeHtml(studentsText)}</div>`;
     }
+
+    function getStudentRequestSubjects(studentName) {
+      if (!studentName) {
+        return [];
+      }
+      const studentCards = Array.from(document.querySelectorAll(".student-request-item"));
+      for (const item of studentCards) {
+        const nameEl = item.querySelector(".student-card .student-name");
+        if (!nameEl || (nameEl.textContent || "").trim() !== studentName) {
+          continue;
+        }
+        return Array.from(item.querySelectorAll(".request-title"))
+          .map((el) => (el.textContent || "").trim())
+          .filter(Boolean);
+      }
+      return [];
+    }
+
+    function uniqueSubjects(list) {
+      return Array.from(new Set(list.filter(Boolean)));
+    }
+
+    function normalizeText(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function getTeacherSubjects(teacherIndex) {
+      return uniqueSubjects(
+        lessons.filter((L) => L.teacher === teacherIndex).map((L) => L.title)
+      );
+    }
+
+    function closeMatchingStudentRequest(studentName, subjectName, teacherIndex) {
+      if (!studentName || !subjectName || !Number.isInteger(teacherIndex)) {
+        return;
+      }
+      const wantedStudent = normalizeText(studentName);
+      const wantedSubject = normalizeText(subjectName);
+      const wantedTeacher = normalizeText(teachers[teacherIndex] || "");
+      const requestItems = Array.from(document.querySelectorAll(".student-request-item"));
+      const item = requestItems.find((node) => {
+        const nameEl = node.querySelector(".student-card .student-name");
+        return normalizeText(nameEl ? nameEl.textContent : "") === wantedStudent;
+      });
+      if (!item) {
+        return;
+      }
+
+      const cards = Array.from(item.querySelectorAll(".request-card"));
+      const match = cards.find((card) => {
+        const titleEl = card.querySelector(".request-title");
+        const teacherEl = card.querySelector(".request-teacher");
+        const cardSubject = normalizeText(titleEl ? titleEl.textContent : "");
+        const cardTeacher = normalizeText(teacherEl ? teacherEl.textContent : "");
+        return cardSubject === wantedSubject && cardTeacher.includes(wantedTeacher);
+      });
+      if (!match) {
+        return;
+      }
+
+      const removedRequestId = match.dataset.requestId || "";
+      match.remove();
+
+      const countEl = item.querySelector(".student-request-count");
+      if (countEl) {
+        const remaining = item.querySelectorAll(".request-card").length;
+        countEl.textContent = String(remaining);
+      }
+
+      if (removedRequestId && activeRequestId === removedRequestId) {
+        clearScheduleHighlights();
+      }
+    }
+
+    function closeSubjectPicker(selectedSubject = null) {
+      subjectPickerBackdrop.hidden = true;
+      subjectPickerGroups.innerHTML = "";
+      subjectPickerValue = "";
+      subjectPickerAssign.disabled = true;
+      if (subjectPickerResolver) {
+        const resolve = subjectPickerResolver;
+        subjectPickerResolver = null;
+        resolve(selectedSubject);
+      }
+    }
+
+    function showSubjectPicker(primarySubjects, secondarySubjects) {
+      return new Promise((resolve) => {
+        subjectPickerResolver = resolve;
+        subjectPickerValue = "";
+        subjectPickerAssign.disabled = true;
+        subjectPickerGroups.innerHTML = "";
+
+        const buildGroup = (title, items, withTitle = true) => {
+          if (items.length === 0) {
+            return;
+          }
+          const group = document.createElement("section");
+          group.className = "subject-picker-group";
+          if (withTitle) {
+            const groupTitle = document.createElement("p");
+            groupTitle.className = "subject-picker-group-title";
+            groupTitle.textContent = title;
+            group.appendChild(groupTitle);
+          }
+          items.forEach((subject) => {
+            const option = document.createElement("label");
+            option.className = "subject-picker-option";
+            const radio = document.createElement("input");
+            radio.type = "radio";
+            radio.name = "subject-picker-choice";
+            radio.value = subject;
+            radio.addEventListener("change", () => {
+              subjectPickerValue = subject;
+              subjectPickerAssign.disabled = false;
+            });
+            const text = document.createElement("span");
+            text.className = "subject-picker-option-text";
+            text.textContent = subject;
+            option.appendChild(radio);
+            option.appendChild(text);
+            group.appendChild(option);
+          });
+          subjectPickerGroups.appendChild(group);
+        };
+
+        const hasPrimary = primarySubjects.length > 0;
+        buildGroup("Из заявок ученика", primarySubjects, true);
+        buildGroup("Другие предметы преподавателя", secondarySubjects, hasPrimary);
+
+        subjectPickerBackdrop.hidden = false;
+      });
+    }
+
+    subjectPickerCancel.addEventListener("click", () => closeSubjectPicker(null));
+    subjectPickerAssign.addEventListener("click", () => {
+      if (!subjectPickerValue) {
+        return;
+      }
+      closeSubjectPicker(subjectPickerValue);
+    });
+    subjectPickerBackdrop.addEventListener("click", (event) => {
+      if (event.target === subjectPickerBackdrop) {
+        closeSubjectPicker(null);
+      }
+    });
 
     function attachLessonDropHandlers(el, lessonKey, titleText, metaText) {
       el.addEventListener("dragover", (event) => {
@@ -1087,7 +1702,7 @@
         el.classList.remove("drop-hover");
       });
 
-      el.addEventListener("drop", (event) => {
+      el.addEventListener("drop", async (event) => {
         event.preventDefault();
         el.classList.remove("drop-hover");
         const raw = event.dataTransfer ? event.dataTransfer.getData(DRAG_STUDENT_MIME) : "";
@@ -1100,11 +1715,253 @@
         }
         const name = payload && typeof payload.name === "string" ? payload.name.trim() : "";
         if (!name) return;
+        const teacherIndex = Number(el.dataset.teacherIndex);
+        const hasSubject = el.dataset.hasSubject === "1";
+        if (!hasSubject && Number.isInteger(teacherIndex)) {
+          const studentRequested = uniqueSubjects(getStudentRequestSubjects(name));
+          const teacherSubjects = getTeacherSubjects(teacherIndex);
+          const primarySubjects = teacherSubjects.filter((subject) => studentRequested.includes(subject));
+          const secondarySubjects = teacherSubjects.filter((subject) => !primarySubjects.includes(subject));
+          const pickedSubject = await showSubjectPicker(primarySubjects, secondarySubjects);
+          if (!pickedSubject) {
+            return;
+          }
+          lessonSubjectByKey.set(lessonKey, pickedSubject);
+          el.dataset.hasSubject = "1";
+          el.classList.remove("empty-slot");
+          el.classList.add(`b${(teacherIndex % 4) + 1}`);
+          titleText = pickedSubject;
+        }
         const list = getStudentsForLesson(lessonKey);
         if (!list.includes(name)) {
           lessonStudentsByKey.set(lessonKey, [...list, name]);
         }
+        if (lessonSubjectByKey.has(lessonKey)) {
+          titleText = lessonSubjectByKey.get(lessonKey);
+        }
         setLessonCardContent(el, titleText, metaText, lessonKey);
+        closeMatchingStudentRequest(name, titleText, teacherIndex);
+      });
+    }
+
+    function clearScheduleHighlights() {
+      document.querySelectorAll(".request-slot-highlight").forEach((el) => el.remove());
+      document.querySelectorAll('.request-link[data-action="show-slots"]').forEach((btn) => {
+        btn.classList.remove("active");
+      });
+      activeRequestId = null;
+      applyRequestFocusState();
+      returnViewState = null;
+      returnViewBtn.hidden = true;
+    }
+
+    function getRequestData(card) {
+      const teacherIndex = Number(card.dataset.teacherIndex);
+      const days = (card.dataset.days || "")
+        .split(",")
+        .map((x) => Number(x.trim()))
+        .filter((x) => Number.isInteger(x) && x >= 0 && x <= 6);
+      const startMinutes = parseTime(card.dataset.timeStart || "08:00");
+      const endMinutes = parseTime(card.dataset.timeEnd || "20:00");
+      const durationMinutes = Number(card.dataset.durationMinutes || "60");
+      return {
+        requestId: card.dataset.requestId || "",
+        teacherIndex,
+        days,
+        startMinutes,
+        endMinutes,
+        durationMinutes: Math.max(30, durationMinutes)
+      };
+    }
+
+    function getFreeIntervalsForTeacherDay(teacherIndex, dayIndex, windowStart, windowEnd) {
+      const dayLessons = lessons
+        .filter((L) => L.teacher === teacherIndex && L.day === dayIndex)
+        .map((L) => [parseTime(L.start), parseTime(L.end)])
+        .sort((a, b) => a[0] - b[0]);
+
+      const free = [];
+      let cursor = windowStart;
+      dayLessons.forEach(([busyStart, busyEnd]) => {
+        if (busyEnd <= cursor || busyStart >= windowEnd) {
+          return;
+        }
+        if (busyStart > cursor) {
+          free.push([cursor, Math.min(busyStart, windowEnd)]);
+        }
+        cursor = Math.max(cursor, busyEnd);
+      });
+      if (cursor < windowEnd) {
+        free.push([cursor, windowEnd]);
+      }
+      return free;
+    }
+
+    function minutesToLabel(minutes) {
+      const hh = Math.floor(minutes / 60);
+      const mm = minutes % 60;
+      return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+    }
+
+    function applyRequestFocusState() {
+      document.querySelectorAll(".teacher-name.is-request-focus-teacher").forEach((el) => {
+        el.classList.remove("is-request-focus-teacher");
+      });
+      document.querySelectorAll(".track.is-request-focus-teacher").forEach((el) => {
+        el.classList.remove("is-request-focus-teacher");
+      });
+      board.classList.remove("request-focus-active");
+
+      if (!activeRequestId) {
+        return;
+      }
+      const card = document.querySelector(`.request-card[data-request-id="${activeRequestId}"]`);
+      if (!card) {
+        return;
+      }
+      const teacherIndex = Number(card.dataset.teacherIndex);
+      if (Number.isNaN(teacherIndex)) {
+        return;
+      }
+      const teacherName = namesCol.querySelector(`.teacher-name[data-teacher-index="${teacherIndex}"]`);
+      const teacherTrack = tracks.querySelector(`.track[data-teacher-index="${teacherIndex}"]`);
+      if (teacherName) {
+        teacherName.classList.add("is-request-focus-teacher");
+      }
+      if (teacherTrack) {
+        teacherTrack.classList.add("is-request-focus-teacher");
+      }
+      board.classList.add("request-focus-active");
+    }
+
+    function setRequestHighlights(card, button) {
+      const request = getRequestData(card);
+      if (Number.isNaN(request.teacherIndex)) {
+        return;
+      }
+
+      document.querySelectorAll(".request-slot-highlight").forEach((el) => el.remove());
+      document.querySelectorAll('.request-link[data-action="show-slots"]').forEach((btn) => {
+        btn.classList.remove("active");
+      });
+
+      const dayIndex = isoDayIndex(anchorDate);
+      const relevantDays = mode === "day"
+        ? request.days.filter((d) => d === dayIndex)
+        : request.days;
+
+      if (relevantDays.length === 0) {
+        activeRequestId = request.requestId;
+        button.classList.add("active");
+        return;
+      }
+
+      const totalWeekMinutes = 7 * MINUTES_PER_DAY;
+      const reqStart = Math.max(request.startMinutes, START_HOUR * 60);
+      const reqEnd = Math.min(request.endMinutes, END_HOUR * 60);
+
+      relevantDays.forEach((reqDay) => {
+        const freeIntervals = getFreeIntervalsForTeacherDay(request.teacherIndex, reqDay, reqStart, reqEnd);
+        const track = tracks.querySelector(`.track[data-teacher-index="${request.teacherIndex}"]`);
+        if (!track) {
+          return;
+        }
+        freeIntervals.forEach(([freeStart, freeEnd]) => {
+          if (freeEnd - freeStart < request.durationMinutes) {
+            return;
+          }
+          const segment = document.createElement("div");
+          segment.className = "request-slot-highlight";
+          const tooltipText = `${minutesToLabel(freeStart)} — ${minutesToLabel(freeEnd)}`;
+          segment.dataset.tooltip = tooltipText;
+          if (mode === "day") {
+            const leftPct = ((freeStart - START_HOUR * 60) / MINUTES_PER_DAY) * 100;
+            const widthPct = ((freeEnd - freeStart) / MINUTES_PER_DAY) * 100;
+            segment.style.left = `${leftPct}%`;
+            segment.style.width = `${widthPct}%`;
+          } else {
+            const startFromWeek = reqDay * MINUTES_PER_DAY + (freeStart - START_HOUR * 60);
+            const endFromWeek = reqDay * MINUTES_PER_DAY + (freeEnd - START_HOUR * 60);
+            const leftPct = (startFromWeek / totalWeekMinutes) * 100;
+            const widthPct = ((endFromWeek - startFromWeek) / totalWeekMinutes) * 100;
+            segment.style.left = `${leftPct}%`;
+            segment.style.width = `${widthPct}%`;
+          }
+          track.appendChild(segment);
+        });
+      });
+
+      activeRequestId = request.requestId;
+      button.classList.add("active");
+      applyRequestFocusState();
+    }
+
+    function restoreRequestHighlights() {
+      if (!activeRequestId) {
+        return;
+      }
+      const card = document.querySelector(`.request-card[data-request-id="${activeRequestId}"]`);
+      const button = card ? card.querySelector('.request-link[data-action="show-slots"]') : null;
+      if (!card || !button) {
+        activeRequestId = null;
+        applyRequestFocusState();
+        return;
+      }
+      setRequestHighlights(card, button);
+    }
+
+    function initRequestCardActions() {
+      if (!studentsSidebarList || studentsSidebarList.dataset.requestActionsReady === "1") {
+        return;
+      }
+      studentsSidebarList.dataset.requestActionsReady = "1";
+      studentsSidebarList.addEventListener("click", (event) => {
+        const target = event.target instanceof HTMLElement ? event.target : null;
+        if (!target) {
+          return;
+        }
+        const button = target.closest(".request-link");
+        if (!button) {
+          return;
+        }
+        const card = button.closest(".request-card");
+        if (!card) {
+          return;
+        }
+        const action = button.dataset.action;
+        if (action === "notes") {
+          card.classList.toggle("notes-open");
+          button.classList.toggle("active", card.classList.contains("notes-open"));
+          return;
+        }
+        if (action === "show-slots") {
+          if (button.classList.contains("active")) {
+            clearScheduleHighlights();
+            return;
+          }
+          if (mode === "day") {
+            returnViewState = {
+              mode,
+              weekZoomMode,
+              anchorDate: new Date(anchorDate)
+            };
+            returnViewBtn.hidden = false;
+            activeRequestId = card.dataset.requestId || null;
+            mode = "week";
+            weekZoomMode = "fit";
+            weekZoomFitSwitch.checked = true;
+            render();
+            return;
+          }
+          if (mode === "week" && weekZoomMode !== "fit") {
+            activeRequestId = card.dataset.requestId || null;
+            weekZoomMode = "fit";
+            weekZoomFitSwitch.checked = true;
+            render();
+            return;
+          }
+          setRequestHighlights(card, button);
+        }
       });
     }
 
@@ -1163,19 +2020,27 @@
         namesCol.innerHTML = "";
         tracks.innerHTML = "";
         const dayIdx = isoDayIndex(d);
-
-        teachers.forEach((name, ti) => {
-          const dayLessons = lessons.filter((L) => L.teacher === ti && L.day === dayIdx);
+        const teachersOrdered = getTeacherOrder();
+        teachersOrdered.forEach(({ name, teacherIndex, teacherLessons, totalMinutes }) => {
+          const dayLessons = teacherLessons.filter((L) => L.day === dayIdx);
           const dayMin = totalMinutesForLessons(dayLessons);
           const hoursLabel = `За день: ${formatHoursSubtitle(dayMin)}`;
-          namesCol.appendChild(buildTeacherNameEl(name, hoursLabel));
+          const nameEl = buildTeacherNameEl(name, hoursLabel, teacherIndex);
+          attachTeacherRowDropHandlers(nameEl);
+          namesCol.appendChild(nameEl);
 
           const track = document.createElement("div");
           track.className = "track";
+          track.dataset.teacherIndex = String(teacherIndex);
           dayLessons.forEach((L, li) => {
             const el = document.createElement("div");
-            el.className = `lesson-card b${(ti % 4) + 1}`;
             const lessonKey = buildLessonKey(L);
+            const occupied = isLessonOccupied(lessonKey);
+            const selectedSubject = lessonSubjectByKey.get(lessonKey);
+            const hasSubject = occupied || Boolean(selectedSubject);
+            el.className = hasSubject ? `lesson-card b${(teacherIndex % 4) + 1}` : "lesson-card empty-slot";
+            el.dataset.hasSubject = hasSubject ? "1" : "0";
+            el.dataset.teacherIndex = String(teacherIndex);
             const startM = minutesFromScheduleStart(L.start);
             const endM = minutesFromScheduleStart(L.end);
             const leftPct = (startM / MINUTES_PER_DAY) * 100;
@@ -1184,12 +2049,14 @@
             el.style.width = `${widthPct}%`;
             el.style.setProperty("--slot-pct", String(widthPct));
             const metaText = `${L.start}–${L.end} · ${L.place}`;
-            setLessonCardContent(el, L.title, metaText, lessonKey);
-            attachLessonDropHandlers(el, lessonKey, L.title, metaText);
+            const displayTitle = selectedSubject || L.title;
+            setLessonCardContent(el, displayTitle, metaText, lessonKey);
+            attachLessonDropHandlers(el, lessonKey, displayTitle, metaText);
             track.appendChild(el);
           });
           tracks.appendChild(track);
         });
+        restoreRequestHighlights();
         return;
       }
 
@@ -1253,18 +2120,27 @@
 
       const totalMin = 7 * MINUTES_PER_DAY;
 
-      teachers.forEach((name, ti) => {
-        const list = lessons.filter((L) => L.teacher === ti);
-        const weekMin = totalMinutesForLessons(list);
+      const teachersOrdered = getTeacherOrder();
+      teachersOrdered.forEach(({ name, teacherIndex, teacherLessons, totalMinutes }) => {
+        const list = teacherLessons;
+        const weekMin = totalMinutes;
         const hoursLabel = `За неделю: ${formatHoursSubtitle(weekMin)}`;
-        namesCol.appendChild(buildTeacherNameEl(name, hoursLabel));
+        const nameEl = buildTeacherNameEl(name, hoursLabel, teacherIndex);
+        attachTeacherRowDropHandlers(nameEl);
+        namesCol.appendChild(nameEl);
 
         const track = document.createElement("div");
         track.className = "track";
+        track.dataset.teacherIndex = String(teacherIndex);
         list.forEach((L) => {
           const el = document.createElement("div");
-          el.className = `lesson-card b${(ti % 4) + 1}`;
           const lessonKey = buildLessonKey(L);
+          const occupied = isLessonOccupied(lessonKey);
+          const selectedSubject = lessonSubjectByKey.get(lessonKey);
+          const hasSubject = occupied || Boolean(selectedSubject);
+          el.className = hasSubject ? `lesson-card b${(teacherIndex % 4) + 1}` : "lesson-card empty-slot";
+          el.dataset.hasSubject = hasSubject ? "1" : "0";
+          el.dataset.teacherIndex = String(teacherIndex);
           const startM = L.day * MINUTES_PER_DAY + minutesFromScheduleStart(L.start);
           const endM = L.day * MINUTES_PER_DAY + minutesFromScheduleStart(L.end);
           const leftPct = (startM / totalMin) * 100;
@@ -1273,12 +2149,14 @@
           el.style.width = `${widthPct}%`;
           el.style.setProperty("--slot-pct", String(widthPct));
           const metaText = `${WEEK_DAYS_SHORT[L.day]} ${L.start}–${L.end} · ${L.place}`;
-          setLessonCardContent(el, L.title, metaText, lessonKey);
-          attachLessonDropHandlers(el, lessonKey, L.title, metaText);
+          const displayTitle = selectedSubject || L.title;
+          setLessonCardContent(el, displayTitle, metaText, lessonKey);
+          attachLessonDropHandlers(el, lessonKey, displayTitle, metaText);
           track.appendChild(el);
         });
         tracks.appendChild(track);
       });
+      restoreRequestHighlights();
     }
 
     function escapeHtml(s) {
@@ -1301,6 +2179,11 @@
 
     weekZoomFitSwitch.addEventListener("change", () => {
       weekZoomMode = weekZoomFitSwitch.checked ? "fit" : "default";
+      render();
+    });
+
+    teacherSort.addEventListener("change", () => {
+      teacherSortMode = teacherSort.value === "free-first" ? "free-first" : "busy-first";
       render();
     });
 
@@ -1331,7 +2214,21 @@
       render();
     });
 
+    returnViewBtn.addEventListener("click", () => {
+      if (!returnViewState) {
+        returnViewBtn.hidden = true;
+        return;
+      }
+      mode = returnViewState.mode;
+      weekZoomMode = returnViewState.weekZoomMode;
+      anchorDate = new Date(returnViewState.anchorDate);
+      returnViewState = null;
+      clearScheduleHighlights();
+      render();
+    });
+
     initStudentDragSources();
+    initRequestCardActions();
     render();
   </script>
 </body>
