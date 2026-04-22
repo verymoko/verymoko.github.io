@@ -74,6 +74,14 @@
       margin-left: auto;
     }
 
+    .toolbar-date-block {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 0 1 auto;
+    }
+
     .view-switch {
       display: inline-flex;
       background: #eef1f9;
@@ -119,16 +127,15 @@
     }
 
     /*
-      Фиксированная зона под дату: хватает на диапазон вроде «30 сентября — 5 октября 2026»
-      (длинные названия месяцев в родительном падеже), чтобы блок ←Сегодня→ не прыгал.
+      Узкий блок под дату; длинные строки обрезаются (ellipsis), навигация рядом.
     */
     .date-title {
       margin: 0;
       font-size: 1.25rem;
       font-weight: 700;
       line-height: 1.25;
-      flex: 0 0 36ch;
-      width: 36ch;
+      flex: 0 0 18ch;
+      width: 18ch;
       max-width: 100%;
       text-align: start;
       white-space: nowrap;
@@ -143,6 +150,8 @@
       overflow-x: auto;
       overflow-y: auto;
       padding: 0 0 16px;
+      display: flex;
+      flex-direction: column;
     }
 
     .students-sidebar {
@@ -431,6 +440,9 @@
       grid-template-rows: var(--header-h) 1fr;
       width: max-content;
       min-width: 100%;
+      flex: 1 1 auto;
+      min-height: 0;
+      align-self: stretch;
     }
 
     /* Режим «День»: временная шкала и дорожки на всю ширину окна */
@@ -471,6 +483,52 @@
       min-height: 100%;
     }
 
+    .board.day.day-zoom-fit .timeline {
+      height: 100%;
+      min-height: 0;
+    }
+
+    .board.day.day-zoom-fit .timeline-day-mode {
+      min-height: 100%;
+    }
+
+    .board.day.day-zoom-fit .hour-cell {
+      height: auto;
+      flex: 1 1 0;
+      min-height: 0;
+      flex-shrink: 1;
+    }
+
+    .board.day.day-zoom-fit .track {
+      height: 100%;
+      min-height: 100%;
+    }
+
+    .board.day.day-zoom-fit .teacher-name,
+    .board.day.day-zoom-fit .track {
+      flex: 1 1 0;
+      min-width: 48px;
+      width: auto;
+      max-width: none;
+      margin-right: -36px;
+      flex-shrink: 1;
+    }
+
+    .board.day.day-zoom-fit .teacher-name:last-child,
+    .board.day.day-zoom-fit .track:last-child {
+      margin-right: 0;
+    }
+
+    .board.day.day-zoom-fit .teacher-name {
+      background: var(--card);
+    }
+
+    .board.day.day-zoom-fit .names-col,
+    .board.day.day-zoom-fit .tracks {
+      width: 100%;
+      min-width: 0;
+    }
+
     /*
       Неделя «Вся сетка в экран»: вторая колонка тянется на всю ширину (без щели от floor(px)).
       Сетка часов и дней — в долях 100%, не фиксированный --hour-w.
@@ -486,7 +544,7 @@
       min-width: 0;
     }
 
-    .board.week.week-zoom-fit .week-day-names span {
+    .board.week.week-zoom-fit .week-day-cell {
       flex: 1 1 0;
       min-width: 0;
       width: auto;
@@ -497,14 +555,48 @@
       height: 100%;
     }
 
-    .board.week.week-zoom-fit .hour-cell {
-      height: calc(100% / (var(--hours) * var(--day-span)));
+    /* В «уместить в экран» подписи часов нечитаемы — скрываем, остаётся только колонка дней */
+    .board.week.week-zoom-fit .hour-row {
+      display: none;
+    }
+
+    .board.week.week-zoom-fit .timeline-week-mode {
+      grid-template-columns: 1fr;
+    }
+
+    /* Колонки преподавателей: сжатие + лёгкое наложение, чтобы уместить больше имён */
+    .board.week.week-zoom-fit .teacher-name,
+    .board.week.week-zoom-fit .track {
+      flex: 1 1 0;
+      min-width: 48px;
+      width: auto;
+      max-width: none;
+      margin-right: -36px;
+      flex-shrink: 1;
+    }
+
+    .board.week.week-zoom-fit .teacher-name:last-child,
+    .board.week.week-zoom-fit .track:last-child {
+      margin-right: 0;
+    }
+
+    .board.week.week-zoom-fit .teacher-name {
+      background: var(--card);
     }
 
     .board.week.week-zoom-fit .tracks {
       width: 100%;
       min-width: 0;
       height: 100%;
+    }
+
+    .board.week.week-zoom-fit .timeline {
+      height: 100%;
+      min-height: 0;
+    }
+
+    .board.week.week-zoom-fit .timeline-week-mode {
+      min-height: 100%;
     }
 
     /* Неделя «в экран»: равномерная почасовая сетка + отдельно усиленные линии только между днями */
@@ -626,7 +718,7 @@
       background: #fff;
     }
 
-    .week-day-names span {
+    .week-day-cell {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -642,6 +734,7 @@
       font-size: 12px;
       line-height: 1.1;
       text-transform: lowercase;
+      flex-shrink: 0;
     }
 
     .week-day-date {
@@ -649,6 +742,7 @@
       line-height: 1.1;
       font-weight: 700;
       margin-top: 2px;
+      flex-shrink: 0;
     }
 
     .hour-row {
@@ -864,7 +958,8 @@
       color: #4a5568;
     }
 
-    .board.week.week-zoom-fit.request-focus-active .lesson-card {
+    .board.week.week-zoom-fit.request-focus-active .lesson-card,
+    .board.day.day-zoom-fit.request-focus-active .lesson-card {
       opacity: 0.38;
       filter: saturate(0.7);
     }
@@ -1127,13 +1222,15 @@
           <button type="button" id="btnDay" class="active">День</button>
           <button type="button" id="btnWeek">Неделя</button>
         </div>
-        <h1 class="date-title" id="dateTitle"></h1>
-        <div class="date-nav">
-          <button type="button" id="btnPrev" aria-label="Назад">←</button>
-          <button type="button" id="btnToday">Сегодня</button>
-          <button type="button" id="btnNext" aria-label="Вперёд">→</button>
+        <div class="toolbar-date-block">
+          <h1 class="date-title" id="dateTitle"></h1>
+          <div class="date-nav">
+            <button type="button" id="btnPrev" aria-label="Назад">←</button>
+            <button type="button" id="btnToday">Сегодня</button>
+            <button type="button" id="btnNext" aria-label="Вперёд">→</button>
+          </div>
         </div>
-        <div class="week-zoom-toolbar" id="weekZoomBar" hidden>
+        <div class="week-zoom-toolbar" id="weekZoomBar">
           <label class="week-fit-switch">
             <span class="week-fit-switch-text">Уместить в экран</span>
             <input type="checkbox" class="week-fit-switch-input" id="weekZoomFitSwitch" />
@@ -1373,6 +1470,8 @@
 
     /** Неделя: «стандарт» — фиксированная ширина часа; «в экран» — подгонка под ширину без меток часов */
     let weekZoomMode = "default";
+    /** День: «в экран» — сетка по вертикали на всю высоту области, равные слоты часа */
+    let dayZoomMode = "default";
     const DEFAULT_WEEK_HOUR_W = 56;
 
     const board = document.getElementById("board");
@@ -1558,10 +1657,12 @@
     }
 
     function updateWeekZoomUi() {
-      const show = mode === "week";
-      weekZoomBar.hidden = !show;
-      const fit = show && weekZoomMode === "fit";
-      weekZoomFitSwitch.checked = fit;
+      weekZoomBar.hidden = false;
+      if (mode === "day") {
+        weekZoomFitSwitch.checked = dayZoomMode === "fit";
+      } else {
+        weekZoomFitSwitch.checked = weekZoomMode === "fit";
+      }
     }
 
     function buildLessonKey(L) {
@@ -1988,6 +2089,7 @@
             returnViewState = {
               mode,
               weekZoomMode,
+              dayZoomMode,
               anchorDate: new Date(anchorDate)
             };
             returnViewBtn.hidden = false;
@@ -2036,6 +2138,7 @@
       board.classList.toggle("week", mode === "week");
       board.classList.toggle("day", mode === "day");
       board.classList.toggle("week-zoom-fit", mode === "week" && weekZoomMode === "fit");
+      board.classList.toggle("day-zoom-fit", mode === "day" && dayZoomMode === "fit");
       btnDay.classList.toggle("active", mode === "day");
       btnWeek.classList.toggle("active", mode === "week");
       updateWeekZoomUi();
@@ -2065,17 +2168,27 @@
         tracks.innerHTML = "";
         const dayIdx = isoDayIndex(d);
         const teachersOrdered = getTeacherOrder();
-        teachersOrdered.forEach(({ name, teacherIndex, teacherLessons, totalMinutes }) => {
+        teachersOrdered.forEach(({ name, teacherIndex, teacherLessons, totalMinutes }, colIndex) => {
           const dayLessons = teacherLessons.filter((L) => L.day === dayIdx);
           const dayMin = totalMinutesForLessons(dayLessons);
           const hoursLabel = `За день: ${formatHoursSubtitle(dayMin)}`;
           const nameEl = buildTeacherNameEl(name, hoursLabel, teacherIndex);
           attachTeacherRowDropHandlers(nameEl);
+          if (dayZoomMode === "fit") {
+            nameEl.style.zIndex = String(colIndex + 1);
+          } else {
+            nameEl.style.removeProperty("z-index");
+          }
           namesCol.appendChild(nameEl);
 
           const track = document.createElement("div");
           track.className = "track";
           track.dataset.teacherIndex = String(teacherIndex);
+          if (dayZoomMode === "fit") {
+            track.style.zIndex = String(colIndex + 1);
+          } else {
+            track.style.removeProperty("z-index");
+          }
           dayLessons.forEach((L, li) => {
             const el = document.createElement("div");
             const lessonKey = buildLessonKey(L);
@@ -2133,13 +2246,21 @@
       for (let i = 0; i < 7; i += 1) {
         const dayDate = new Date(weekStart);
         dayDate.setDate(weekStart.getDate() + i);
-        const span = document.createElement("span");
+        const cell = document.createElement("span");
+        cell.className = "week-day-cell";
         if (weekZoomMode === "default") {
-          span.style.height = dayBandH;
-          span.style.minHeight = dayBandH;
+          cell.style.height = dayBandH;
+          cell.style.minHeight = dayBandH;
         }
-        span.innerHTML = `<span class="week-day-name">${escapeHtml(WEEK_DAYS_SHORT[i])}</span><span class="week-day-date">${dayDate.getDate()}</span>`;
-        namesRow.appendChild(span);
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "week-day-name";
+        nameSpan.textContent = WEEK_DAYS_SHORT[i];
+        const dateSpan = document.createElement("span");
+        dateSpan.className = "week-day-date";
+        dateSpan.textContent = String(dayDate.getDate());
+        cell.appendChild(nameSpan);
+        cell.appendChild(dateSpan);
+        namesRow.appendChild(cell);
       }
       weekRoot.appendChild(namesRow);
 
@@ -2162,17 +2283,23 @@
       const totalMin = 7 * MINUTES_PER_DAY;
 
       const teachersOrdered = getTeacherOrder();
-      teachersOrdered.forEach(({ name, teacherIndex, teacherLessons, totalMinutes }) => {
+      teachersOrdered.forEach(({ name, teacherIndex, teacherLessons, totalMinutes }, colIndex) => {
         const list = teacherLessons;
         const weekMin = totalMinutes;
         const hoursLabel = `За неделю: ${formatHoursSubtitle(weekMin)}`;
         const nameEl = buildTeacherNameEl(name, hoursLabel, teacherIndex);
         attachTeacherRowDropHandlers(nameEl);
+        if (weekZoomMode === "fit") {
+          nameEl.style.zIndex = String(colIndex + 1);
+        }
         namesCol.appendChild(nameEl);
 
         const track = document.createElement("div");
         track.className = "track";
         track.dataset.teacherIndex = String(teacherIndex);
+        if (weekZoomMode === "fit") {
+          track.style.zIndex = String(colIndex + 1);
+        }
         list.forEach((L) => {
           const el = document.createElement("div");
           const lessonKey = buildLessonKey(L);
@@ -2219,7 +2346,11 @@
     });
 
     weekZoomFitSwitch.addEventListener("change", () => {
-      weekZoomMode = weekZoomFitSwitch.checked ? "fit" : "default";
+      if (mode === "day") {
+        dayZoomMode = weekZoomFitSwitch.checked ? "fit" : "default";
+      } else {
+        weekZoomMode = weekZoomFitSwitch.checked ? "fit" : "default";
+      }
       render();
     });
 
@@ -2262,6 +2393,9 @@
       }
       mode = returnViewState.mode;
       weekZoomMode = returnViewState.weekZoomMode;
+      if ("dayZoomMode" in returnViewState) {
+        dayZoomMode = returnViewState.dayZoomMode;
+      }
       anchorDate = new Date(returnViewState.anchorDate);
       returnViewState = null;
       clearScheduleHighlights();
