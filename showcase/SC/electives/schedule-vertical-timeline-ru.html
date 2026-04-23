@@ -436,10 +436,10 @@
       --hours: 12;
       --day-span: 1;
       display: grid;
-      grid-template-columns: var(--time-col-w) max-content;
+      grid-template-columns: var(--time-col-w) minmax(0, 1fr);
       grid-template-rows: var(--header-h) 1fr;
-      width: max-content;
-      min-width: 100%;
+      width: 100%;
+      min-width: max(100%, min-content);
       flex: 1 1 auto;
       min-height: 0;
       align-self: stretch;
@@ -478,8 +478,8 @@
       );
     }
 
-    .board.day .timeline,
-    .board.day .tracks {
+    .board.day .board-rail,
+    .board.day .timeline {
       min-height: 100%;
     }
 
@@ -504,14 +504,17 @@
       min-height: 100%;
     }
 
+    .board.day.day-zoom-fit .board-rail {
+      grid-template-columns: repeat(var(--teacher-cols, 1), minmax(48px, 1fr));
+      width: 100%;
+      min-width: 0;
+    }
+
     .board.day.day-zoom-fit .teacher-name,
     .board.day.day-zoom-fit .track {
-      flex: 1 1 0;
-      min-width: 48px;
-      width: auto;
+      min-width: 0;
       max-width: none;
       margin-right: -36px;
-      flex-shrink: 1;
     }
 
     .board.day.day-zoom-fit .teacher-name:last-child,
@@ -521,12 +524,6 @@
 
     .board.day.day-zoom-fit .teacher-name {
       background: var(--card);
-    }
-
-    .board.day.day-zoom-fit .names-col,
-    .board.day.day-zoom-fit .tracks {
-      width: 100%;
-      min-width: 0;
     }
 
     /* Соседние перекрывающиеся .track с большим z-index иначе перекрывают клик/ховер по подсветкам и урокам */
@@ -577,15 +574,19 @@
       grid-template-columns: 1fr;
     }
 
+    .board.week.week-zoom-fit .board-rail {
+      grid-template-columns: repeat(var(--teacher-cols, 1), minmax(48px, 1fr));
+      width: 100%;
+      min-width: 0;
+      height: 100%;
+    }
+
     /* Колонки преподавателей: сжатие + лёгкое наложение, чтобы уместить больше имён */
     .board.week.week-zoom-fit .teacher-name,
     .board.week.week-zoom-fit .track {
-      flex: 1 1 0;
-      min-width: 48px;
-      width: auto;
+      min-width: 0;
       max-width: none;
       margin-right: -36px;
-      flex-shrink: 1;
     }
 
     .board.week.week-zoom-fit .teacher-name:last-child,
@@ -595,12 +596,6 @@
 
     .board.week.week-zoom-fit .teacher-name {
       background: var(--card);
-    }
-
-    .board.week.week-zoom-fit .tracks {
-      width: 100%;
-      min-width: 0;
-      height: 100%;
     }
 
     .board.week.week-zoom-fit .timeline {
@@ -699,6 +694,25 @@
       padding: 4px 24px 4px 8px;
     }
 
+    .board-rail {
+      --teacher-cols: 1;
+      grid-row: 1 / -1;
+      grid-column: 2;
+      display: grid;
+      grid-template-columns: repeat(var(--teacher-cols), minmax(var(--teacher-col-w), 1fr));
+      grid-template-rows: var(--header-h) 1fr;
+      min-width: 0;
+      min-height: 0;
+      width: 100%;
+      align-self: stretch;
+      box-sizing: border-box;
+    }
+
+    .names-col,
+    .tracks {
+      display: contents;
+    }
+
     .timeline {
       grid-row: 2;
       grid-column: 1;
@@ -787,22 +801,18 @@
       border-top-color: var(--line);
     }
 
-    .names-col {
+    .teacher-name {
       grid-row: 1;
-      grid-column: 2;
       position: sticky;
       top: 0;
       z-index: 25;
+      min-width: 0;
+      min-height: 0;
+      height: var(--header-h);
+      align-self: start;
       background: var(--card);
       border-bottom: 1px solid var(--line-strong);
       box-shadow: 0 4px 12px rgba(16, 24, 40, 0.06);
-      display: flex;
-      flex-direction: row;
-    }
-
-    .teacher-name {
-      width: var(--teacher-col-w);
-      height: var(--header-h);
       display: flex;
       flex-direction: column;
       align-items: flex-start;
@@ -813,7 +823,6 @@
       box-sizing: border-box;
       cursor: grab;
       user-select: none;
-      flex-shrink: 0;
     }
 
     .teacher-name:active {
@@ -845,19 +854,14 @@
       text-overflow: ellipsis;
     }
 
-    .tracks {
-      grid-row: 2;
-      grid-column: 2;
-      display: flex;
-      flex-direction: row;
-    }
-
     .track {
+      grid-row: 2;
       position: relative;
       z-index: 0;
-      width: var(--teacher-col-w);
+      min-width: 0;
+      min-height: 0;
+      width: auto;
       height: calc(var(--hour-h) * var(--hours) * var(--day-span));
-      flex-shrink: 0;
       border-right: 1px solid var(--line);
       background-color: #fff;
       background-image: repeating-linear-gradient(
@@ -945,8 +949,8 @@
     .lesson-card:hover {
       right: 6px;
       width: auto !important;
-      min-width: calc(var(--teacher-col-w) - 12px);
-      max-width: calc(var(--teacher-col-w) - 12px) !important;
+      min-width: calc(100% - 12px);
+      max-width: calc(100% - 12px) !important;
       min-height: calc(var(--slot-pct) * 1%) !important;
       z-index: 2;
       overflow: visible !important;
@@ -1264,8 +1268,10 @@
             </select>
           </div>
           <div class="timeline" id="timeline"></div>
-          <div class="names-col" id="namesCol"></div>
-          <div class="tracks" id="tracks"></div>
+          <div class="board-rail" id="boardRail">
+            <div class="names-col" id="namesCol"></div>
+            <div class="tracks" id="tracks"></div>
+          </div>
         </div>
       </div>
       <aside class="students-sidebar" aria-label="Список учеников">
@@ -1488,6 +1494,7 @@
     const DEFAULT_WEEK_HOUR_W = 56;
 
     const board = document.getElementById("board");
+    const boardRail = document.getElementById("boardRail");
     const timeline = document.getElementById("timeline");
     const namesCol = document.getElementById("namesCol");
     const tracks = document.getElementById("tracks");
@@ -2220,18 +2227,23 @@
         tracks.innerHTML = "";
         const dayIdx = isoDayIndex(d);
         const teachersOrdered = getTeacherOrder();
-        teachersOrdered.forEach(({ name, teacherIndex, teacherLessons, totalMinutes }) => {
+        boardRail.style.setProperty("--teacher-cols", String(teachersOrdered.length));
+        const dayData = teachersOrdered.map(({ name, teacherIndex, teacherLessons }) => {
           const dayLessons = teacherLessons.filter((L) => L.day === dayIdx);
           const dayMin = totalMinutesForLessons(dayLessons);
           const hoursLabel = `За день: ${formatHoursSubtitle(dayMin)}`;
+          return { name, teacherIndex, dayLessons, hoursLabel };
+        });
+        dayData.forEach(({ name, hoursLabel, teacherIndex }) => {
           const nameEl = buildTeacherNameEl(name, hoursLabel, teacherIndex);
           attachTeacherRowDropHandlers(nameEl);
           namesCol.appendChild(nameEl);
-
+        });
+        dayData.forEach(({ teacherIndex, dayLessons }) => {
           const track = document.createElement("div");
           track.className = "track";
           track.dataset.teacherIndex = String(teacherIndex);
-          dayLessons.forEach((L, li) => {
+          dayLessons.forEach((L) => {
             const el = document.createElement("div");
             const lessonKey = buildLessonKey(L);
             const occupied = isLessonOccupied(lessonKey);
@@ -2326,6 +2338,7 @@
       const totalMin = 7 * MINUTES_PER_DAY;
 
       const teachersOrdered = getTeacherOrder();
+      boardRail.style.setProperty("--teacher-cols", String(teachersOrdered.length));
       teachersOrdered.forEach(({ name, teacherIndex, teacherLessons, totalMinutes }) => {
         const list = teacherLessons;
         const weekMin = totalMinutes;
@@ -2333,7 +2346,9 @@
         const nameEl = buildTeacherNameEl(name, hoursLabel, teacherIndex);
         attachTeacherRowDropHandlers(nameEl);
         namesCol.appendChild(nameEl);
-
+      });
+      teachersOrdered.forEach(({ teacherIndex, teacherLessons }) => {
+        const list = teacherLessons;
         const track = document.createElement("div");
         track.className = "track";
         track.dataset.teacherIndex = String(teacherIndex);
