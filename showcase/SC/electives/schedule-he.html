@@ -13,9 +13,9 @@
       --line: #e7e9ef;
       --line-strong: #d8dce6;
       --accent: #3a67ff;
-      --slot-h: 22px;
+      --slot-w: 44px;
+      --row-h: 68px;
       --teacher-col-w: 280px;
-      --time-col-w: 88px;
       --header-h: 56px;
       --radius: 14px;
       --request-card-w: 244px;
@@ -161,7 +161,7 @@
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 4px;
-      direction: ltr;
+      direction: rtl;
     }
 
     .date-picker-weekday {
@@ -303,13 +303,18 @@
 
     .calendar-grid {
       display: flex;
-      flex-direction: row-reverse;
+      flex-direction: row;
       align-items: stretch;
+      /* RTL scroll container keeps native vertical scrollbar on the left. */
       direction: rtl;
       overflow: auto;
       flex: 1 1 auto;
       min-height: 0;
       position: relative;
+    }
+
+    .calendar.week-view .calendar-grid {
+      direction: rtl;
     }
 
     .zoom-toolbar {
@@ -347,17 +352,19 @@
 
     #teachersWrap {
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       align-items: stretch;
       width: max-content;
       direction: ltr;
     }
 
     .teacher-column {
-      width: var(--teacher-col-w);
-      min-width: var(--teacher-col-w);
-      border-right: 1px solid var(--line);
+      width: max-content;
+      min-width: max-content;
+      border-bottom: 1px solid var(--line);
       background: #fff;
+      display: flex;
+      flex-direction: row-reverse;
     }
 
     .teacher-column.hidden {
@@ -369,60 +376,176 @@
       height: var(--header-h);
       display: flex;
       align-items: center;
-      justify-content: center;
-      border-bottom: 1px solid var(--line-strong);
+      justify-content: flex-start;
+      border-left: 1px solid var(--line-strong);
       font-weight: 600;
       position: sticky;
-      top: 0;
+      /* RTL: inline-start is the right edge — pin names / time header to the viewport right. */
+      inset-inline-start: 0;
       background: #fff;
-      z-index: 2;
+      z-index: 4;
       direction: rtl;
+      text-align: start;
+      padding-inline: 12px;
+    }
+
+    .teacher-header {
+      width: var(--teacher-col-w);
+      min-width: var(--teacher-col-w);
+      font-size: 16px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .time-header {
+      width: var(--teacher-col-w);
+      min-width: var(--teacher-col-w);
     }
 
     .teacher-body,
     .time-body {
       display: grid;
-      grid-template-rows: repeat(var(--slots), var(--slot-h));
+      grid-template-columns: repeat(var(--slots), var(--slot-w));
+      /* Match applyLessonPosition (right-origin); earliest slot index sits on the physical right. */
+      direction: rtl;
     }
 
     .teacher-body {
       position: relative;
+      height: var(--row-h);
     }
 
     .slot {
-      border-bottom: 1px solid var(--line);
+      border-left: 1px solid var(--line);
       position: relative;
     }
 
     .slot.hour {
-      border-bottom-color: var(--line-strong);
+      border-left-color: var(--line-strong);
     }
 
     .time-column {
-      width: var(--time-col-w);
-      min-width: var(--time-col-w);
-      border-right: 1px solid var(--line-strong);
+      width: max-content;
+      min-width: max-content;
+      border-bottom: 1px solid var(--line-strong);
       background: #fafbff;
       position: sticky;
-      right: 0;
-      z-index: 3;
+      inset-inline-start: 0;
+      top: 0;
+      z-index: 5;
       flex-shrink: 0;
       direction: ltr;
+      display: flex;
+      flex-direction: row-reverse;
     }
 
     .time-slot {
-      border-bottom: 1px solid var(--line);
+      border-left: 1px solid var(--line);
       color: var(--muted);
       font-size: 12px;
       display: flex;
-      align-items: start;
+      align-items: center;
       justify-content: center;
-      padding-top: 2px;
+      height: var(--header-h);
       direction: ltr;
+      white-space: nowrap;
     }
 
     .time-slot.muted {
       color: transparent;
+    }
+
+    .time-end-label {
+      border-left: 1px solid var(--line-strong);
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: var(--header-h);
+      direction: ltr;
+      white-space: nowrap;
+      padding-inline: 4px;
+      min-width: var(--slot-w);
+      background: #fafbff;
+    }
+
+    .calendar.week-view .time-column {
+      display: none;
+    }
+
+    .calendar.week-view #teachersWrap {
+      flex-direction: row;
+      align-items: stretch;
+      direction: rtl;
+    }
+
+    .week-day-column {
+      width: max-content;
+      min-width: max-content;
+      border-left: 1px solid var(--line);
+      border-bottom: 0;
+      display: block;
+    }
+
+    .week-day-date {
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-inline: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--line-strong);
+      background: #fff;
+      white-space: nowrap;
+    }
+
+    .week-day-time {
+      border-bottom: 1px solid var(--line);
+      background: #fafbff;
+      display: grid;
+      grid-template-columns: repeat(var(--slots), var(--slot-w)) var(--slot-w);
+      direction: rtl;
+    }
+
+    .week-day-body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .week-teacher-row {
+      display: flex;
+      flex-direction: row-reverse;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .week-teacher-row.hidden {
+      display: none;
+    }
+
+    .week-teacher-label {
+      width: var(--teacher-col-w);
+      min-width: var(--teacher-col-w);
+      height: var(--row-h);
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      border-left: 1px solid var(--line-strong);
+      background: #fff;
+      direction: rtl;
+      text-align: start;
+      padding-inline: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      position: sticky;
+      inset-inline-start: 0;
+      z-index: 4;
+    }
+
+    .week-day-body .teacher-body {
+      border-left: 0;
     }
 
     .lesson-layer {
@@ -434,8 +557,6 @@
 
     .lesson-item {
       position: absolute;
-      left: 8px;
-      right: 8px;
       border-radius: 8px;
       background: rgba(58, 103, 255, 0.14);
       border: 1px solid rgba(58, 103, 255, 0.5);
@@ -448,17 +569,18 @@
       user-select: none;
       touch-action: none;
       overflow: hidden;
-      padding: 6px 8px 10px;
+      padding: 6px 8px 8px;
       direction: ltr;
+      height: calc(var(--row-h) - 20px);
     }
 
     .calendar.fit-zoom .lesson-item {
-      left: 2px;
-      right: 2px;
+      top: 2px;
       padding: 2px 3px 4px;
       border-radius: 5px;
       font-size: 9px;
       line-height: 1.1;
+      height: calc(var(--row-h) - 4px);
     }
 
     .lesson-item.dragging {
@@ -486,12 +608,12 @@
 
     .lesson-resize-handle {
       position: absolute;
+      top: 0;
       left: 0;
-      right: 0;
       bottom: 0;
-      height: 8px;
-      cursor: ns-resize;
-      background: linear-gradient(to bottom, transparent 0%, rgba(58, 103, 255, 0.35) 100%);
+      width: 8px;
+      cursor: ew-resize;
+      background: linear-gradient(to right, rgba(58, 103, 255, 0.35) 0%, transparent 100%);
     }
 
     .slot.drop-hover {
@@ -773,11 +895,11 @@
         </header>
 
         <div class="calendar-grid">
-          <div id="teachersWrap"></div>
           <aside class="time-column">
             <div class="time-header">זמן</div>
             <div id="timeBody" class="time-body"></div>
           </aside>
+          <div id="teachersWrap"></div>
         </div>
         <footer class="zoom-toolbar">
           <div class="zoom-switch" role="tablist" aria-label="רמת זום">
@@ -816,6 +938,7 @@
                     <h4 class="request-title">Алгебра</h4>
                     <p class="request-teacher">Рут Амсалем</p>
                     <p class="request-meta">раз в неделю 1</p>
+                    <p class="request-meta">класс · группа Бет 9</p>
                   </div>
                   <div class="request-score">82 ← 68</div>
                 </div>
@@ -831,6 +954,7 @@
                     <h4 class="request-title">Физика</h4>
                     <p class="request-teacher">Шошана Розенблюм</p>
                     <p class="request-meta">раз в неделю 2</p>
+                    <p class="request-meta">класс · группа Алеф 8</p>
                   </div>
                   <div class="request-score">76 ← 61</div>
                 </div>
@@ -868,6 +992,7 @@
                     <h4 class="request-title">Английский</h4>
                     <p class="request-teacher">Рут Амсалем</p>
                     <p class="request-meta">раз в неделю 1</p>
+                    <p class="request-meta">класс · группа Бет 9</p>
                   </div>
                   <div class="request-score">79 ← 65</div>
                 </div>
@@ -927,7 +1052,7 @@
       "שבת"
     ];
     const startHour = 8;
-    const endHour = 20;
+    const endHour = 23;
     const slotMinutes = 15;
     const totalSlots = ((endHour - startHour) * 60) / slotMinutes;
     document.documentElement.style.setProperty("--slots", totalSlots);
@@ -953,9 +1078,9 @@
     const zoomButtons = document.querySelectorAll(".zoom-btn");
     const selectedTeacherIndexes = new Set(teachers.map((_, index) => index));
     const defaultLayout = {
-      slotHeight: 22,
-      teacherWidth: 280,
-      timeWidth: 88
+      slotWidth: 44,
+      rowHeight: 68,
+      teacherWidth: 280
     };
     let currentView = "day";
     let currentZoom = "standard";
@@ -1169,6 +1294,7 @@
     }
 
     function buildTimeColumn() {
+      const endLabel = `${String(endHour).padStart(2, "0")}:00`;
       let html = "";
       for (let i = 0; i < totalSlots; i += 1) {
         const minutesFromStart = i * slotMinutes;
@@ -1178,6 +1304,7 @@
         const muted = minute === 0 ? "" : "muted";
         html += `<div class="time-slot ${muted}">${label}</div>`;
       }
+      html += `<div class="time-end-label">${endLabel}</div>`;
       timeBody.innerHTML = html;
     }
 
@@ -1200,6 +1327,7 @@
         `;
       });
       teachersWrap.innerHTML = html;
+      syncTeacherHeaderWidth();
       applyTeacherFilter();
     }
 
@@ -1207,27 +1335,79 @@
       const weekStartDate = new Date(selectedDate);
       weekStartDate.setDate(selectedDate.getDate() - selectedDate.getDay());
       let html = "";
-      for (let displayIndex = 0; displayIndex < weekDays.length; displayIndex += 1) {
-        const dayIndex = weekDays.length - 1 - displayIndex;
+      const endLabel = `${String(endHour).padStart(2, "0")}:00`;
+      for (let dayIndex = 0; dayIndex < weekDays.length; dayIndex += 1) {
         const dayDate = new Date(weekStartDate);
         dayDate.setDate(weekStartDate.getDate() + dayIndex);
         const dayName = `${weekDays[dayIndex]} ${dayDate.getDate()}`;
-        let slots = "";
+        let timeSlots = "";
         for (let i = 0; i < totalSlots; i += 1) {
-          const isHourEnd = ((i + 1) * slotMinutes) % 60 === 0;
-          slots += `<div class="slot ${isHourEnd ? "hour" : ""}" data-slot-index="${i}" data-teacher-index="${dayIndex}"></div>`;
+          const minutesFromStart = i * slotMinutes;
+          const hour = startHour + Math.floor(minutesFromStart / 60);
+          const minute = minutesFromStart % 60;
+          const label = minute === 0 ? `${String(hour).padStart(2, "0")}:00` : "";
+          const muted = minute === 0 ? "" : "muted";
+          timeSlots += `<div class="time-slot ${muted}">${label}</div>`;
         }
+        let teacherRows = "";
+        teachers.forEach((teacherName, teacherIndex) => {
+          let slots = "";
+          for (let i = 0; i < totalSlots; i += 1) {
+            const isHourEnd = ((i + 1) * slotMinutes) % 60 === 0;
+            const bodyIndex = `${dayIndex}-${teacherIndex}`;
+            slots += `<div class="slot ${isHourEnd ? "hour" : ""}" data-slot-index="${i}" data-teacher-index="${bodyIndex}"></div>`;
+          }
+          teacherRows += `
+            <div class="week-teacher-row" data-week-teacher-index="${teacherIndex}">
+              <div class="week-teacher-label">${teacherName}</div>
+              <div class="teacher-body" data-teacher-index="${dayIndex}-${teacherIndex}">
+                ${slots}
+                <div class="lesson-layer"></div>
+              </div>
+            </div>
+          `;
+        });
         html += `
-          <section class="teacher-column">
-            <div class="teacher-header">${dayName}</div>
-            <div class="teacher-body" data-teacher-index="${dayIndex}">
-              ${slots}
-              <div class="lesson-layer"></div>
+          <section class="teacher-column week-day-column">
+            <div class="week-day-date">${dayName}</div>
+            <div class="time-body week-day-time">
+              ${timeSlots}
+              <div class="time-end-label">${endLabel}</div>
+            </div>
+            <div class="week-day-body">
+              ${teacherRows}
             </div>
           </section>
         `;
       }
       teachersWrap.innerHTML = html;
+    }
+
+    function syncTeacherHeaderWidth() {
+      const labels = currentView === "week"
+        ? teachersWrap.querySelectorAll(".week-teacher-label")
+        : teachersWrap.querySelectorAll(".teacher-header");
+      if (!labels.length) {
+        return;
+      }
+      const probe = document.createElement("span");
+      probe.style.position = "absolute";
+      probe.style.visibility = "hidden";
+      probe.style.pointerEvents = "none";
+      probe.style.whiteSpace = "nowrap";
+      const labelStyle = getComputedStyle(labels[0]);
+      probe.style.fontSize = labelStyle.fontSize;
+      probe.style.fontWeight = labelStyle.fontWeight;
+      probe.style.fontFamily = labelStyle.fontFamily;
+      document.body.appendChild(probe);
+      let maxWidth = 0;
+      labels.forEach((label) => {
+        probe.textContent = label.textContent || "";
+        maxWidth = Math.max(maxWidth, Math.ceil(probe.getBoundingClientRect().width));
+      });
+      probe.remove();
+      const width = Math.max(96, maxWidth + 24);
+      document.documentElement.style.setProperty("--teacher-col-w", `${width}px`);
     }
 
     function updateTeacherFilterSummary() {
@@ -1256,6 +1436,11 @@
           column.classList.toggle("hidden", !isVisible);
         });
       } else {
+        teachersWrap.querySelectorAll(".week-teacher-row").forEach((row) => {
+          const teacherIndex = Number(row.dataset.weekTeacherIndex);
+          const isVisible = selectedTeacherIndexes.has(teacherIndex);
+          row.classList.toggle("hidden", !isVisible);
+        });
         const selectedTeacherNames = new Set(
           Array.from(selectedTeacherIndexes).map((teacherIndex) => teachers[teacherIndex])
         );
@@ -1316,16 +1501,20 @@
     }
 
     function alignScrollToRight() {
-      // Start from the right edge for RTL-first behavior.
+      // In RTL timeline, default camera starts from right edge.
       requestAnimationFrame(() => {
-        calendarGrid.scrollLeft = calendarGrid.scrollWidth;
+        const max = Math.max(0, calendarGrid.scrollWidth - calendarGrid.clientWidth);
+        calendarGrid.scrollLeft = max;
+        if (calendarGrid.scrollLeft !== max) {
+          calendarGrid.scrollLeft = -max;
+        }
       });
     }
 
-    function getVisibleColumnCount() {
-      const columns = teachersWrap.querySelectorAll(".teacher-column");
+    function getVisibleRowCount() {
       if (currentView === "week") {
-        return columns.length || weekDays.length;
+        const visibleRows = teachersWrap.querySelectorAll(".week-teacher-row:not(.hidden)");
+        return visibleRows.length || teachers.length;
       }
       const visibleColumns = teachersWrap.querySelectorAll(".teacher-column:not(.hidden)");
       return visibleColumns.length || 1;
@@ -1333,30 +1522,31 @@
 
     function applyZoomLayout() {
       if (currentZoom === "standard") {
-        document.documentElement.style.setProperty("--slot-h", `${defaultLayout.slotHeight}px`);
-        document.documentElement.style.setProperty("--teacher-col-w", `${defaultLayout.teacherWidth}px`);
-        document.documentElement.style.setProperty("--time-col-w", `${defaultLayout.timeWidth}px`);
+        document.documentElement.style.setProperty("--slot-w", `${defaultLayout.slotWidth}px`);
+        document.documentElement.style.setProperty("--row-h", `${defaultLayout.rowHeight}px`);
+        syncTeacherHeaderWidth();
         document.querySelector(".calendar")?.classList.remove("fit-zoom");
         calendarGrid.style.overflow = "auto";
         return;
       }
 
-      const columnCount = Math.max(1, getVisibleColumnCount());
+      const rowCount = Math.max(1, getVisibleRowCount());
       const gridWidth = calendarGrid.clientWidth;
       const gridHeight = calendarGrid.clientHeight;
       if (!gridWidth || !gridHeight) {
         return;
       }
 
-      const fitTimeWidth = 44;
-      const horizontalReserve = columnCount + 6;
-      const verticalReserve = 8;
-      const fitTeacherWidth = Math.max(48, Math.floor((gridWidth - fitTimeWidth - horizontalReserve) / columnCount));
-      const fitSlotHeight = Math.max(4, Math.floor((gridHeight - 56 - verticalReserve) / totalSlots));
+      const fitTeacherWidth = Number.parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue("--teacher-col-w")
+      ) || 132;
+      const horizontalReserve = totalSlots + 6;
+      const verticalReserve = rowCount + 6;
+      const fitSlotWidth = Math.max(20, Math.floor((gridWidth - fitTeacherWidth - horizontalReserve) / totalSlots));
+      const fitRowHeight = Math.max(44, Math.floor((gridHeight - 56 - verticalReserve) / rowCount));
 
-      document.documentElement.style.setProperty("--time-col-w", `${fitTimeWidth}px`);
-      document.documentElement.style.setProperty("--teacher-col-w", `${fitTeacherWidth}px`);
-      document.documentElement.style.setProperty("--slot-h", `${fitSlotHeight}px`);
+      document.documentElement.style.setProperty("--slot-w", `${fitSlotWidth}px`);
+      document.documentElement.style.setProperty("--row-h", `${fitRowHeight}px`);
       document.querySelector(".calendar")?.classList.add("fit-zoom");
       calendarGrid.style.overflow = "auto";
     }
@@ -1398,8 +1588,8 @@
       });
     }
 
-    function getRowHeight() {
-      return Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--slot-h"));
+    function getSlotWidth() {
+      return Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--slot-w"));
     }
 
     function updateLessonLabel(lesson) {
@@ -1413,11 +1603,12 @@
     }
 
     function applyLessonPosition(lesson) {
-      const rowHeight = getRowHeight();
+      const slotWidth = getSlotWidth();
       const slotIndex = Number(lesson.dataset.slotIndex);
       const duration = Number(lesson.dataset.duration);
-      lesson.style.top = `${slotIndex * rowHeight + 1}px`;
-      lesson.style.height = `${duration * rowHeight - 2}px`;
+      lesson.style.left = "auto";
+      lesson.style.right = `${slotIndex * slotWidth + 1}px`;
+      lesson.style.width = `${duration * slotWidth - 2}px`;
     }
 
     function moveLessonToTeacher(lesson, teacherIndex) {
@@ -1510,6 +1701,7 @@
     }
 
     function seedWeekLessons() {
+      const weekCellIndex = (dayIndex, teacherIndex) => `${dayIndex}-${teacherIndex}`;
       const seededLessons = [
         { dayIndex: 0, time: "09:00", duration: 4, subject: "Математика", teacherIndex: 0, studentsCount: 2 },
         { dayIndex: 0, time: "12:00", duration: 6, subject: "Английский", teacherIndex: 1, studentsCount: 1 },
@@ -1534,7 +1726,7 @@
       ];
 
       seededLessons.forEach((lesson) => {
-        createLessonCard(lesson.dayIndex, timeToSlot(lesson.time), lesson.duration, {
+        createLessonCard(weekCellIndex(lesson.dayIndex, lesson.teacherIndex), timeToSlot(lesson.time), lesson.duration, {
           subject: lesson.subject,
           teacher: teachers[lesson.teacherIndex],
           studentsCount: lesson.studentsCount
@@ -1545,6 +1737,7 @@
     function setCalendarView(view) {
       const isWeekView = view === "week";
       currentView = view;
+      document.querySelector(".calendar")?.classList.toggle("week-view", isWeekView);
       clearScheduleHighlights();
       if (isWeekView) {
         buildWeekColumns();
@@ -1579,7 +1772,7 @@
         interaction = {
           mode,
           lesson,
-          startY: event.clientY,
+          startX: event.clientX,
           originTeacher: Number(lesson.dataset.teacherIndex),
           originSlot: Number(lesson.dataset.slotIndex),
           originDuration: Number(lesson.dataset.duration)
@@ -1593,8 +1786,8 @@
         if (!interaction) {
           return;
         }
-        const rowHeight = getRowHeight();
-        const slotDelta = Math.round((event.clientY - interaction.startY) / rowHeight);
+        const slotWidth = getSlotWidth();
+        const slotDelta = Math.round((interaction.startX - event.clientX) / slotWidth);
         const lesson = interaction.lesson;
 
         if (interaction.mode === "resize") {

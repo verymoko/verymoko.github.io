@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Совмещённые дни и неделя</title>
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --text: #1e1f24;
+      --muted: #7a7f8d;
+      --line: #e7e9ef;
+      --line-strong: #d8dce6;
+      --accent: #3a67ff;
+      --teacher-col-w: 200px;
+      --row-h: 72px;
+      --header-h: 52px;
+      --hour-w: 56px;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .board-wrap {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      overflow: auto;
+      padding: 0 0 16px;
+    }
+
+    .board {
+      --hours: 12;
+      --day-span: 1;
+      display: grid;
+      grid-template-columns: var(--teacher-col-w) max-content;
+      grid-template-rows: auto 1fr;
+      width: max-content;
+      min-width: 100%;
+    }
+
+    .left-stack {
+      grid-row: 1 / -1;
+      grid-column: 1;
+      display: flex;
+      flex-direction: column;
+      align-self: start;
+      width: var(--teacher-col-w);
+      min-width: var(--teacher-col-w);
+      position: sticky;
+      left: 0;
+      top: 0;
+      z-index: 13;
+      background: var(--card);
+      border-right: 1px solid var(--line-strong);
+      box-shadow: 4px 0 12px rgba(16, 24, 40, 0.06);
+    }
+
+    .month-cal {
+      padding: 10px 6px 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--card);
+    }
+
+    .month-cal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .month-cal-head h2 {
+      margin: 0;
+      font-size: 0.82rem;
+      font-weight: 700;
+      flex: 1;
+      text-align: center;
+      line-height: 1.2;
+      color: var(--text);
+    }
+
+    .month-cal-nav {
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      font-size: 1rem;
+      line-height: 1;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .month-cal-nav:hover {
+      border-color: #c9d0e4;
+    }
+
+    .month-cal-grid {
+      display: grid;
+      grid-template-columns: 26px repeat(7, minmax(0, 1fr));
+      gap: 2px 1px;
+      align-items: stretch;
+    }
+
+    .month-cal-corner {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: center;
+      padding: 2px 0;
+      align-self: end;
+    }
+
+    .month-cal-wd {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: center;
+      padding: 2px 0;
+    }
+
+    .month-cal-weekno {
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      padding: 4px 0;
+      cursor: pointer;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .month-cal-weekno:hover {
+      background: rgba(58, 103, 255, 0.08);
+    }
+
+    .month-cal-weekno.is-fit-week {
+      background: rgba(58, 103, 255, 0.14);
+      color: #2848c4;
+    }
+
+    .month-cal-day {
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      padding: 5px 0;
+      cursor: pointer;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .month-cal-day:hover {
+      background: #eef1f9;
+    }
+
+    .month-cal-day.other-month {
+      color: #b4b8c4;
+      font-weight: 500;
+    }
+
+    .month-cal-day.is-today {
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 1px 3px rgba(58, 103, 255, 0.35);
+    }
+
+    .month-cal-day.is-today:hover {
+      filter: brightness(1.05);
+    }
+
+    .month-cal-day.in-schedule-week {
+      outline: 1px solid rgba(58, 103, 255, 0.35);
+      outline-offset: -1px;
+    }
+
+    .month-cal-day.is-today.in-schedule-week {
+      outline-color: rgba(255, 255, 255, 0.5);
+    }
+
+    /*
+      Неделя «Вся сетка в экран»: вторая колонка тянется на всю ширину (без щели от floor(px)).
+      Сетка часов и дней — в долях 100%, не фиксированный --hour-w.
+    */
+    .board.week.week-zoom-fit {
+      width: 100%;
+      max-width: 100%;
+      grid-template-columns: var(--teacher-col-w) minmax(0, 1fr);
+    }
+
+    .board.week.week-zoom-fit .timeline-week-mode {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .board.week.week-zoom-fit .week-day-names span {
+      flex: 1 1 0;
+      min-width: 0;
+      width: auto;
+    }
+
+    .board.week.week-zoom-fit .tracks {
+      width: 100%;
+      min-width: 0;
+    }
+
+    /* Неделя «в экран»: равномерная почасовая сетка + отдельно усиленные линии только между днями */
+    .board.week.week-zoom-fit .track {
+      width: 100%;
+      min-width: 0;
+      background-color: #fafbff;
+      background-image:
+        linear-gradient(
+          to right,
+          transparent 0,
+          transparent calc(100% / var(--day-span) - 1px),
+          var(--line-strong) calc(100% / var(--day-span) - 1px),
+          var(--line-strong) calc(100% / var(--day-span)),
+          transparent calc(100% / var(--day-span)),
+          transparent calc(2 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(2 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(2 * 100% / var(--day-span)),
+          transparent calc(2 * 100% / var(--day-span)),
+          transparent calc(3 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(3 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(3 * 100% / var(--day-span)),
+          transparent calc(3 * 100% / var(--day-span)),
+          transparent calc(4 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(4 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(4 * 100% / var(--day-span)),
+          transparent calc(4 * 100% / var(--day-span)),
+          transparent calc(5 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(5 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(5 * 100% / var(--day-span)),
+          transparent calc(5 * 100% / var(--day-span)),
+          transparent calc(6 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(6 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(6 * 100% / var(--day-span)),
+          transparent calc(6 * 100% / var(--day-span)),
+          transparent 100%
+        ),
+        repeating-linear-gradient(
+          to right,
+          transparent 0,
+          transparent calc(100% / (var(--hours) * var(--day-span)) - 1px),
+          var(--line) calc(100% / (var(--hours) * var(--day-span)) - 1px),
+          var(--line) calc(100% / (var(--hours) * var(--day-span)))
+        );
+    }
+
+    .corner {
+      height: auto;
+      min-height: var(--header-h);
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .timeline {
+      grid-row: 1;
+      grid-column: 2;
+      position: sticky;
+      top: 0;
+      z-index: 11;
+      background: #fafbff;
+      border-bottom: 1px solid var(--line-strong);
+      box-shadow: 0 4px 10px rgba(16, 24, 40, 0.05);
+    }
+
+    .timeline-day-mode {
+      display: flex;
+      flex-direction: row;
+      height: var(--header-h);
+    }
+
+    .timeline-week-mode {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .week-day-names {
+      display: flex;
+      flex-direction: row;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .week-day-names span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 6px;
+      border-left: 1px solid var(--line);
+      color: var(--text);
+    }
+
+    .hour-row {
+      display: flex;
+      flex-direction: row;
+      height: var(--header-h);
+    }
+
+    .hour-cell {
+      width: var(--hour-w);
+      min-width: var(--hour-w);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--muted);
+      border-left: 1px solid var(--line);
+    }
+
+    .hour-cell.hour-tick {
+      border-left-color: var(--line-strong);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .board.week .hour-cell.hour-tick {
+      border-left-color: var(--line);
+    }
+
+    .names-col {
+      flex: 1;
+      min-height: 0;
+      background: var(--card);
+    }
+
+    .teacher-name {
+      height: var(--row-h);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 2px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line);
+      box-sizing: border-box;
+    }
+
+    .teacher-name-main {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.2;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .teacher-name-hours {
+      font-size: 11px;
+      line-height: 1.2;
+      font-weight: 500;
+      color: var(--muted);
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tracks {
+      grid-row: 2;
+      grid-column: 2;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .track {
+      position: relative;
+      z-index: 0;
+      height: var(--row-h);
+      width: calc(var(--hour-w) * var(--hours) * var(--day-span));
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--line);
+      background-color: #fff;
+      background-image: repeating-linear-gradient(
+        to right,
+        transparent 0,
+        transparent calc(var(--hour-w) - 1px),
+        var(--line) calc(var(--hour-w) - 1px),
+        var(--line) var(--hour-w)
+      );
+    }
+
+    /* Неделя (стандарт, px): равномерная почасовая сетка + усиленные линии только между днями */
+    .board.week .track {
+      background-color: #fafbff;
+      background-image:
+        linear-gradient(
+          to right,
+          transparent 0,
+          transparent calc(1 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(1 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(1 * var(--day-band-w)),
+          transparent calc(1 * var(--day-band-w)),
+          transparent calc(2 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(2 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(2 * var(--day-band-w)),
+          transparent calc(2 * var(--day-band-w)),
+          transparent calc(3 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(3 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(3 * var(--day-band-w)),
+          transparent calc(3 * var(--day-band-w)),
+          transparent calc(4 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(4 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(4 * var(--day-band-w)),
+          transparent calc(4 * var(--day-band-w)),
+          transparent calc(5 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(5 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(5 * var(--day-band-w)),
+          transparent calc(5 * var(--day-band-w)),
+          transparent calc(6 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(6 * var(--day-band-w) - 1px),
+          var(--line-strong) calc(6 * var(--day-band-w)),
+          transparent calc(6 * var(--day-band-w)),
+          transparent 100%
+        ),
+        repeating-linear-gradient(
+          to right,
+          transparent 0,
+          transparent calc(var(--hour-w) - 1px),
+          var(--line) calc(var(--hour-w) - 1px),
+          var(--line) var(--hour-w)
+        );
+    }
+
+    .track:has(.lesson-card:hover) {
+      z-index: 12;
+      overflow: visible;
+    }
+
+    .lesson-card {
+      position: absolute;
+      top: 6px;
+      bottom: 6px;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 11px;
+      line-height: 1.25;
+      overflow: hidden;
+      border: 1px solid #6d8ce8;
+      background: #e8ecff;
+      color: #1f2e70;
+      cursor: default;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+    }
+
+    /* Инлайновый width у карточки сильнее класса — без !important ховер не перебивает слот */
+    .lesson-card:hover {
+      bottom: auto !important;
+      right: auto;
+      height: auto !important;
+      min-height: calc(var(--row-h) - 12px);
+      width: max-content !important;
+      max-width: min(36rem, calc(100vw - 32px)) !important;
+      min-width: calc(var(--slot-pct) * 1%) !important;
+      z-index: 2;
+      overflow: visible !important;
+      box-shadow: 0 6px 20px rgba(16, 24, 40, 0.14);
+    }
+
+    .lesson-card:hover .lesson-title,
+    .lesson-card:hover .lesson-meta {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .lesson-card.b2 { border-color: #2d9c6e; background: #dff5ec; color: #12402d; }
+    .lesson-card.b3 { border-color: #b05ec8; background: #f4e8f8; color: #4a2560; }
+    .lesson-card.b4 { border-color: #d9772e; background: #fcefe0; color: #5c3610; }
+
+    .lesson-title {
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lesson-meta {
+      font-size: 10px;
+      opacity: 0.9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="board-wrap" id="boardWrap">
+      <div class="board week" id="board">
+        <div class="left-stack">
+          <div class="month-cal" id="monthCalendar" aria-label="Календарь месяца"></div>
+          <div class="corner">Преподаватель</div>
+          <div class="names-col" id="namesCol"></div>
+        </div>
+        <div class="timeline" id="timeline"></div>
+        <div class="tracks" id="tracks"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const START_HOUR = 8;
+    const END_HOUR = 20;
+    const HOURS = END_HOUR - START_HOUR;
+    const MINUTES_PER_DAY = HOURS * 60;
+
+    const WEEK_DAYS_SHORT = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+
+    const MONTH_NAMES_NOM = [
+      "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+      "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+    ];
+
+    const teachers = [
+      "Елена Викторовна Соколова",
+      "Михаил Андреевич Петров",
+      "Анна Сергеевна Орлова",
+      "Дмитрий Игоревич Волков",
+      "Ольга Павловна Никитина"
+    ];
+
+    /**
+     * Уроки: day — 0 пн … 6 вс (понедельник = 0).
+     * В ряде дней у преподавателя 6 астрономических часов занятий с обедом ~12:15–13:15 между блоками.
+     * По всем парам (преподаватель, день) мода суммарных рабочих часов ≥ 3 (чаще всего встречаются дни на 3 ч).
+     */
+    const lessons = [
+      /* Елена — пн 6 ч с обедом; ср 3 ч; пт 4 ч с длинным перерывом */
+      { teacher: 0, day: 0, start: "09:00", end: "10:30", title: "Алгебра", place: "каб. 12" },
+      { teacher: 0, day: 0, start: "10:45", end: "12:15", title: "Алгебра (практика)", place: "каб. 12" },
+      { teacher: 0, day: 0, start: "13:15", end: "14:45", title: "Геометрия", place: "каб. 12" },
+      { teacher: 0, day: 0, start: "15:00", end: "16:30", title: "Геометрия (практика)", place: "каб. 12" },
+      { teacher: 0, day: 2, start: "10:00", end: "11:00", title: "Алгебра", place: "каб. 12" },
+      { teacher: 0, day: 2, start: "11:30", end: "12:30", title: "Геометрия", place: "каб. 12" },
+      { teacher: 0, day: 2, start: "14:00", end: "15:00", title: "Консультация", place: "каб. 12" },
+      { teacher: 0, day: 4, start: "09:00", end: "11:00", title: "Алгебра", place: "каб. 12" },
+      { teacher: 0, day: 4, start: "13:00", end: "15:00", title: "Геометрия", place: "каб. 12" },
+      /* Михаил — пн 3 ч; вт 6 ч с обедом; чт 4 ч */
+      { teacher: 1, day: 0, start: "09:00", end: "10:00", title: "Физика", place: "лаб. 3" },
+      { teacher: 1, day: 0, start: "10:30", end: "11:30", title: "Физика (лаб.)", place: "лаб. 3" },
+      { teacher: 1, day: 0, start: "14:00", end: "15:00", title: "Консультация", place: "лаб. 3" },
+      { teacher: 1, day: 1, start: "09:00", end: "10:30", title: "Физика", place: "лаб. 3" },
+      { teacher: 1, day: 1, start: "10:45", end: "12:15", title: "Физика (лаб.)", place: "лаб. 3" },
+      { teacher: 1, day: 1, start: "13:15", end: "14:45", title: "Робототехника", place: "лаб. 1" },
+      { teacher: 1, day: 1, start: "15:00", end: "16:30", title: "Робототехника (проект)", place: "лаб. 1" },
+      { teacher: 1, day: 3, start: "09:00", end: "11:00", title: "Физика", place: "лаб. 3" },
+      { teacher: 1, day: 3, start: "13:00", end: "15:00", title: "Олимпиадная подготовка", place: "лаб. 3" },
+      /* Анна — пн 3 ч; вт 3 ч; пт 6 ч с обедом */
+      { teacher: 2, day: 0, start: "08:30", end: "09:30", title: "Русский язык", place: "каб. 5" },
+      { teacher: 2, day: 0, start: "09:45", end: "10:45", title: "Литература", place: "каб. 5" },
+      { teacher: 2, day: 0, start: "11:00", end: "12:00", title: "Сочинение", place: "каб. 5" },
+      { teacher: 2, day: 1, start: "14:00", end: "15:00", title: "Русский язык", place: "каб. 5" },
+      { teacher: 2, day: 1, start: "15:30", end: "16:30", title: "Литература", place: "каб. 5" },
+      { teacher: 2, day: 1, start: "17:00", end: "18:00", title: "Кружок", place: "каб. 5" },
+      { teacher: 2, day: 4, start: "09:00", end: "10:30", title: "Русский язык", place: "каб. 5" },
+      { teacher: 2, day: 4, start: "10:45", end: "12:15", title: "Литература", place: "каб. 5" },
+      { teacher: 2, day: 4, start: "13:15", end: "14:45", title: "Литература (практика)", place: "каб. 5" },
+      { teacher: 2, day: 4, start: "15:00", end: "16:30", title: "Итоговое сочинение", place: "каб. 5" },
+      /* Дмитрий — пн 4 ч; ср 6 ч с обедом; сб 3 ч */
+      { teacher: 3, day: 0, start: "08:30", end: "10:30", title: "История", place: "каб. 21" },
+      { teacher: 3, day: 0, start: "14:00", end: "16:00", title: "Обществознание", place: "каб. 21" },
+      { teacher: 3, day: 2, start: "09:00", end: "10:30", title: "История", place: "каб. 21" },
+      { teacher: 3, day: 2, start: "10:45", end: "12:15", title: "История (семинар)", place: "каб. 21" },
+      { teacher: 3, day: 2, start: "13:15", end: "14:45", title: "Обществознание", place: "каб. 21" },
+      { teacher: 3, day: 2, start: "15:00", end: "16:30", title: "Дебаты", place: "каб. 21" },
+      { teacher: 3, day: 5, start: "10:00", end: "11:00", title: "История", place: "каб. 21" },
+      { teacher: 3, day: 5, start: "11:30", end: "12:30", title: "Обществознание", place: "каб. 21" },
+      { teacher: 3, day: 5, start: "14:00", end: "15:00", title: "Консультация", place: "каб. 21" },
+      /* Ольга — вт 3 ч; чт 6 ч с обедом; вс 3 ч */
+      { teacher: 4, day: 1, start: "09:00", end: "10:00", title: "Английский", place: "каб. 8" },
+      { teacher: 4, day: 1, start: "10:30", end: "11:30", title: "Английский (разговор)", place: "каб. 8" },
+      { teacher: 4, day: 1, start: "14:00", end: "15:00", title: "Консультация", place: "каб. 8" },
+      { teacher: 4, day: 3, start: "09:00", end: "10:30", title: "Английский", place: "каб. 8" },
+      { teacher: 4, day: 3, start: "10:45", end: "12:15", title: "Английский (аудирование)", place: "каб. 8" },
+      { teacher: 4, day: 3, start: "13:15", end: "14:45", title: "Английский (проект)", place: "каб. 8" },
+      { teacher: 4, day: 3, start: "15:00", end: "16:30", title: "Английский (письмо)", place: "каб. 8" },
+      { teacher: 4, day: 6, start: "10:00", end: "11:00", title: "Английский", place: "каб. 8" },
+      { teacher: 4, day: 6, start: "11:30", end: "12:30", title: "Разговорный клуб", place: "каб. 8" },
+      { teacher: 4, day: 6, start: "14:00", end: "15:00", title: "Консультация", place: "каб. 8" }
+    ];
+
+    function startOfDay(d) {
+      const x = new Date(d);
+      x.setHours(0, 0, 0, 0);
+      return x;
+    }
+
+    function startOfMonth(d) {
+      const x = startOfDay(d);
+      x.setDate(1);
+      return x;
+    }
+
+    /** Понедельник недели для даты */
+    function mondayOfWeek(d) {
+      const x = startOfDay(d);
+      const dow = x.getDay();
+      const diff = dow === 0 ? -6 : 1 - dow;
+      x.setDate(x.getDate() + diff);
+      return x;
+    }
+
+    /** Пн = 0 … Вс = 6 */
+    function isoDayIndex(date) {
+      const dow = startOfDay(date).getDay();
+      return dow === 0 ? 6 : dow - 1;
+    }
+
+    function sameCalendarDay(a, b) {
+      return startOfDay(a).getTime() === startOfDay(b).getTime();
+    }
+
+    /** ISO 8601: номер недели по понедельнику строки */
+    function isoWeekNumber(mondayDate) {
+      const date = new Date(startOfDay(mondayDate).getTime());
+      const day = (date.getDay() + 6) % 7;
+      date.setDate(date.getDate() - day + 3);
+      const firstThursday = date.getTime();
+      date.setMonth(0, 4);
+      if (date.getDay() !== 4) {
+        date.setMonth(0, 4 + ((4 - date.getDay() + 7) % 7));
+      }
+      return 1 + Math.round((firstThursday - date.getTime()) / 604800000);
+    }
+
+    function isInScheduleWeek(cellDate, scheduleWeekStart) {
+      const x = startOfDay(cellDate);
+      for (let i = 0; i < 7; i += 1) {
+        const y = new Date(scheduleWeekStart);
+        y.setDate(scheduleWeekStart.getDate() + i);
+        if (sameCalendarDay(x, y)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    let anchorDate = startOfDay(new Date());
+
+    /** Неделя: «стандарт» — фиксированная ширина часа; «в экран» — подгонка под ширину (по клику на номер недели в календаре) */
+    let weekZoomMode = "default";
+    const DEFAULT_WEEK_HOUR_W = 56;
+
+    /** Месяц, отображаемый в мини-календаре (стрелки ‹ ›) */
+    let visibleMonth = startOfMonth(anchorDate);
+
+    const board = document.getElementById("board");
+    const boardWrap = document.getElementById("boardWrap");
+    const timeline = document.getElementById("timeline");
+    const namesCol = document.getElementById("namesCol");
+    const tracks = document.getElementById("tracks");
+    const monthCalendar = document.getElementById("monthCalendar");
+
+    function parseTime(s) {
+      const [h, m] = s.split(":").map(Number);
+      return h * 60 + m;
+    }
+
+    function minutesFromScheduleStart(timeStr) {
+      return parseTime(timeStr) - START_HOUR * 60;
+    }
+
+    function lessonDurationMinutes(L) {
+      return parseTime(L.end) - parseTime(L.start);
+    }
+
+    function totalMinutesForLessons(list) {
+      return list.reduce((sum, L) => sum + lessonDurationMinutes(L), 0);
+    }
+
+    /** Краткая подпись длительности на русском */
+    function formatHoursSubtitle(totalMinutes) {
+      if (totalMinutes <= 0) {
+        return "0 ч";
+      }
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      if (m === 0) {
+        return `${h} ч`;
+      }
+      if (h === 0) {
+        return `${m} мин`;
+      }
+      return `${h} ч ${m} мин`;
+    }
+
+    function buildTeacherNameEl(displayName, hoursLabel) {
+      const wrap = document.createElement("div");
+      wrap.className = "teacher-name";
+      const main = document.createElement("span");
+      main.className = "teacher-name-main";
+      main.textContent = displayName;
+      const sub = document.createElement("span");
+      sub.className = "teacher-name-hours";
+      sub.textContent = hoursLabel;
+      wrap.appendChild(main);
+      wrap.appendChild(sub);
+      return wrap;
+    }
+
+    function dayColumnWidthPx() {
+      const track = tracks.querySelector(".track");
+      if (!track || track.clientWidth <= 0) {
+        return 0;
+      }
+      return track.clientWidth / 7;
+    }
+
+    function scrollBoardToDay(dayIndex, smooth) {
+      const w = dayColumnWidthPx();
+      if (w <= 0) {
+        return;
+      }
+      const d = Math.min(6, Math.max(0, dayIndex));
+      const maxScroll = Math.max(0, boardWrap.scrollWidth - boardWrap.clientWidth);
+      const target = Math.min(d * w, maxScroll);
+      boardWrap.scrollTo({ left: target, behavior: smooth ? "smooth" : "auto" });
+    }
+
+    function renderMonthCalendar() {
+      const root = monthCalendar;
+      if (!root) {
+        return;
+      }
+      root.innerHTML = "";
+      const y = visibleMonth.getFullYear();
+      const m = visibleMonth.getMonth();
+      const scheduleWeekStart = mondayOfWeek(anchorDate);
+      const today = startOfDay(new Date());
+
+      const head = document.createElement("div");
+      head.className = "month-cal-head";
+      const prevB = document.createElement("button");
+      prevB.type = "button";
+      prevB.className = "month-cal-nav";
+      prevB.dataset.nav = "prev";
+      prevB.setAttribute("aria-label", "Предыдущий месяц");
+      prevB.textContent = "‹";
+      const title = document.createElement("h2");
+      title.textContent = `${MONTH_NAMES_NOM[m]} ${y}`;
+      const nextB = document.createElement("button");
+      nextB.type = "button";
+      nextB.className = "month-cal-nav";
+      nextB.dataset.nav = "next";
+      nextB.setAttribute("aria-label", "Следующий месяц");
+      nextB.textContent = "›";
+      head.appendChild(prevB);
+      head.appendChild(title);
+      head.appendChild(nextB);
+      root.appendChild(head);
+
+      const grid = document.createElement("div");
+      grid.className = "month-cal-grid";
+      const corner = document.createElement("div");
+      corner.className = "month-cal-corner";
+      corner.setAttribute("aria-hidden", "true");
+      grid.appendChild(corner);
+      for (let i = 0; i < 7; i += 1) {
+        const wd = document.createElement("div");
+        wd.className = "month-cal-wd";
+        wd.textContent = WEEK_DAYS_SHORT[i];
+        grid.appendChild(wd);
+      }
+
+      const first = new Date(y, m, 1);
+      const dow = first.getDay();
+      const back = (dow + 6) % 7;
+      const gridStart = new Date(y, m, 1 - back);
+      const fitWeekMondayTs = mondayOfWeek(anchorDate).getTime();
+
+      for (let row = 0; row < 6; row += 1) {
+        const monday = new Date(gridStart);
+        monday.setDate(gridStart.getDate() + row * 7);
+        const weekNo = isoWeekNumber(monday);
+        const wbtn = document.createElement("button");
+        wbtn.type = "button";
+        wbtn.className = "month-cal-weekno";
+        wbtn.textContent = String(weekNo);
+        wbtn.title = `Неделя ${weekNo}: уместить эту неделю в экран`;
+        wbtn.dataset.monday = String(startOfDay(monday).getTime());
+        if (weekZoomMode === "fit" && startOfDay(monday).getTime() === fitWeekMondayTs) {
+          wbtn.classList.add("is-fit-week");
+        }
+        grid.appendChild(wbtn);
+        for (let c = 0; c < 7; c += 1) {
+          const cell = new Date(monday);
+          cell.setDate(monday.getDate() + c);
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "month-cal-day";
+          b.textContent = String(cell.getDate());
+          b.dataset.day = String(startOfDay(cell).getTime());
+          if (cell.getMonth() !== m) {
+            b.classList.add("other-month");
+          }
+          if (sameCalendarDay(cell, today)) {
+            b.classList.add("is-today");
+          }
+          if (isInScheduleWeek(cell, scheduleWeekStart)) {
+            b.classList.add("in-schedule-week");
+          }
+          grid.appendChild(b);
+        }
+      }
+      root.appendChild(grid);
+    }
+
+    function render() {
+      board.classList.add("week");
+      board.classList.remove("day");
+      board.classList.toggle("week-zoom-fit", weekZoomMode === "fit");
+
+      const weekStart = mondayOfWeek(anchorDate);
+      const targetDayIndex = Math.min(6, Math.max(0, isoDayIndex(anchorDate)));
+
+      board.style.setProperty("--hours", String(HOURS));
+      board.style.setProperty("--day-span", "7");
+      let dayBandW = "";
+      if (weekZoomMode === "default") {
+        board.style.setProperty("--hour-w", `${DEFAULT_WEEK_HOUR_W}px`);
+        dayBandW = `calc(var(--hour-w) * ${HOURS})`;
+        board.style.setProperty("--day-band-w", dayBandW);
+      } else {
+        board.style.removeProperty("--hour-w");
+        board.style.removeProperty("--day-band-w");
+      }
+
+      timeline.innerHTML = "";
+      const weekRoot = document.createElement("div");
+      weekRoot.className = "timeline-week-mode";
+
+      const namesRow = document.createElement("div");
+      namesRow.className = "week-day-names";
+      for (let i = 0; i < 7; i += 1) {
+        const dayDate = new Date(weekStart);
+        dayDate.setDate(weekStart.getDate() + i);
+        const span = document.createElement("span");
+        if (weekZoomMode === "default") {
+          span.style.width = dayBandW;
+          span.style.minWidth = dayBandW;
+        }
+        span.textContent = `${WEEK_DAYS_SHORT[i]} · ${dayDate.getDate()}.${String(dayDate.getMonth() + 1).padStart(2, "0")}`;
+        namesRow.appendChild(span);
+      }
+      weekRoot.appendChild(namesRow);
+
+      if (weekZoomMode === "default") {
+        const hourRow = document.createElement("div");
+        hourRow.className = "hour-row";
+        for (let d = 0; d < 7; d += 1) {
+          for (let h = START_HOUR; h < END_HOUR; h += 1) {
+            const cell = document.createElement("div");
+            cell.className = "hour-cell hour-tick";
+            cell.textContent = `${String(h).padStart(2, "0")}:00`;
+            hourRow.appendChild(cell);
+          }
+        }
+        weekRoot.appendChild(hourRow);
+      }
+      timeline.appendChild(weekRoot);
+
+      namesCol.innerHTML = "";
+      tracks.innerHTML = "";
+
+      const totalMin = 7 * MINUTES_PER_DAY;
+
+      teachers.forEach((name, ti) => {
+        const list = lessons.filter((L) => L.teacher === ti);
+        const weekMin = totalMinutesForLessons(list);
+        const hoursLabel = `За неделю: ${formatHoursSubtitle(weekMin)}`;
+        namesCol.appendChild(buildTeacherNameEl(name, hoursLabel));
+
+        const track = document.createElement("div");
+        track.className = "track";
+        list.forEach((L) => {
+          const el = document.createElement("div");
+          el.className = `lesson-card b${(ti % 4) + 1}`;
+          const startM = L.day * MINUTES_PER_DAY + minutesFromScheduleStart(L.start);
+          const endM = L.day * MINUTES_PER_DAY + minutesFromScheduleStart(L.end);
+          const leftPct = (startM / totalMin) * 100;
+          const widthPct = ((endM - startM) / totalMin) * 100;
+          el.style.left = `${leftPct}%`;
+          el.style.width = `${widthPct}%`;
+          el.style.setProperty("--slot-pct", String(widthPct));
+          el.innerHTML = `<div class="lesson-title">${escapeHtml(L.title)}</div><div class="lesson-meta">${escapeHtml(WEEK_DAYS_SHORT[L.day])} ${escapeHtml(L.start)}–${escapeHtml(L.end)} · ${escapeHtml(L.place)}</div>`;
+          track.appendChild(el);
+        });
+        tracks.appendChild(track);
+      });
+
+      renderMonthCalendar();
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          scrollBoardToDay(targetDayIndex, false);
+        });
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    monthCalendar.addEventListener("click", (e) => {
+      const el = e.target instanceof HTMLElement ? e.target : null;
+      if (!el) {
+        return;
+      }
+      const navBtn = el.closest("button[data-nav]");
+      if (navBtn) {
+        if (navBtn.dataset.nav === "prev") {
+          visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
+          renderMonthCalendar();
+        } else if (navBtn.dataset.nav === "next") {
+          visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
+          renderMonthCalendar();
+        }
+        return;
+      }
+      const wk = el.closest("button.month-cal-weekno");
+      if (wk && wk.dataset.monday != null) {
+        anchorDate = startOfDay(new Date(Number(wk.dataset.monday)));
+        weekZoomMode = "fit";
+        visibleMonth = startOfMonth(anchorDate);
+        render();
+        return;
+      }
+      const db = el.closest("button.month-cal-day");
+      if (db && db.dataset.day != null) {
+        anchorDate = startOfDay(new Date(Number(db.dataset.day)));
+        weekZoomMode = "default";
+        visibleMonth = startOfMonth(anchorDate);
+        render();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
