@@ -529,6 +529,19 @@
       min-width: 0;
     }
 
+    /* Соседние перекрывающиеся .track с большим z-index иначе перекрывают клик/ховер по подсветкам и урокам */
+    .board.day.day-zoom-fit .track,
+    .board.week.week-zoom-fit .track {
+      pointer-events: none;
+    }
+
+    .board.day.day-zoom-fit .track .lesson-card,
+    .board.day.day-zoom-fit .track .request-slot-highlight[data-tooltip],
+    .board.week.week-zoom-fit .track .lesson-card,
+    .board.week.week-zoom-fit .track .request-slot-highlight[data-tooltip] {
+      pointer-events: auto;
+    }
+
     /*
       Неделя «Вся сетка в экран»: вторая колонка тянется на всю ширину (без щели от floor(px)).
       Сетка часов и дней — в долях 100%, не фиксированный --hour-w.
@@ -972,7 +985,7 @@
       background: rgba(53, 99, 255, 0.16);
       outline: 1px dashed rgba(53, 99, 255, 0.5);
       pointer-events: none;
-      z-index: 1;
+      z-index: 3;
     }
 
     .request-slot-highlight[data-tooltip] {
@@ -983,9 +996,9 @@
     .request-slot-highlight[data-tooltip]:hover::after {
       content: attr(data-tooltip);
       position: absolute;
-      left: calc(100% + 8px);
-      top: 50%;
-      transform: translateY(-50%);
+      left: 50%;
+      top: calc(100% + 8px);
+      transform: translateX(-50%);
       background: #111827;
       color: #fff;
       font-size: 11px;
@@ -1665,6 +1678,42 @@
       }
     }
 
+    function isZoomFitMode() {
+      return (mode === "day" && dayZoomMode === "fit") || (mode === "week" && weekZoomMode === "fit");
+    }
+
+    function applyFitModeZOrder() {
+      if (!isZoomFitMode()) {
+        namesCol.querySelectorAll(".teacher-name").forEach((el) => el.style.removeProperty("z-index"));
+        tracks.querySelectorAll(".track").forEach((el) => el.style.removeProperty("z-index"));
+        return;
+      }
+      const nameEls = namesCol.querySelectorAll(".teacher-name");
+      const trs = tracks.querySelectorAll(".track");
+      for (let i = 0; i < nameEls.length; i += 1) {
+        const z = String(i + 1);
+        nameEls[i].style.zIndex = z;
+        if (trs[i]) {
+          trs[i].style.zIndex = z;
+        }
+      }
+    }
+
+    function elevateTrackForRequestSlots(teacherIndex) {
+      if (Number.isNaN(teacherIndex)) {
+        return;
+      }
+      const z = isZoomFitMode() ? "100" : "30";
+      const t = tracks.querySelector(`.track[data-teacher-index="${teacherIndex}"]`);
+      const n = namesCol.querySelector(`.teacher-name[data-teacher-index="${teacherIndex}"]`);
+      if (t) {
+        t.style.zIndex = z;
+      }
+      if (n) {
+        n.style.zIndex = z;
+      }
+    }
+
     function buildLessonKey(L) {
       return `${L.teacher}|${L.day}|${L.start}|${L.end}|${L.title}|${L.place}`;
     }
@@ -1899,6 +1948,7 @@
       applyRequestFocusState();
       returnViewState = null;
       returnViewBtn.hidden = true;
+      applyFitModeZOrder();
     }
 
     function getRequestData(card) {
@@ -1990,6 +2040,7 @@
       document.querySelectorAll('.request-link[data-action="show-slots"]').forEach((btn) => {
         btn.classList.remove("active");
       });
+      applyFitModeZOrder();
 
       const dayIndex = isoDayIndex(anchorDate);
       const relevantDays = mode === "day"
@@ -2037,6 +2088,7 @@
         });
       });
 
+      elevateTrackForRequestSlots(request.teacherIndex);
       activeRequestId = request.requestId;
       button.classList.add("active");
       applyRequestFocusState();
@@ -2168,27 +2220,17 @@
         tracks.innerHTML = "";
         const dayIdx = isoDayIndex(d);
         const teachersOrdered = getTeacherOrder();
-        teachersOrdered.forEach(({ name, teacherIndex, teacherLessons, totalMinutes }, colIndex) => {
+        teachersOrdered.forEach(({ name, teacherIndex, teacherLessons, totalMinutes }) => {
           const dayLessons = teacherLessons.filter((L) => L.day === dayIdx);
           const dayMin = totalMinutesForLessons(dayLessons);
           const hoursLabel = `За день: ${formatHoursSubtitle(dayMin)}`;
           const nameEl = buildTeacherNameEl(name, hoursLabel, teacherIndex);
           attachTeacherRowDropHandlers(nameEl);
-          if (dayZoomMode === "fit") {
-            nameEl.style.zIndex = String(colIndex + 1);
-          } else {
-            nameEl.style.removeProperty("z-index");
-          }
           namesCol.appendChild(nameEl);
 
           const track = document.createElement("div");
           track.className = "track";
           track.dataset.teacherIndex = String(teacherIndex);
-          if (dayZoomMode === "fit") {
-            track.style.zIndex = String(colIndex + 1);
-          } else {
-            track.style.removeProperty("z-index");
-          }
           dayLessons.forEach((L, li) => {
             const el = document.createElement("div");
             const lessonKey = buildLessonKey(L);
@@ -2213,6 +2255,7 @@
           });
           tracks.appendChild(track);
         });
+        applyFitModeZOrder();
         restoreRequestHighlights();
         return;
       }
@@ -2283,23 +2326,17 @@
       const totalMin = 7 * MINUTES_PER_DAY;
 
       const teachersOrdered = getTeacherOrder();
-      teachersOrdered.forEach(({ name, teacherIndex, teacherLessons, totalMinutes }, colIndex) => {
+      teachersOrdered.forEach(({ name, teacherIndex, teacherLessons, totalMinutes }) => {
         const list = teacherLessons;
         const weekMin = totalMinutes;
         const hoursLabel = `За неделю: ${formatHoursSubtitle(weekMin)}`;
         const nameEl = buildTeacherNameEl(name, hoursLabel, teacherIndex);
         attachTeacherRowDropHandlers(nameEl);
-        if (weekZoomMode === "fit") {
-          nameEl.style.zIndex = String(colIndex + 1);
-        }
         namesCol.appendChild(nameEl);
 
         const track = document.createElement("div");
         track.className = "track";
         track.dataset.teacherIndex = String(teacherIndex);
-        if (weekZoomMode === "fit") {
-          track.style.zIndex = String(colIndex + 1);
-        }
         list.forEach((L) => {
           const el = document.createElement("div");
           const lessonKey = buildLessonKey(L);
@@ -2324,6 +2361,7 @@
         });
         tracks.appendChild(track);
       });
+      applyFitModeZOrder();
       restoreRequestHighlights();
     }
 
