@@ -754,18 +754,44 @@
       flex-direction: column;
       border-right: 1px solid var(--line);
       background: #fff;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      z-index: 35;
+      padding: 4px 3px;
+      gap: 4px;
     }
 
     .week-day-cell {
+      display: block;
+    }
+
+    .week-day-radio {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .week-day-label {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 8px 6px;
-      border-top: 1px solid var(--line);
+      width: 100%;
+      padding: 6px 2px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
       color: var(--text);
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+      user-select: none;
+    }
+
+    .week-day-radio:checked + .week-day-label {
+      border-color: var(--accent);
+      background: #eef3ff;
+      color: #1639aa;
     }
 
     .week-day-name {
@@ -1599,10 +1625,44 @@
     let returnViewState = null;
     let subjectPickerResolver = null;
     let subjectPickerValue = "";
+    let weekHourRowEl = null;
+    let weekDayRadioInputs = [];
 
     function syncTimeRailScroll() {
       if (!boardScroll || !timeline) return;
+      if (mode === "week" && weekHourRowEl) {
+        timeline.style.transform = "";
+        weekHourRowEl.style.transform = `translateY(${-boardScroll.scrollTop}px)`;
+        syncActiveWeekDayFromScroll();
+        return;
+      }
+      weekHourRowEl = null;
+      weekDayRadioInputs = [];
       timeline.style.transform = `translateY(${-boardScroll.scrollTop}px)`;
+    }
+
+    function resolveWeekDayHeightPx() {
+      if (!tracks) return 0;
+      const firstTrack = tracks.querySelector(".track");
+      if (!firstTrack) return 0;
+      const dayHeight = firstTrack.clientHeight / 7;
+      return Number.isFinite(dayHeight) && dayHeight > 0 ? dayHeight : 0;
+    }
+
+    function setActiveWeekDay(dayIndex) {
+      if (!Array.isArray(weekDayRadioInputs) || weekDayRadioInputs.length !== 7) return;
+      const safeIdx = Math.max(0, Math.min(6, dayIndex));
+      weekDayRadioInputs.forEach((input, idx) => {
+        input.checked = idx === safeIdx;
+      });
+    }
+
+    function syncActiveWeekDayFromScroll() {
+      if (mode !== "week" || !boardScroll) return;
+      const dayHeight = resolveWeekDayHeightPx();
+      if (!dayHeight) return;
+      const activeDay = Math.max(0, Math.min(6, Math.floor((boardScroll.scrollTop + 1) / dayHeight)));
+      setActiveWeekDay(activeDay);
     }
 
     function startOfDay(d) {
@@ -2648,29 +2708,48 @@
 
       const namesRow = document.createElement("div");
       namesRow.className = "week-day-names";
+      weekDayRadioInputs = [];
       for (let i = 0; i < 7; i += 1) {
         const dayDate = new Date(weekStart);
         dayDate.setDate(weekStart.getDate() + i);
-        const cell = document.createElement("span");
+        const cell = document.createElement("label");
         cell.className = "week-day-cell";
-        if (weekZoomMode === "default") {
-          cell.style.height = dayBandH;
-          cell.style.minHeight = dayBandH;
-        }
+
+        const dayInput = document.createElement("input");
+        dayInput.type = "radio";
+        dayInput.name = "weekDaySelector";
+        dayInput.className = "week-day-radio";
+        dayInput.value = String(i);
+
+        dayInput.addEventListener("change", () => {
+          if (!dayInput.checked || !boardScroll) return;
+          const dayHeight = resolveWeekDayHeightPx();
+          if (!dayHeight) return;
+          boardScroll.scrollTo({ top: i * dayHeight, behavior: "smooth" });
+        });
+
+        const dayLabel = document.createElement("span");
+        dayLabel.className = "week-day-label";
+
         const nameSpan = document.createElement("span");
         nameSpan.className = "week-day-name";
         nameSpan.textContent = WEEK_DAYS_SHORT[i];
         const dateSpan = document.createElement("span");
         dateSpan.className = "week-day-date";
         dateSpan.textContent = String(dayDate.getDate());
-        cell.appendChild(nameSpan);
-        cell.appendChild(dateSpan);
+
+        dayLabel.appendChild(nameSpan);
+        dayLabel.appendChild(dateSpan);
+        cell.appendChild(dayInput);
+        cell.appendChild(dayLabel);
+        weekDayRadioInputs.push(dayInput);
         namesRow.appendChild(cell);
       }
       weekRoot.appendChild(namesRow);
 
       const hourRow = document.createElement("div");
       hourRow.className = "hour-row";
+      weekHourRowEl = hourRow;
       for (let d = 0; d < 7; d += 1) {
         for (let h = START_HOUR; h < END_HOUR; h += 1) {
           const cell = document.createElement("div");
@@ -2728,6 +2807,8 @@
       });
       applyFitModeZOrder();
       restoreRequestHighlights();
+      setActiveWeekDay(isoDayIndex(anchorDate));
+      syncTimeRailScroll();
     }
 
     function escapeHtml(s) {
