@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>День и неделя раздельно</title>
+  <title>Заявка — это урок, а не подсказка</title>
   <style>
     :root {
       --bg: #f7f7fb;
@@ -147,11 +147,31 @@
       flex: 1 1 auto;
       min-height: 0;
       width: 100%;
-      overflow-x: auto;
-      overflow-y: auto;
+      display: grid;
+      grid-template-columns: var(--time-col-w) minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .board-scroll {
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
       padding: 0 0 16px;
-      display: flex;
-      flex-direction: column;
+    }
+
+    .time-rail {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: var(--header-h) 1fr;
+      background: #fafbff;
+      border-right: 1px solid var(--line-strong);
+      box-shadow: 4px 0 10px rgba(16, 24, 40, 0.05);
+      z-index: 35;
+    }
+
+    .timeline-viewport {
+      min-height: 0;
+      overflow: hidden;
     }
 
     .students-sidebar {
@@ -435,10 +455,10 @@
       --hours: 12;
       --day-span: 1;
       display: grid;
-      grid-template-columns: var(--time-col-w) minmax(0, 1fr);
+      grid-template-columns: max-content;
       grid-template-rows: var(--header-h) 1fr;
-      width: 100%;
-      min-width: max(100%, min-content);
+      width: max-content;
+      min-width: 100%;
       flex: 1 1 auto;
       min-height: 0;
       align-self: stretch;
@@ -446,9 +466,10 @@
 
     /* Режим «День»: временная шкала и дорожки на всю ширину окна */
     .board.day {
-      width: 100%;
-      max-width: 100%;
-      grid-template-columns: var(--time-col-w) minmax(0, 1fr);
+      width: max-content;
+      min-width: 100%;
+      max-width: none;
+      grid-template-columns: max-content;
       min-height: 100%;
     }
 
@@ -651,11 +672,7 @@
     }
 
     .corner {
-      grid-row: 1;
-      grid-column: 1;
-      position: sticky;
-      left: 0;
-      top: 0;
+      position: relative;
       z-index: 30;
       height: auto;
       min-height: var(--header-h);
@@ -696,13 +713,14 @@
     .board-rail {
       --teacher-cols: 1;
       grid-row: 1 / -1;
-      grid-column: 2;
+      grid-column: 1;
       display: grid;
       grid-template-columns: repeat(var(--teacher-cols), minmax(var(--teacher-col-w), 1fr));
       grid-template-rows: var(--header-h) 1fr;
       min-width: 0;
       min-height: 0;
-      width: 100%;
+      width: max-content;
+      min-width: 100%;
       align-self: stretch;
       box-sizing: border-box;
     }
@@ -713,15 +731,9 @@
     }
 
     .timeline {
-      grid-row: 2;
-      grid-column: 1;
-      position: sticky;
-      top: var(--header-h);
-      left: 0;
+      position: relative;
       z-index: 20;
       background: #fafbff;
-      border-right: 1px solid var(--line-strong);
-      box-shadow: 4px 0 10px rgba(16, 24, 40, 0.05);
     }
 
     .timeline-day-mode {
@@ -1262,7 +1274,7 @@
     </header>
     <div class="main-layout">
       <div class="board-wrap" id="boardWrap">
-        <div class="board" id="board">
+        <div class="time-rail" id="timeRail">
           <div class="corner">
             <span class="corner-title">Время / дата</span>
             <select id="teacherSort" class="teacher-sort" aria-label="Сортировка преподавателей по занятости">
@@ -1271,10 +1283,16 @@
               <option value="custom">Произвольный порядок</option>
             </select>
           </div>
-          <div class="timeline" id="timeline"></div>
-          <div class="board-rail" id="boardRail">
-            <div class="names-col" id="namesCol"></div>
-            <div class="tracks" id="tracks"></div>
+          <div class="timeline-viewport" id="timelineViewport">
+            <div class="timeline" id="timeline"></div>
+          </div>
+        </div>
+        <div class="board-scroll" id="boardScroll">
+          <div class="board" id="board">
+            <div class="board-rail" id="boardRail">
+              <div class="names-col" id="namesCol"></div>
+              <div class="tracks" id="tracks"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1549,7 +1567,10 @@
 
     const board = document.getElementById("board");
     const boardRail = document.getElementById("boardRail");
+    const boardScroll = document.getElementById("boardScroll");
     const timeline = document.getElementById("timeline");
+    const timelineViewport = document.getElementById("timelineViewport");
+    const timeRail = document.getElementById("timeRail");
     const namesCol = document.getElementById("namesCol");
     const tracks = document.getElementById("tracks");
 
@@ -1578,6 +1599,11 @@
     let returnViewState = null;
     let subjectPickerResolver = null;
     let subjectPickerValue = "";
+
+    function syncTimeRailScroll() {
+      if (!boardScroll || !timeline) return;
+      timeline.style.transform = `translateY(${-boardScroll.scrollTop}px)`;
+    }
 
     function startOfDay(d) {
       const x = new Date(d);
@@ -2783,7 +2809,27 @@
     initRequestCardActions();
     initScheduleRequestDrop();
     initRequestCardDrag();
+    boardScroll?.addEventListener("scroll", syncTimeRailScroll, { passive: true });
+    timeRail?.addEventListener(
+      "wheel",
+      (event) => {
+        if (!boardScroll) return;
+        boardScroll.scrollTop += event.deltaY;
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+    timelineViewport?.addEventListener(
+      "wheel",
+      (event) => {
+        if (!boardScroll) return;
+        boardScroll.scrollTop += event.deltaY;
+        event.preventDefault();
+      },
+      { passive: false }
+    );
     render();
+    syncTimeRailScroll();
   </script>
 </body>
 </html>
