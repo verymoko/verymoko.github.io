@@ -486,16 +486,9 @@
     }
 
     .board.day .track {
-      height: auto;
-      min-height: 100%;
+      height: calc(var(--hour-h) * var(--hours));
+      min-height: 0;
       min-width: 0;
-      background-image: repeating-linear-gradient(
-        to bottom,
-        transparent 0,
-        transparent calc(100% / var(--hours) - 1px),
-        var(--line) calc(100% / var(--hours) - 1px),
-        var(--line) calc(100% / var(--hours))
-      );
     }
 
     .board.day .board-rail,
@@ -504,24 +497,24 @@
     }
 
     .board.day.day-zoom-fit .timeline {
-      height: 100%;
+      height: calc(var(--hour-h) * var(--hours));
       min-height: 0;
     }
 
     .board.day.day-zoom-fit .timeline-day-mode {
-      min-height: 100%;
+      min-height: 0;
     }
 
     .board.day.day-zoom-fit .hour-cell {
-      height: auto;
-      flex: 1 1 0;
+      height: var(--hour-h);
+      flex: 0 0 auto;
       min-height: 0;
-      flex-shrink: 1;
+      flex-shrink: 0;
     }
 
     .board.day.day-zoom-fit .track {
-      height: 100%;
-      min-height: 100%;
+      height: calc(var(--hour-h) * var(--hours));
+      min-height: 0;
     }
 
     .board.day.day-zoom-fit .board-rail {
@@ -566,7 +559,9 @@
     .board.week.week-zoom-fit {
       width: 100%;
       max-width: 100%;
-      grid-template-columns: var(--time-col-w) minmax(0, 1fr);
+      min-height: 100%;
+      height: 100%;
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .board.week.week-zoom-fit .timeline-week-mode {
@@ -575,12 +570,15 @@
     }
 
     .board.week.week-zoom-fit .week-day-cell {
-      flex: 1 1 0;
+      flex: 0 0 auto;
       min-width: 0;
       width: auto;
     }
 
-    .board.week.week-zoom-fit .week-day-names,
+    .board.week.week-zoom-fit .week-day-names {
+      height: auto;
+    }
+
     .board.week.week-zoom-fit .hour-row {
       height: 100%;
     }
@@ -630,6 +628,7 @@
     /* Неделя «в экран»: равномерная почасовая сетка + отдельно усиленные линии только между днями */
     .board.week.week-zoom-fit .track {
       height: 100%;
+      min-height: 100%;
       min-width: 0;
       background-color: #fafbff;
       background-image:
@@ -825,7 +824,7 @@
       justify-content: center;
       font-size: 11px;
       color: var(--muted);
-      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
     }
 
     .hour-cell.hour-tick {
@@ -1590,6 +1589,7 @@
     /** День: «в экран» — сетка по вертикали на всю высоту области, равные слоты часа */
     let dayZoomMode = "default";
     const DEFAULT_WEEK_HOUR_W = 56;
+    const DEFAULT_DAY_HOUR_H = 56;
 
     const board = document.getElementById("board");
     const boardRail = document.getElementById("boardRail");
@@ -1651,6 +1651,12 @@
 
     function setActiveWeekDay(dayIndex) {
       if (!Array.isArray(weekDayRadioInputs) || weekDayRadioInputs.length !== 7) return;
+      if (weekZoomMode === "fit") {
+        weekDayRadioInputs.forEach((input) => {
+          input.checked = false;
+        });
+        return;
+      }
       const safeIdx = Math.max(0, Math.min(6, dayIndex));
       weekDayRadioInputs.forEach((input, idx) => {
         input.checked = idx === safeIdx;
@@ -1659,6 +1665,10 @@
 
     function syncActiveWeekDayFromScroll() {
       if (mode !== "week" || !boardScroll) return;
+      if (weekZoomMode === "fit") {
+        setActiveWeekDay(0);
+        return;
+      }
       const dayHeight = resolveWeekDayHeightPx();
       if (!dayHeight) return;
       const activeDay = Math.max(0, Math.min(6, Math.floor((boardScroll.scrollTop + 1) / dayHeight)));
@@ -1830,6 +1840,13 @@
 
     function isZoomFitMode() {
       return (mode === "day" && dayZoomMode === "fit") || (mode === "week" && weekZoomMode === "fit");
+    }
+
+    function resolveDayHourHeightPx() {
+      if (!boardScroll) return DEFAULT_DAY_HOUR_H;
+      const viewportHeight = boardScroll.clientHeight;
+      if (!Number.isFinite(viewportHeight) || viewportHeight <= 0) return DEFAULT_DAY_HOUR_H;
+      return Math.max(DEFAULT_DAY_HOUR_H, viewportHeight / HOURS);
     }
 
     function applyFitModeZOrder() {
@@ -2615,6 +2632,9 @@
       const weekStart = mondayOfWeek(anchorDate);
 
       if (mode === "day") {
+        const resolvedDayHourH = resolveDayHourHeightPx();
+        document.documentElement.style.setProperty("--hour-h", `${resolvedDayHourH}px`);
+        board.style.setProperty("--hour-h", `${resolvedDayHourH}px`);
         board.style.setProperty("--hours", String(HOURS));
         board.style.setProperty("--day-span", "1");
         board.style.removeProperty("--day-band-h");
@@ -2677,6 +2697,13 @@
           });
           tracks.appendChild(track);
         });
+        const firstTrack = tracks.querySelector(".track");
+        const firstHourCell = timeline.querySelector(".hour-cell.hour-tick");
+        const secondHourCell = timeline.querySelectorAll(".hour-cell.hour-tick")[1];
+        const trackRect = firstTrack ? firstTrack.getBoundingClientRect() : null;
+        const hour1Rect = firstHourCell ? firstHourCell.getBoundingClientRect() : null;
+        const hour2Rect = secondHourCell ? secondHourCell.getBoundingClientRect() : null;
+        const hourStepPx = hour1Rect && hour2Rect ? (hour2Rect.top - hour1Rect.top) : null;
         applyFitModeZOrder();
         restoreRequestHighlights();
         return;
@@ -2687,10 +2714,12 @@
       board.style.setProperty("--day-span", "7");
       let dayBandH = "";
       if (weekZoomMode === "default") {
+        document.documentElement.style.setProperty("--hour-h", `${DEFAULT_WEEK_HOUR_W}px`);
         board.style.setProperty("--hour-h", `${DEFAULT_WEEK_HOUR_W}px`);
         dayBandH = `calc(var(--hour-h) * ${HOURS})`;
         board.style.setProperty("--day-band-h", dayBandH);
       } else {
+        document.documentElement.style.setProperty("--hour-h", `${DEFAULT_WEEK_HOUR_W}px`);
         board.style.removeProperty("--day-band-h");
       }
 
@@ -2807,7 +2836,11 @@
       });
       applyFitModeZOrder();
       restoreRequestHighlights();
-      setActiveWeekDay(isoDayIndex(anchorDate));
+      if (weekZoomMode === "fit") {
+        setActiveWeekDay(0);
+      } else {
+        setActiveWeekDay(isoDayIndex(anchorDate));
+      }
       syncTimeRailScroll();
     }
 
@@ -2909,6 +2942,9 @@
       },
       { passive: false }
     );
+    window.addEventListener("resize", () => {
+      render();
+    });
     render();
     syncTimeRailScroll();
   </script>
