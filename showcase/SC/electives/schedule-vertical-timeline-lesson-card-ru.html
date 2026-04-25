@@ -286,16 +286,15 @@
     }
 
     .request-card {
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      padding: 0;
+      border: 1px solid #d8e0f5;
+      border-radius: 8px;
+      background: #f8f9ff;
+      padding: 8px 10px;
+      cursor: grab;
     }
 
-    .request-card + .request-card {
-      border-top: 1px solid #e3e8f7;
-      padding-top: 8px;
-      margin-top: 2px;
+    .request-card:active {
+      cursor: grabbing;
     }
 
     .request-head {
@@ -923,6 +922,11 @@
     .track:has(.request-slot-highlight:hover) {
       z-index: 40;
       overflow: visible;
+    }
+
+    .track.request-drop-candidate {
+      box-shadow: inset 0 0 0 2px rgba(53, 99, 255, 0.4);
+      background: rgba(244, 247, 255, 0.6);
     }
 
     .lesson-card {
@@ -1567,7 +1571,10 @@
     const lessonStudentsByKey = new Map();
     const lessonSubjectByKey = new Map();
     const DRAG_STUDENT_MIME = "application/x-student";
+    const DRAG_REQUEST_MIME = "application/x-student-request-lesson";
     let activeRequestId = null;
+    let activeDragRequest = null;
+    let scheduleDropContext = { mode: "week", dayIndex: 0 };
     let returnViewState = null;
     let subjectPickerResolver = null;
     let subjectPickerValue = "";
@@ -1946,6 +1953,9 @@
 
     function attachLessonDropHandlers(el, lessonKey, titleText, metaText) {
       el.addEventListener("dragover", (event) => {
+        if (activeDragRequest) {
+          return;
+        }
         event.preventDefault();
         el.classList.add("drop-hover");
       });
@@ -1955,6 +1965,10 @@
       });
 
       el.addEventListener("drop", async (event) => {
+        if (activeDragRequest) {
+          event.preventDefault();
+          return;
+        }
         event.preventDefault();
         el.classList.remove("drop-hover");
         const raw = event.dataTransfer ? event.dataTransfer.getData(DRAG_STUDENT_MIME) : "";
@@ -2027,6 +2041,254 @@
       };
     }
 
+    function removeRequestCardById(requestId) {
+      if (!requestId) {
+        return;
+      }
+      const match = document.querySelector(`.request-card[data-request-id="${requestId}"]`);
+      if (!match) {
+        return;
+      }
+      const item = match.closest(".student-request-item");
+      match.remove();
+      if (item) {
+        const countEl = item.querySelector(".student-request-count");
+        if (countEl) {
+          const remaining = item.querySelectorAll(".request-card").length;
+          countEl.textContent = String(remaining);
+        }
+      }
+      if (activeRequestId === requestId) {
+        clearScheduleHighlights();
+      }
+    }
+
+    function getDefaultPlaceForTeacher(teacherIndex) {
+      const l = lessons.find((x) => x.teacher === teacherIndex);
+      return l && l.place ? l.place : "—";
+    }
+
+    function findSlotForRequest(teacherIndex, day, request, desiredStart) {
+      const wStart = Math.max(request.startMinutes, START_HOUR * 60);
+      const wEnd = Math.min(request.endMinutes, END_HOUR * 60);
+      const free = getFreeIntervalsForTeacherDay(teacherIndex, day, wStart, wEnd);
+      const dur = request.durationMinutes;
+      for (let i = 0; i < free.length; i += 1) {
+        const [a, b] = free[i];
+        if (b - a < dur) {
+          continue;
+        }
+        const s = Math.max(a, Math.min(desiredStart, b - dur));
+        if (s >= a && s + dur <= b) {
+          return s;
+        }
+      }
+      return null;
+    }
+
+    function clientYToDayAndMinute(track, clientY, durationM) {
+      const rect = track.getBoundingClientRect();
+      if (rect.height < 1) {
+        return null;
+      }
+      const y = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+      let day;
+      let inDay; /* minutes in [0, MINUTES_PER_DAY] from schedule start of that day */
+      if (scheduleDropContext.mode === "day") {
+        day = scheduleDropContext.dayIndex;
+        inDay = y * MINUTES_PER_DAY;
+      } else {
+        const w = y * 7 * MINUTES_PER_DAY;
+        day = Math.min(6, Math.floor(w / MINUTES_PER_DAY));
+        inDay = w - day * MINUTES_PER_DAY;
+      }
+      const snapped = Math.round(inDay / 15) * 15;
+      const clamped = Math.max(0, Math.min(MINUTES_PER_DAY - 15, snapped));
+      let startM = START_HOUR * 60 + clamped;
+      if (startM + durationM > END_HOUR * 60) {
+        startM = Math.max(START_HOUR * 60, END_HOUR * 60 - durationM);
+      }
+      return { day, startM };
+    }
+
+    function clearRequestDropTrackHighlight() {
+      if (!tracks) {
+        return;
+      }
+      tracks.querySelectorAll(".track.request-drop-candidate").forEach((el) => {
+        el.classList.remove("request-drop-candidate");
+      });
+    }
+
+    function isValidRequestDropOnTrack(event, request, track) {
+      const trackTeacher = Number(track.dataset.teacherIndex);
+      if (Number.isNaN(request.teacherIndex) || request.teacherIndex !== trackTeacher) {
+        return false;
+      }
+      if (request.days.length > 0) {
+        if (scheduleDropContext.mode === "day" && !request.days.includes(scheduleDropContext.dayIndex)) {
+          return false;
+        }
+        if (scheduleDropContext.mode === "week") {
+          const t = clientYToDayAndMinute(track, event.clientY, request.durationMinutes);
+          if (!t || !request.days.includes(t.day)) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function initRequestCardDrag() {
+      if (!studentsSidebarList || studentsSidebarList.dataset.requestDragInit === "1") {
+        return;
+      }
+      studentsSidebarList.dataset.requestDragInit = "1";
+      const bindCard = (card) => {
+        if (card.dataset.requestDragCardInit === "1") {
+          return;
+        }
+        card.dataset.requestDragCardInit = "1";
+        card.setAttribute("draggable", "true");
+        card.querySelectorAll("button, summary").forEach((el) => {
+          const n = el;
+          n.setAttribute("draggable", "false");
+        });
+        card.addEventListener("dragstart", (event) => {
+          const title = (card.querySelector(".request-title")
+            && card.querySelector(".request-title").textContent
+            || "")
+            .trim();
+          const base = getRequestData(card);
+          if (Number.isNaN(base.teacherIndex) || !title) {
+            event.preventDefault();
+            return;
+          }
+          const payload = { ...base, title };
+          activeDragRequest = payload;
+          if (event.dataTransfer) {
+            event.dataTransfer.setData(DRAG_REQUEST_MIME, JSON.stringify(payload));
+            event.dataTransfer.setData("text/plain", title);
+            event.dataTransfer.effectAllowed = "copy";
+          }
+          activateDesiredTimeForRequestCard(card, true);
+        });
+        card.addEventListener("dragend", () => {
+          activeDragRequest = null;
+          clearRequestDropTrackHighlight();
+        });
+      };
+      studentsSidebarList.querySelectorAll(".request-card").forEach(bindCard);
+    }
+
+    function initScheduleRequestDrop() {
+      if (!tracks || tracks.dataset.scheduleRequestDrop === "1") {
+        return;
+      }
+      tracks.dataset.scheduleRequestDrop = "1";
+      document.addEventListener("dragend", () => {
+        clearRequestDropTrackHighlight();
+        activeDragRequest = null;
+      });
+      tracks.addEventListener(
+        "dragover",
+        (event) => {
+          if (!activeDragRequest) {
+            return;
+          }
+          const track = event.target instanceof Element ? event.target.closest(".track") : null;
+          if (!track || !tracks.contains(track)) {
+            clearRequestDropTrackHighlight();
+            return;
+          }
+          if (!isValidRequestDropOnTrack(event, activeDragRequest, track)) {
+            clearRequestDropTrackHighlight();
+            return;
+          }
+          event.preventDefault();
+          if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = "copy";
+          }
+          clearRequestDropTrackHighlight();
+          track.classList.add("request-drop-candidate");
+        },
+        true
+      );
+      tracks.addEventListener(
+        "dragleave",
+        (event) => {
+          if (!activeDragRequest) {
+            return;
+          }
+          if (!tracks) {
+            return;
+          }
+          if (event.target === tracks) {
+            clearRequestDropTrackHighlight();
+          }
+        },
+        true
+      );
+      tracks.addEventListener(
+        "drop",
+        (event) => {
+          const raw =
+            (event.dataTransfer && event.dataTransfer.getData(DRAG_REQUEST_MIME)) || "";
+          if (!raw) {
+            return;
+          }
+          event.preventDefault();
+          let request;
+          try {
+            request = JSON.parse(raw);
+          } catch {
+            return;
+          }
+          if (!request || !request.requestId) {
+            return;
+          }
+          const track = event.target instanceof Element ? event.target.closest(".track") : null;
+          if (!track || !tracks.contains(track)) {
+            return;
+          }
+          if (!isValidRequestDropOnTrack(event, request, track)) {
+            return;
+          }
+          const tIdx = Number(track.dataset.teacherIndex);
+          const t = clientYToDayAndMinute(track, event.clientY, request.durationMinutes);
+          if (!t) {
+            return;
+          }
+          const place = getDefaultPlaceForTeacher(tIdx);
+          const startSlot = findSlotForRequest(tIdx, t.day, request, t.startM);
+          if (startSlot == null) {
+            return;
+          }
+          const endM = startSlot + request.durationMinutes;
+          if (endM > END_HOUR * 60) {
+            return;
+          }
+          const L = {
+            teacher: tIdx,
+            day: t.day,
+            start: minutesToLabel(startSlot),
+            end: minutesToLabel(endM),
+            title: request.title,
+            place
+          };
+          const lessonKey = buildLessonKey(L);
+          lessons.push(L);
+          lessonSubjectByKey.set(lessonKey, request.title);
+          removeRequestCardById(request.requestId);
+          activeDragRequest = null;
+          event.stopImmediatePropagation();
+          clearRequestDropTrackHighlight();
+          render();
+        },
+        true
+      );
+    }
+
     function getFreeIntervalsForTeacherDay(teacherIndex, dayIndex, windowStart, windowEnd) {
       const dayLessons = lessons
         .filter((L) => L.teacher === teacherIndex && L.day === dayIndex)
@@ -2087,6 +2349,35 @@
       board.classList.add("request-focus-active");
     }
 
+    function activateDesiredTimeForRequestCard(card, fromDrag) {
+      if (mode === "day") {
+        returnViewState = {
+          mode,
+          weekZoomMode,
+          dayZoomMode,
+          anchorDate: new Date(anchorDate)
+        };
+        returnViewBtn.hidden = false;
+        activeRequestId = card.dataset.requestId || null;
+        mode = "week";
+        if (!fromDrag) {
+          weekZoomMode = "fit";
+          weekZoomFitSwitch.checked = true;
+        }
+        render();
+        return;
+      }
+      if (mode === "week" && weekZoomMode !== "fit" && !fromDrag) {
+        activeRequestId = card.dataset.requestId || null;
+        weekZoomMode = "fit";
+        weekZoomFitSwitch.checked = true;
+        render();
+        return;
+      }
+      const showSlotsBtn = card.querySelector('.request-link[data-action="show-slots"]');
+      setRequestHighlights(card, showSlotsBtn);
+    }
+
     function setRequestHighlights(card, button) {
       const request = getRequestData(card);
       if (Number.isNaN(request.teacherIndex)) {
@@ -2106,7 +2397,9 @@
 
       if (relevantDays.length === 0) {
         activeRequestId = request.requestId;
-        button.classList.add("active");
+        if (button) {
+          button.classList.add("active");
+        }
         return;
       }
 
@@ -2147,7 +2440,9 @@
 
       elevateTrackForRequestSlots(request.teacherIndex);
       activeRequestId = request.requestId;
-      button.classList.add("active");
+      if (button) {
+        button.classList.add("active");
+      }
       applyRequestFocusState();
     }
 
@@ -2194,29 +2489,7 @@
             clearScheduleHighlights();
             return;
           }
-          if (mode === "day") {
-            returnViewState = {
-              mode,
-              weekZoomMode,
-              dayZoomMode,
-              anchorDate: new Date(anchorDate)
-            };
-            returnViewBtn.hidden = false;
-            activeRequestId = card.dataset.requestId || null;
-            mode = "week";
-            weekZoomMode = "fit";
-            weekZoomFitSwitch.checked = true;
-            render();
-            return;
-          }
-          if (mode === "week" && weekZoomMode !== "fit") {
-            activeRequestId = card.dataset.requestId || null;
-            weekZoomMode = "fit";
-            weekZoomFitSwitch.checked = true;
-            render();
-            return;
-          }
-          setRequestHighlights(card, button);
+          activateDesiredTimeForRequestCard(card);
         }
       });
     }
@@ -2244,6 +2517,7 @@
     }
 
     function render() {
+      scheduleDropContext = { mode, dayIndex: isoDayIndex(anchorDate) };
       board.classList.toggle("week", mode === "week");
       board.classList.toggle("day", mode === "day");
       board.classList.toggle("week-zoom-fit", mode === "week" && weekZoomMode === "fit");
@@ -2507,6 +2781,8 @@
 
     initStudentDragSources();
     initRequestCardActions();
+    initScheduleRequestDrop();
+    initRequestCardDrag();
     render();
   </script>
 </body>
