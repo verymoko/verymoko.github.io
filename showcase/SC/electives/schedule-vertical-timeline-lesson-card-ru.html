@@ -1,0 +1,2789 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>День и неделя раздельно</title>
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --text: #1e1f24;
+      --muted: #7a7f8d;
+      --line: #e7e9ef;
+      --line-strong: #d8dce6;
+      --accent: #3a67ff;
+      --teacher-col-w: 200px;
+      --time-col-w: 92px;
+      --row-h: 72px;
+      --header-h: 52px;
+      --hour-w: 56px;
+      --hour-h: 56px;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .page {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-layout {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .toolbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+    }
+
+    #weekZoomBar {
+      margin-left: auto;
+    }
+
+    .toolbar-date-block {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 0 1 auto;
+    }
+
+    .view-switch {
+      display: inline-flex;
+      background: #eef1f9;
+      padding: 4px;
+      border-radius: 10px;
+      gap: 4px;
+    }
+
+    .view-switch button {
+      border: 0;
+      background: transparent;
+      color: #5c6272;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .view-switch button.active {
+      background: #fff;
+      color: var(--text);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.1);
+    }
+
+    .date-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .date-nav button {
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--text);
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .date-nav button:hover {
+      border-color: #c9d0e4;
+    }
+
+    /*
+      Узкий блок под дату; длинные строки обрезаются (ellipsis), навигация рядом.
+    */
+    .date-title {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1.25;
+      flex: 0 0 18ch;
+      width: 18ch;
+      max-width: 100%;
+      text-align: start;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .board-wrap {
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: auto;
+      padding: 0 0 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .students-sidebar {
+      width: 280px;
+      min-width: 280px;
+      border-left: 1px solid var(--line);
+      background: var(--card);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      direction: ltr;
+      text-align: left;
+    }
+
+    .students-sidebar-header {
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+      background: #fafbff;
+    }
+
+    .students-sidebar-list {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      align-content: start;
+    }
+
+    .student-request-item summary {
+      list-style: none;
+      cursor: pointer;
+      display: block;
+    }
+
+    .student-request-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .student-request-item[open] {
+      border: 1px solid #d8dce8;
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .student-card {
+      border: 1px solid #d8dce8;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(16, 24, 40, 0.08);
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 0;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .student-card:active {
+      cursor: grabbing;
+    }
+
+    .student-request-item[open] .student-card {
+      border: 1px solid #d8dce8;
+      border-radius: 12px;
+      margin: 0;
+    }
+
+    .student-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .student-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .student-request-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #4b587a;
+      flex-shrink: 0;
+    }
+
+    .student-request-count {
+      border: 1px solid #d1daf9;
+      background: #eef2ff;
+      color: #2f4db8;
+      border-radius: 999px;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 8px;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .student-request-chevron {
+      font-size: 12px;
+      transition: transform 0.2s ease;
+    }
+
+    .student-request-item[open] .student-request-chevron {
+      transform: rotate(180deg);
+    }
+
+    .student-requests {
+      border-top: 0;
+      padding: 0;
+      display: grid;
+      gap: 6px;
+      padding: 6px 10px 8px;
+    }
+
+    .request-card {
+      border: 1px solid #d8e0f5;
+      border-radius: 8px;
+      background: #f8f9ff;
+      padding: 8px 10px;
+      cursor: grab;
+    }
+
+    .request-card:active {
+      cursor: grabbing;
+    }
+
+    .request-head {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .request-title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .request-title {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .request-goal {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1f2e70;
+      white-space: nowrap;
+    }
+
+    .request-teacher {
+      margin: 0;
+      font-size: 12px;
+      color: #1f273d;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .request-teacher-avatar {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #dde3f2;
+      color: #4b587a;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .request-meta {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: #67708a;
+      line-height: 1.35;
+    }
+
+    .request-summary {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: #67708a;
+      line-height: 1.35;
+    }
+
+    .request-actions {
+      margin-top: 8px;
+      padding-top: 0;
+      border-top: 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .request-link {
+      border: 0;
+      background: transparent;
+      color: #3563ff;
+      font: inherit;
+      font-size: 12px;
+      padding: 0;
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 2px;
+    }
+
+    .request-link.active {
+      color: #1f2e70;
+      text-decoration-style: solid;
+      font-weight: 700;
+    }
+
+    .request-notes {
+      margin-top: 8px;
+      padding-top: 0;
+      border-top: 0;
+      font-size: 12px;
+      color: #4a5268;
+      display: none;
+      line-height: 1.35;
+    }
+
+    .request-card.notes-open .request-notes {
+      display: block;
+    }
+
+    .student-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #dde3f2;
+      color: #4b587a;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .student-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      line-height: 1.35;
+    }
+
+    .student-class {
+      font-size: 12px;
+      color: #7a7f8d;
+      line-height: 1.3;
+      margin-top: 2px;
+    }
+
+    .board {
+      --hours: 12;
+      --day-span: 1;
+      display: grid;
+      grid-template-columns: var(--time-col-w) minmax(0, 1fr);
+      grid-template-rows: var(--header-h) 1fr;
+      width: 100%;
+      min-width: max(100%, min-content);
+      flex: 1 1 auto;
+      min-height: 0;
+      align-self: stretch;
+    }
+
+    /* Режим «День»: временная шкала и дорожки на всю ширину окна */
+    .board.day {
+      width: 100%;
+      max-width: 100%;
+      grid-template-columns: var(--time-col-w) minmax(0, 1fr);
+      min-height: 100%;
+    }
+
+    .board.day .timeline-day-mode {
+      width: 100%;
+      min-width: 0;
+      min-height: 100%;
+    }
+
+    .board.day .hour-cell.hour-tick {
+      flex: 1 1 0;
+      min-width: 0;
+      width: auto;
+    }
+
+    .board.day .track {
+      height: auto;
+      min-height: 100%;
+      min-width: 0;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(100% / var(--hours) - 1px),
+        var(--line) calc(100% / var(--hours) - 1px),
+        var(--line) calc(100% / var(--hours))
+      );
+    }
+
+    .board.day .board-rail,
+    .board.day .timeline {
+      min-height: 100%;
+    }
+
+    .board.day.day-zoom-fit .timeline {
+      height: 100%;
+      min-height: 0;
+    }
+
+    .board.day.day-zoom-fit .timeline-day-mode {
+      min-height: 100%;
+    }
+
+    .board.day.day-zoom-fit .hour-cell {
+      height: auto;
+      flex: 1 1 0;
+      min-height: 0;
+      flex-shrink: 1;
+    }
+
+    .board.day.day-zoom-fit .track {
+      height: 100%;
+      min-height: 100%;
+    }
+
+    .board.day.day-zoom-fit .board-rail {
+      grid-template-columns: repeat(var(--teacher-cols, 1), minmax(48px, 1fr));
+      width: 100%;
+      min-width: 0;
+    }
+
+    .board.day.day-zoom-fit .teacher-name,
+    .board.day.day-zoom-fit .track {
+      min-width: 0;
+      max-width: none;
+      margin-right: -36px;
+    }
+
+    .board.day.day-zoom-fit .teacher-name:last-child,
+    .board.day.day-zoom-fit .track:last-child {
+      margin-right: 0;
+    }
+
+    .board.day.day-zoom-fit .teacher-name {
+      background: var(--card);
+    }
+
+    /* Соседние перекрывающиеся .track с большим z-index иначе перекрывают клик/ховер по подсветкам и урокам */
+    .board.day.day-zoom-fit .track,
+    .board.week.week-zoom-fit .track {
+      pointer-events: none;
+    }
+
+    .board.day.day-zoom-fit .track .lesson-card,
+    .board.day.day-zoom-fit .track .request-slot-highlight[data-tooltip],
+    .board.week.week-zoom-fit .track .lesson-card,
+    .board.week.week-zoom-fit .track .request-slot-highlight[data-tooltip] {
+      pointer-events: auto;
+    }
+
+    /*
+      Неделя «Вся сетка в экран»: вторая колонка тянется на всю ширину (без щели от floor(px)).
+      Сетка часов и дней — в долях 100%, не фиксированный --hour-w.
+    */
+    .board.week.week-zoom-fit {
+      width: 100%;
+      max-width: 100%;
+      grid-template-columns: var(--time-col-w) minmax(0, 1fr);
+    }
+
+    .board.week.week-zoom-fit .timeline-week-mode {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .board.week.week-zoom-fit .week-day-cell {
+      flex: 1 1 0;
+      min-width: 0;
+      width: auto;
+    }
+
+    .board.week.week-zoom-fit .week-day-names,
+    .board.week.week-zoom-fit .hour-row {
+      height: 100%;
+    }
+
+    /* В «уместить в экран» подписи часов нечитаемы — скрываем, остаётся только колонка дней */
+    .board.week.week-zoom-fit .hour-row {
+      display: none;
+    }
+
+    .board.week.week-zoom-fit .timeline-week-mode {
+      grid-template-columns: 1fr;
+    }
+
+    .board.week.week-zoom-fit .board-rail {
+      grid-template-columns: repeat(var(--teacher-cols, 1), minmax(48px, 1fr));
+      width: 100%;
+      min-width: 0;
+      height: 100%;
+    }
+
+    /* Колонки преподавателей: сжатие + лёгкое наложение, чтобы уместить больше имён */
+    .board.week.week-zoom-fit .teacher-name,
+    .board.week.week-zoom-fit .track {
+      min-width: 0;
+      max-width: none;
+      margin-right: -36px;
+    }
+
+    .board.week.week-zoom-fit .teacher-name:last-child,
+    .board.week.week-zoom-fit .track:last-child {
+      margin-right: 0;
+    }
+
+    .board.week.week-zoom-fit .teacher-name {
+      background: var(--card);
+    }
+
+    .board.week.week-zoom-fit .timeline {
+      height: 100%;
+      min-height: 0;
+    }
+
+    .board.week.week-zoom-fit .timeline-week-mode {
+      min-height: 100%;
+    }
+
+    /* Неделя «в экран»: равномерная почасовая сетка + отдельно усиленные линии только между днями */
+    .board.week.week-zoom-fit .track {
+      height: 100%;
+      min-width: 0;
+      background-color: #fafbff;
+      background-image:
+        linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent calc(100% / var(--day-span) - 1px),
+          var(--line-strong) calc(100% / var(--day-span) - 1px),
+          var(--line-strong) calc(100% / var(--day-span)),
+          transparent calc(100% / var(--day-span)),
+          transparent calc(2 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(2 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(2 * 100% / var(--day-span)),
+          transparent calc(2 * 100% / var(--day-span)),
+          transparent calc(3 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(3 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(3 * 100% / var(--day-span)),
+          transparent calc(3 * 100% / var(--day-span)),
+          transparent calc(4 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(4 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(4 * 100% / var(--day-span)),
+          transparent calc(4 * 100% / var(--day-span)),
+          transparent calc(5 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(5 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(5 * 100% / var(--day-span)),
+          transparent calc(5 * 100% / var(--day-span)),
+          transparent calc(6 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(6 * 100% / var(--day-span) - 1px),
+          var(--line-strong) calc(6 * 100% / var(--day-span)),
+          transparent calc(6 * 100% / var(--day-span)),
+          transparent 100%
+        ),
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent calc(100% / (var(--hours) * var(--day-span)) - 1px),
+          var(--line) calc(100% / (var(--hours) * var(--day-span)) - 1px),
+          var(--line) calc(100% / (var(--hours) * var(--day-span)))
+        );
+    }
+
+    .corner {
+      grid-row: 1;
+      grid-column: 1;
+      position: sticky;
+      left: 0;
+      top: 0;
+      z-index: 30;
+      height: auto;
+      min-height: var(--header-h);
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      background: var(--card);
+      border-right: 1px solid var(--line-strong);
+      border-bottom: 1px solid var(--line);
+      box-shadow: 4px 0 8px rgba(16, 24, 40, 0.04);
+      gap: 6px;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      line-height: 1.2;
+    }
+
+    .corner-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .teacher-sort {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.2;
+      padding: 4px 24px 4px 8px;
+    }
+
+    .board-rail {
+      --teacher-cols: 1;
+      grid-row: 1 / -1;
+      grid-column: 2;
+      display: grid;
+      grid-template-columns: repeat(var(--teacher-cols), minmax(var(--teacher-col-w), 1fr));
+      grid-template-rows: var(--header-h) 1fr;
+      min-width: 0;
+      min-height: 0;
+      width: 100%;
+      align-self: stretch;
+      box-sizing: border-box;
+    }
+
+    .names-col,
+    .tracks {
+      display: contents;
+    }
+
+    .timeline {
+      grid-row: 2;
+      grid-column: 1;
+      position: sticky;
+      top: var(--header-h);
+      left: 0;
+      z-index: 20;
+      background: #fafbff;
+      border-right: 1px solid var(--line-strong);
+      box-shadow: 4px 0 10px rgba(16, 24, 40, 0.05);
+    }
+
+    .timeline-day-mode {
+      display: flex;
+      flex-direction: column;
+      width: var(--time-col-w);
+    }
+
+    .timeline-week-mode {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      align-items: stretch;
+      width: 100%;
+    }
+
+    .week-day-names {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .week-day-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 6px;
+      border-top: 1px solid var(--line);
+      color: var(--text);
+    }
+
+    .week-day-name {
+      font-size: 12px;
+      line-height: 1.1;
+      text-transform: lowercase;
+      flex-shrink: 0;
+    }
+
+    .week-day-date {
+      font-size: 14px;
+      line-height: 1.1;
+      font-weight: 700;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .hour-row {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .hour-cell {
+      width: 100%;
+      min-width: 0;
+      height: var(--hour-h);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+    }
+
+    .hour-cell.hour-tick {
+      border-left-color: var(--line-strong);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .board.week .hour-cell.hour-tick {
+      border-top-color: var(--line);
+    }
+
+    .teacher-name {
+      grid-row: 1;
+      position: sticky;
+      top: 0;
+      z-index: 25;
+      min-width: 0;
+      min-height: 0;
+      height: var(--header-h);
+      align-self: start;
+      background: var(--card);
+      border-bottom: 1px solid var(--line-strong);
+      box-shadow: 0 4px 12px rgba(16, 24, 40, 0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 2px;
+      padding: 8px 12px;
+      border-right: 1px solid var(--line);
+      box-sizing: border-box;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .teacher-name:active {
+      cursor: grabbing;
+    }
+
+    .teacher-name.drag-over {
+      box-shadow: inset -2px 0 0 var(--accent);
+    }
+
+    .teacher-name-main {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.2;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .teacher-name-hours {
+      font-size: 11px;
+      line-height: 1.2;
+      font-weight: 500;
+      color: var(--muted);
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .track {
+      grid-row: 2;
+      position: relative;
+      z-index: 0;
+      min-width: 0;
+      min-height: 0;
+      width: auto;
+      height: calc(var(--hour-h) * var(--hours) * var(--day-span));
+      border-right: 1px solid var(--line);
+      background-color: #fff;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(var(--hour-h) - 1px),
+        var(--line) calc(var(--hour-h) - 1px),
+        var(--line) var(--hour-h)
+      );
+    }
+
+    /* Неделя (стандарт, px): равномерная почасовая сетка + усиленные линии только между днями */
+    .board.week .track {
+      background-color: #fafbff;
+      background-image:
+        linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent calc(1 * var(--day-band-h) - 1px),
+          var(--line-strong) calc(1 * var(--day-band-h) - 1px),
+          var(--line-strong) calc(1 * var(--day-band-h)),
+          transparent calc(1 * var(--day-band-h)),
+          transparent calc(2 * var(--day-band-h) - 1px),
+          var(--line-strong) calc(2 * var(--day-band-h) - 1px),
+          var(--line-strong) calc(2 * var(--day-band-h)),
+          transparent calc(2 * var(--day-band-h)),
+          transparent calc(3 * var(--day-band-h) - 1px),
+          var(--line-strong) calc(3 * var(--day-band-h) - 1px),
+          var(--line-strong) calc(3 * var(--day-band-h)),
+          transparent calc(3 * var(--day-band-h)),
+          transparent calc(4 * var(--day-band-h) - 1px),
+          var(--line-strong) calc(4 * var(--day-band-h) - 1px),
+          var(--line-strong) calc(4 * var(--day-band-h)),
+          transparent calc(4 * var(--day-band-h)),
+          transparent calc(5 * var(--day-band-h) - 1px),
+          var(--line-strong) calc(5 * var(--day-band-h) - 1px),
+          var(--line-strong) calc(5 * var(--day-band-h)),
+          transparent calc(5 * var(--day-band-h)),
+          transparent calc(6 * var(--day-band-h) - 1px),
+          var(--line-strong) calc(6 * var(--day-band-h) - 1px),
+          var(--line-strong) calc(6 * var(--day-band-h)),
+          transparent calc(6 * var(--day-band-h)),
+          transparent 100%
+        ),
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent calc(var(--hour-h) - 1px),
+          var(--line) calc(var(--hour-h) - 1px),
+          var(--line) var(--hour-h)
+        );
+    }
+
+    .track:has(.lesson-card:hover) {
+      z-index: 2;
+      overflow: visible;
+    }
+
+    .track:has(.request-slot-highlight:hover) {
+      z-index: 40;
+      overflow: visible;
+    }
+
+    .track.request-drop-candidate {
+      box-shadow: inset 0 0 0 2px rgba(53, 99, 255, 0.4);
+      background: rgba(244, 247, 255, 0.6);
+    }
+
+    .lesson-card {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 11px;
+      line-height: 1.25;
+      overflow: hidden;
+      border: 1px solid #6d8ce8;
+      background: #e8ecff;
+      color: #1f2e70;
+      cursor: default;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+    }
+
+    .lesson-card.drop-hover {
+      box-shadow: 0 0 0 2px rgba(58, 103, 255, 0.5), 0 1px 2px rgba(16, 24, 40, 0.06);
+    }
+
+    /* Инлайновый width у карточки сильнее класса — без !important ховер не перебивает слот */
+    .lesson-card:hover {
+      right: 6px;
+      width: auto !important;
+      min-width: calc(100% - 12px);
+      max-width: calc(100% - 12px) !important;
+      min-height: calc(var(--slot-pct) * 1%) !important;
+      z-index: 2;
+      overflow: visible !important;
+      box-shadow: 0 6px 20px rgba(16, 24, 40, 0.14);
+    }
+
+    .lesson-card:hover .lesson-title,
+    .lesson-card:hover .lesson-meta {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .lesson-card.b2 { border-color: #2d9c6e; background: #dff5ec; color: #12402d; }
+    .lesson-card.b3 { border-color: #b05ec8; background: #f4e8f8; color: #4a2560; }
+    .lesson-card.b4 { border-color: #d9772e; background: #fcefe0; color: #5c3610; }
+    .lesson-card.empty-slot {
+      border-color: #c7cedd;
+      background: #edf1f7;
+      color: #4a5568;
+    }
+
+    .board.week.week-zoom-fit.request-focus-active .lesson-card,
+    .board.day.day-zoom-fit.request-focus-active .lesson-card {
+      opacity: 0.38;
+      filter: saturate(0.7);
+    }
+
+    .request-slot-highlight {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      border-radius: 8px;
+      background: rgba(53, 99, 255, 0.16);
+      outline: 1px dashed rgba(53, 99, 255, 0.5);
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .request-slot-highlight[data-tooltip] {
+      pointer-events: auto;
+      cursor: default;
+    }
+
+    .request-slot-highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 8px);
+      transform: translateX(-50%);
+      background: #111827;
+      color: #fff;
+      font-size: 11px;
+      line-height: 1.2;
+      white-space: nowrap;
+      padding: 4px 8px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(16, 24, 40, 0.18);
+      z-index: 2000;
+    }
+
+    .teacher-name.is-request-focus-teacher {
+      box-shadow: inset 0 0 0 2px rgba(53, 99, 255, 0.38);
+      background: #eef3ff;
+    }
+
+    .track.is-request-focus-teacher {
+      background-color: #f4f7ff;
+    }
+
+    .lesson-title {
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lesson-meta {
+      font-size: 10px;
+      opacity: 0.9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lesson-students {
+      margin-top: 2px;
+      font-size: 10px;
+      opacity: 0.95;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .week-zoom-toolbar {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .week-zoom-toolbar[hidden] {
+      display: none !important;
+      margin-left: 0 !important;
+    }
+
+    .week-fit-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .week-fit-switch-text {
+      font-weight: 500;
+    }
+
+    .week-fit-switch-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+    }
+
+    .week-fit-switch-track {
+      position: relative;
+      width: 44px;
+      height: 26px;
+      flex-shrink: 0;
+      border-radius: 13px;
+      background: #d8dce6;
+      transition: background 0.2s ease;
+    }
+
+    .week-fit-switch-track::after {
+      content: "";
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 3px rgba(16, 24, 40, 0.2);
+    }
+
+    .week-fit-switch-input:focus-visible + .week-fit-switch-track {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .week-fit-switch-input:checked + .week-fit-switch-track {
+      background: var(--accent);
+    }
+
+    .week-fit-switch-input:checked + .week-fit-switch-track::after {
+      transform: translateX(18px);
+    }
+
+    .return-view-btn {
+      position: fixed;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      z-index: 120;
+      border: 0;
+      border-radius: 999px;
+      background: #111827;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1;
+      padding: 11px 16px;
+      box-shadow: 0 6px 20px rgba(16, 24, 40, 0.28);
+      cursor: pointer;
+    }
+
+    .return-view-btn:hover {
+      background: #1f2937;
+    }
+
+    .subject-picker-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 24, 39, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 16px;
+    }
+
+    .subject-picker-backdrop[hidden] {
+      display: none;
+    }
+
+    .subject-picker {
+      width: min(460px, 100%);
+      max-height: min(75vh, 620px);
+      overflow: auto;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #d8dce8;
+      box-shadow: 0 14px 36px rgba(16, 24, 40, 0.28);
+      padding: 14px;
+    }
+
+    .subject-picker-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0 0 10px;
+      color: #111827;
+    }
+
+    .subject-picker-group + .subject-picker-group {
+      margin-top: 10px;
+    }
+
+    .subject-picker-group-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #5c667d;
+      margin: 0 0 6px;
+    }
+
+    .subject-picker-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #1f273d;
+      font-size: 13px;
+      margin-top: 6px;
+      cursor: pointer;
+    }
+
+    .subject-picker-option input[type="radio"] {
+      margin: 0;
+    }
+
+    .subject-picker-option-text {
+      line-height: 1.3;
+    }
+
+    .subject-picker-assign {
+      margin-top: 12px;
+      border: 0;
+      border-radius: 9px;
+      background: #111827;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+
+    .subject-picker-assign:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    .subject-picker-cancel {
+      margin-top: 10px;
+      border: 0;
+      background: transparent;
+      color: #3563ff;
+      font-size: 13px;
+      padding: 0;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="toolbar">
+      <div class="toolbar-actions">
+        <div class="view-switch" role="group" aria-label="Режим отображения">
+          <button type="button" id="btnDay" class="active">День</button>
+          <button type="button" id="btnWeek">Неделя</button>
+        </div>
+        <div class="toolbar-date-block">
+          <h1 class="date-title" id="dateTitle"></h1>
+          <div class="date-nav">
+            <button type="button" id="btnPrev" aria-label="Назад">←</button>
+            <button type="button" id="btnToday">Сегодня</button>
+            <button type="button" id="btnNext" aria-label="Вперёд">→</button>
+          </div>
+        </div>
+        <div class="week-zoom-toolbar" id="weekZoomBar">
+          <label class="week-fit-switch">
+            <span class="week-fit-switch-text">Уместить в экран</span>
+            <input type="checkbox" class="week-fit-switch-input" id="weekZoomFitSwitch" />
+            <span class="week-fit-switch-track" aria-hidden="true"></span>
+          </label>
+        </div>
+      </div>
+    </header>
+    <div class="main-layout">
+      <div class="board-wrap" id="boardWrap">
+        <div class="board" id="board">
+          <div class="corner">
+            <span class="corner-title">Время / дата</span>
+            <select id="teacherSort" class="teacher-sort" aria-label="Сортировка преподавателей по занятости">
+              <option value="busy-first">Сначала занятые</option>
+              <option value="free-first">Сначала свободные</option>
+              <option value="custom">Произвольный порядок</option>
+            </select>
+          </div>
+          <div class="timeline" id="timeline"></div>
+          <div class="board-rail" id="boardRail">
+            <div class="names-col" id="namesCol"></div>
+            <div class="tracks" id="tracks"></div>
+          </div>
+        </div>
+      </div>
+      <aside class="students-sidebar" aria-label="Список учеников">
+        <div class="students-sidebar-header">Ученики</div>
+        <div class="students-sidebar-list">
+          <details class="student-request-item" open>
+            <summary>
+              <article class="student-card">
+                <div class="student-main">
+                  <div class="student-meta">
+                    <div class="student-avatar">ШР</div>
+                    <div>
+                      <div class="student-name">Шошана Розенблюм</div>
+                      <div class="student-class">8 класс · группа Алеф</div>
+                    </div>
+                  </div>
+                  <div class="student-request-toggle">
+                    <span class="student-request-count">2</span>
+                    <span class="student-request-chevron">⌄</span>
+                  </div>
+                </div>
+              </article>
+            </summary>
+            <div class="student-requests">
+              <article class="request-card" data-request-id="shoshana-algebra" data-teacher-index="0" data-days="0,2,4" data-time-start="14:00" data-time-end="19:00" data-duration-minutes="60">
+                <div class="request-head">
+                  <div class="request-title-row">
+                    <h4 class="request-title">Алгебра</h4>
+                    <span class="request-goal">82→100</span>
+                  </div>
+                  <p class="request-teacher">
+                    <span class="request-teacher-avatar" aria-hidden="true">ЕС</span>
+                    Елена Викторовна Соколова
+                  </p>
+                </div>
+                <p class="request-summary">Одиночный, 1 раз в неделю</p>
+                <div class="request-actions">
+                  <button class="request-link" type="button" data-action="show-slots">Показать желаемое время</button>
+                  <button class="request-link" type="button" data-action="notes">Примечания</button>
+                </div>
+                <div class="request-notes">Удобно после 15:00, лучше в понедельник или среду. До 14:00 занята секциями.</div>
+              </article>
+              <article class="request-card" data-request-id="shoshana-physics" data-teacher-index="1" data-days="1,3" data-time-start="13:00" data-time-end="18:30" data-duration-minutes="120">
+                <div class="request-head">
+                  <div class="request-title-row">
+                    <h4 class="request-title">Физика</h4>
+                    <span class="request-goal">76→100</span>
+                  </div>
+                  <p class="request-teacher">
+                    <span class="request-teacher-avatar" aria-hidden="true">МП</span>
+                    Михаил Андреевич Петров
+                  </p>
+                </div>
+                <p class="request-summary">Двойной, 2 раза в неделю</p>
+                <div class="request-actions">
+                  <button class="request-link" type="button" data-action="show-slots">Показать желаемое время</button>
+                </div>
+              </article>
+            </div>
+          </details>
+
+          <details class="student-request-item">
+            <summary>
+              <article class="student-card">
+                <div class="student-main">
+                  <div class="student-meta">
+                    <div class="student-avatar">РА</div>
+                    <div>
+                      <div class="student-name">Рут Амсалем</div>
+                      <div class="student-class">9 класс · группа Бет</div>
+                    </div>
+                  </div>
+                  <div class="student-request-toggle">
+                    <span class="student-request-count">1</span>
+                    <span class="student-request-chevron">⌄</span>
+                  </div>
+                </div>
+              </article>
+            </summary>
+            <div class="student-requests">
+              <article class="request-card" data-request-id="rut-english" data-teacher-index="4" data-days="1,3,6" data-time-start="10:00" data-time-end="16:30" data-duration-minutes="60">
+                <div class="request-head">
+                  <div class="request-title-row">
+                    <h4 class="request-title">Английский</h4>
+                    <span class="request-goal">79→100</span>
+                  </div>
+                  <p class="request-teacher">
+                    <span class="request-teacher-avatar" aria-hidden="true">ОН</span>
+                    Ольга Павловна Никитина
+                  </p>
+                </div>
+                <p class="request-summary">Одиночный, 1 раз в неделю</p>
+                <div class="request-actions">
+                  <button class="request-link" type="button" data-action="show-slots">Показать желаемое время</button>
+                  <button class="request-link" type="button" data-action="notes">Примечания</button>
+                </div>
+                <div class="request-notes">Желательно в первой половине дня в будни, кроме пятницы.</div>
+              </article>
+            </div>
+          </details>
+
+          <article class="student-card">
+            <div class="student-avatar">ДЛ</div>
+            <div>
+              <div class="student-name">Дина Леви</div>
+              <div class="student-class">7 класс · группа Гимел</div>
+            </div>
+          </article>
+          <article class="student-card">
+            <div class="student-avatar">ЙП</div>
+            <div>
+              <div class="student-name">Йоав Пелег</div>
+              <div class="student-class">10 класс · группа Алеф</div>
+            </div>
+          </article>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <button id="returnViewBtn" class="return-view-btn" type="button" hidden>Вернуться к прежнему виду</button>
+  <div id="subjectPickerBackdrop" class="subject-picker-backdrop" hidden>
+    <div class="subject-picker" role="dialog" aria-modal="true" aria-labelledby="subjectPickerTitle">
+      <h3 id="subjectPickerTitle" class="subject-picker-title">Выберите предмет для слота</h3>
+      <div id="subjectPickerGroups"></div>
+      <button id="subjectPickerAssign" class="subject-picker-assign" type="button" disabled>Назначить урок</button>
+      <button id="subjectPickerCancel" class="subject-picker-cancel" type="button">Отмена</button>
+    </div>
+  </div>
+
+  <script>
+    const START_HOUR = 8;
+    const END_HOUR = 20;
+    const HOURS = END_HOUR - START_HOUR;
+    const MINUTES_PER_DAY = HOURS * 60;
+
+    const WEEK_DAYS_SHORT = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+
+    const MONTH_NAMES = [
+      "января", "февраля", "марта", "апреля", "мая", "июня",
+      "июля", "августа", "сентября", "октября", "ноября", "декабря"
+    ];
+
+    const teachers = [
+      "Елена Викторовна Соколова",
+      "Михаил Андреевич Петров",
+      "Анна Сергеевна Орлова",
+      "Дмитрий Игоревич Волков",
+      "Ольга Павловна Никитина",
+      "Ирина Константиновна Белова",
+      "Сергей Павлович Кузнецов",
+      "Марина Олеговна Фролова",
+      "Алексей Николаевич Громов",
+      "Татьяна Ильинична Миронова"
+    ];
+
+    /**
+     * Уроки: day — 0 пн … 6 вс (понедельник = 0).
+     * В ряде дней у преподавателя 6 астрономических часов занятий с обедом ~12:15–13:15 между блоками.
+     * По всем парам (преподаватель, день) мода суммарных рабочих часов ≥ 3 (чаще всего встречаются дни на 3 ч).
+     */
+    const lessons = [
+      /* Елена — пн 6 ч с обедом; ср 3 ч; пт 4 ч с длинным перерывом */
+      { teacher: 0, day: 0, start: "09:00", end: "10:30", title: "Алгебра", place: "каб. 12" },
+      { teacher: 0, day: 0, start: "10:45", end: "12:15", title: "Алгебра (практика)", place: "каб. 12" },
+      { teacher: 0, day: 0, start: "13:15", end: "14:45", title: "Геометрия", place: "каб. 12" },
+      { teacher: 0, day: 0, start: "15:00", end: "16:30", title: "Геометрия (практика)", place: "каб. 12" },
+      { teacher: 0, day: 2, start: "10:00", end: "11:00", title: "Алгебра", place: "каб. 12" },
+      { teacher: 0, day: 2, start: "11:30", end: "12:30", title: "Геометрия", place: "каб. 12" },
+      { teacher: 0, day: 2, start: "14:00", end: "15:00", title: "Консультация", place: "каб. 12" },
+      { teacher: 0, day: 4, start: "09:00", end: "11:00", title: "Алгебра", place: "каб. 12" },
+      { teacher: 0, day: 4, start: "13:00", end: "15:00", title: "Геометрия", place: "каб. 12" },
+      /* Михаил — пн 3 ч; вт 6 ч с обедом; чт 4 ч */
+      { teacher: 1, day: 0, start: "09:00", end: "10:00", title: "Физика", place: "лаб. 3" },
+      { teacher: 1, day: 0, start: "10:30", end: "11:30", title: "Физика (лаб.)", place: "лаб. 3" },
+      { teacher: 1, day: 0, start: "14:00", end: "15:00", title: "Консультация", place: "лаб. 3" },
+      { teacher: 1, day: 1, start: "09:00", end: "10:30", title: "Физика", place: "лаб. 3" },
+      { teacher: 1, day: 1, start: "10:45", end: "12:15", title: "Физика (лаб.)", place: "лаб. 3" },
+      { teacher: 1, day: 1, start: "13:15", end: "14:45", title: "Робототехника", place: "лаб. 1" },
+      { teacher: 1, day: 1, start: "15:00", end: "16:30", title: "Робототехника (проект)", place: "лаб. 1" },
+      { teacher: 1, day: 3, start: "09:00", end: "11:00", title: "Физика", place: "лаб. 3" },
+      { teacher: 1, day: 3, start: "13:00", end: "15:00", title: "Олимпиадная подготовка", place: "лаб. 3" },
+      /* Анна — пн 3 ч; вт 3 ч; пт 6 ч с обедом */
+      { teacher: 2, day: 0, start: "08:30", end: "09:30", title: "Русский язык", place: "каб. 5" },
+      { teacher: 2, day: 0, start: "09:45", end: "10:45", title: "Литература", place: "каб. 5" },
+      { teacher: 2, day: 0, start: "11:00", end: "12:00", title: "Сочинение", place: "каб. 5" },
+      { teacher: 2, day: 1, start: "14:00", end: "15:00", title: "Русский язык", place: "каб. 5" },
+      { teacher: 2, day: 1, start: "15:30", end: "16:30", title: "Литература", place: "каб. 5" },
+      { teacher: 2, day: 1, start: "17:00", end: "18:00", title: "Кружок", place: "каб. 5" },
+      { teacher: 2, day: 4, start: "09:00", end: "10:30", title: "Русский язык", place: "каб. 5" },
+      { teacher: 2, day: 4, start: "10:45", end: "12:15", title: "Литература", place: "каб. 5" },
+      { teacher: 2, day: 4, start: "13:15", end: "14:45", title: "Литература (практика)", place: "каб. 5" },
+      { teacher: 2, day: 4, start: "15:00", end: "16:30", title: "Итоговое сочинение", place: "каб. 5" },
+      /* Дмитрий — пн 4 ч; ср 6 ч с обедом; сб 3 ч */
+      { teacher: 3, day: 0, start: "08:30", end: "10:30", title: "История", place: "каб. 21" },
+      { teacher: 3, day: 0, start: "14:00", end: "16:00", title: "Обществознание", place: "каб. 21" },
+      { teacher: 3, day: 2, start: "09:00", end: "10:30", title: "История", place: "каб. 21" },
+      { teacher: 3, day: 2, start: "10:45", end: "12:15", title: "История (семинар)", place: "каб. 21" },
+      { teacher: 3, day: 2, start: "13:15", end: "14:45", title: "Обществознание", place: "каб. 21" },
+      { teacher: 3, day: 2, start: "15:00", end: "16:30", title: "Дебаты", place: "каб. 21" },
+      { teacher: 3, day: 5, start: "10:00", end: "11:00", title: "История", place: "каб. 21" },
+      { teacher: 3, day: 5, start: "11:30", end: "12:30", title: "Обществознание", place: "каб. 21" },
+      { teacher: 3, day: 5, start: "14:00", end: "15:00", title: "Консультация", place: "каб. 21" },
+      /* Ольга — вт 3 ч; чт 6 ч с обедом; вс 3 ч */
+      { teacher: 4, day: 1, start: "09:00", end: "10:00", title: "Английский", place: "каб. 8" },
+      { teacher: 4, day: 1, start: "10:30", end: "11:30", title: "Английский (разговор)", place: "каб. 8" },
+      { teacher: 4, day: 1, start: "14:00", end: "15:00", title: "Консультация", place: "каб. 8" },
+      { teacher: 4, day: 3, start: "09:00", end: "10:30", title: "Английский", place: "каб. 8" },
+      { teacher: 4, day: 3, start: "10:45", end: "12:15", title: "Английский (аудирование)", place: "каб. 8" },
+      { teacher: 4, day: 3, start: "13:15", end: "14:45", title: "Английский (проект)", place: "каб. 8" },
+      { teacher: 4, day: 3, start: "15:00", end: "16:30", title: "Английский (письмо)", place: "каб. 8" },
+      { teacher: 4, day: 6, start: "10:00", end: "11:00", title: "Английский", place: "каб. 8" },
+      { teacher: 4, day: 6, start: "11:30", end: "12:30", title: "Разговорный клуб", place: "каб. 8" },
+      { teacher: 4, day: 6, start: "14:00", end: "15:00", title: "Консультация", place: "каб. 8" },
+      /* Ирина — пн 3 ч; ср 4 ч; пт 3 ч */
+      { teacher: 5, day: 0, start: "09:00", end: "10:00", title: "Биология", place: "каб. 16" },
+      { teacher: 5, day: 0, start: "10:30", end: "11:30", title: "Биология (практика)", place: "каб. 16" },
+      { teacher: 5, day: 0, start: "14:00", end: "15:00", title: "Консультация", place: "каб. 16" },
+      { teacher: 5, day: 2, start: "09:30", end: "11:30", title: "Биология", place: "каб. 16" },
+      { teacher: 5, day: 2, start: "13:30", end: "15:30", title: "Подготовка к ЕГЭ", place: "каб. 16" },
+      { teacher: 5, day: 4, start: "10:00", end: "11:00", title: "Биология", place: "каб. 16" },
+      { teacher: 5, day: 4, start: "11:30", end: "12:30", title: "Генетика", place: "каб. 16" },
+      { teacher: 5, day: 4, start: "14:00", end: "15:00", title: "Кружок", place: "каб. 16" },
+      /* Сергей — вт 4 ч; чт 3 ч; сб 3 ч */
+      { teacher: 6, day: 1, start: "08:30", end: "10:30", title: "Информатика", place: "комп. класс 2" },
+      { teacher: 6, day: 1, start: "14:00", end: "16:00", title: "Программирование", place: "комп. класс 2" },
+      { teacher: 6, day: 3, start: "09:00", end: "10:00", title: "Информатика", place: "комп. класс 2" },
+      { teacher: 6, day: 3, start: "10:30", end: "11:30", title: "Алгоритмы", place: "комп. класс 2" },
+      { teacher: 6, day: 3, start: "15:00", end: "16:00", title: "Консультация", place: "комп. класс 2" },
+      { teacher: 6, day: 5, start: "10:00", end: "11:00", title: "Олимпиадная информатика", place: "комп. класс 2" },
+      { teacher: 6, day: 5, start: "11:30", end: "12:30", title: "Проектная работа", place: "комп. класс 2" },
+      { teacher: 6, day: 5, start: "14:00", end: "15:00", title: "Разбор задач", place: "комп. класс 2" },
+      /* Марина — пн 3 ч; ср 3 ч; чт 4 ч */
+      { teacher: 7, day: 0, start: "09:00", end: "10:00", title: "Химия", place: "лаб. 4" },
+      { teacher: 7, day: 0, start: "10:30", end: "11:30", title: "Химия (лаб.)", place: "лаб. 4" },
+      { teacher: 7, day: 0, start: "14:00", end: "15:00", title: "Консультация", place: "лаб. 4" },
+      { teacher: 7, day: 2, start: "09:00", end: "10:00", title: "Органическая химия", place: "лаб. 4" },
+      { teacher: 7, day: 2, start: "10:30", end: "11:30", title: "Неорганическая химия", place: "лаб. 4" },
+      { teacher: 7, day: 2, start: "14:00", end: "15:00", title: "Практикум", place: "лаб. 4" },
+      { teacher: 7, day: 3, start: "09:30", end: "11:30", title: "Химия", place: "лаб. 4" },
+      { teacher: 7, day: 3, start: "13:30", end: "15:30", title: "Подготовка к ЕГЭ", place: "лаб. 4" },
+      /* Алексей — вт 3 ч; пт 4 ч; вс 3 ч */
+      { teacher: 8, day: 1, start: "09:00", end: "10:00", title: "География", place: "каб. 9" },
+      { teacher: 8, day: 1, start: "10:30", end: "11:30", title: "География (карты)", place: "каб. 9" },
+      { teacher: 8, day: 1, start: "14:00", end: "15:00", title: "Краеведение", place: "каб. 9" },
+      { teacher: 8, day: 4, start: "08:30", end: "10:30", title: "География", place: "каб. 9" },
+      { teacher: 8, day: 4, start: "11:00", end: "13:00", title: "Подготовка к ОГЭ", place: "каб. 9" },
+      { teacher: 8, day: 6, start: "10:00", end: "11:00", title: "География", place: "каб. 9" },
+      { teacher: 8, day: 6, start: "11:30", end: "12:30", title: "Гео-клуб", place: "каб. 9" },
+      { teacher: 8, day: 6, start: "14:00", end: "15:00", title: "Консультация", place: "каб. 9" },
+      /* Татьяна — пн 4 ч; чт 3 ч; сб 3 ч */
+      { teacher: 9, day: 0, start: "08:30", end: "10:30", title: "Начальная школа (математика)", place: "каб. 2" },
+      { teacher: 9, day: 0, start: "11:00", end: "13:00", title: "Начальная школа (чтение)", place: "каб. 2" },
+      { teacher: 9, day: 3, start: "09:00", end: "10:00", title: "Начальная школа (русский)", place: "каб. 2" },
+      { teacher: 9, day: 3, start: "10:30", end: "11:30", title: "Начальная школа (окружающий мир)", place: "каб. 2" },
+      { teacher: 9, day: 3, start: "14:00", end: "15:00", title: "Подготовка к ВПР", place: "каб. 2" },
+      { teacher: 9, day: 5, start: "10:00", end: "11:00", title: "Логика", place: "каб. 2" },
+      { teacher: 9, day: 5, start: "11:30", end: "12:30", title: "Развивающие занятия", place: "каб. 2" },
+      { teacher: 9, day: 5, start: "14:00", end: "15:00", title: "Консультация", place: "каб. 2" }
+    ];
+
+    let mode = "day";
+    let anchorDate = startOfDay(new Date());
+    let teacherSortMode = "busy-first";
+    let customTeacherOrder = teachers.map((_, idx) => idx);
+
+    /** Неделя: «стандарт» — фиксированная ширина часа; «в экран» — подгонка под ширину без меток часов */
+    let weekZoomMode = "default";
+    /** День: «в экран» — сетка по вертикали на всю высоту области, равные слоты часа */
+    let dayZoomMode = "default";
+    const DEFAULT_WEEK_HOUR_W = 56;
+
+    const board = document.getElementById("board");
+    const boardRail = document.getElementById("boardRail");
+    const timeline = document.getElementById("timeline");
+    const namesCol = document.getElementById("namesCol");
+    const tracks = document.getElementById("tracks");
+
+    const btnDay = document.getElementById("btnDay");
+    const btnWeek = document.getElementById("btnWeek");
+    const btnPrev = document.getElementById("btnPrev");
+    const btnNext = document.getElementById("btnNext");
+    const btnToday = document.getElementById("btnToday");
+    const dateTitle = document.getElementById("dateTitle");
+    const weekZoomBar = document.getElementById("weekZoomBar");
+    const weekZoomFitSwitch = document.getElementById("weekZoomFitSwitch");
+    const teacherSort = document.getElementById("teacherSort");
+    const returnViewBtn = document.getElementById("returnViewBtn");
+    const subjectPickerBackdrop = document.getElementById("subjectPickerBackdrop");
+    const subjectPickerGroups = document.getElementById("subjectPickerGroups");
+    const subjectPickerAssign = document.getElementById("subjectPickerAssign");
+    const subjectPickerCancel = document.getElementById("subjectPickerCancel");
+    const studentsSidebarList = document.querySelector(".students-sidebar-list");
+    const lessonStudentsByKey = new Map();
+    const lessonSubjectByKey = new Map();
+    const DRAG_STUDENT_MIME = "application/x-student";
+    const DRAG_REQUEST_MIME = "application/x-student-request-lesson";
+    let activeRequestId = null;
+    let activeDragRequest = null;
+    let scheduleDropContext = { mode: "week", dayIndex: 0 };
+    let returnViewState = null;
+    let subjectPickerResolver = null;
+    let subjectPickerValue = "";
+
+    function startOfDay(d) {
+      const x = new Date(d);
+      x.setHours(0, 0, 0, 0);
+      return x;
+    }
+
+    /** Понедельник недели для даты */
+    function mondayOfWeek(d) {
+      const x = startOfDay(d);
+      const dow = x.getDay();
+      const diff = dow === 0 ? -6 : 1 - dow;
+      x.setDate(x.getDate() + diff);
+      return x;
+    }
+
+    /** Наш формат дня: пн=0 … вс=6 */
+    function isoDayIndex(date) {
+      const dow = date.getDay();
+      return dow === 0 ? 6 : dow - 1;
+    }
+
+    function parseTime(s) {
+      const [h, m] = s.split(":").map(Number);
+      return h * 60 + m;
+    }
+
+    function minutesFromScheduleStart(timeStr) {
+      return parseTime(timeStr) - START_HOUR * 60;
+    }
+
+    function lessonDurationMinutes(L) {
+      return parseTime(L.end) - parseTime(L.start);
+    }
+
+    function totalMinutesForLessons(list) {
+      return list.reduce((sum, L) => sum + lessonDurationMinutes(L), 0);
+    }
+
+    /** Краткая подпись длительности на русском */
+    function formatHoursSubtitle(totalMinutes) {
+      if (totalMinutes <= 0) {
+        return "0 ч";
+      }
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      if (m === 0) {
+        return `${h} ч`;
+      }
+      if (h === 0) {
+        return `${m} мин`;
+      }
+      return `${h} ч ${m} мин`;
+    }
+
+    function buildTeacherNameEl(displayName, hoursLabel, teacherIndex) {
+      const wrap = document.createElement("div");
+      wrap.className = "teacher-name";
+      wrap.draggable = true;
+      wrap.dataset.teacherIndex = String(teacherIndex);
+      const main = document.createElement("span");
+      main.className = "teacher-name-main";
+      main.textContent = displayName;
+      const sub = document.createElement("span");
+      sub.className = "teacher-name-hours";
+      sub.textContent = hoursLabel;
+      wrap.appendChild(main);
+      wrap.appendChild(sub);
+      return wrap;
+    }
+
+    function ensureCustomTeacherOrder() {
+      if (customTeacherOrder.length !== teachers.length) {
+        const known = new Set(customTeacherOrder);
+        const missing = teachers.map((_, idx) => idx).filter((idx) => !known.has(idx));
+        customTeacherOrder = [...customTeacherOrder.filter((idx) => idx >= 0 && idx < teachers.length), ...missing];
+      }
+    }
+
+    function getTeacherOrder(dayIdx = null) {
+      ensureCustomTeacherOrder();
+      const stats = teachers.map((name, teacherIndex) => {
+        const teacherLessons = dayIdx === null
+          ? lessons.filter((L) => L.teacher === teacherIndex)
+          : lessons.filter((L) => L.teacher === teacherIndex && L.day === dayIdx);
+        return {
+          name,
+          teacherIndex,
+          teacherLessons,
+          totalMinutes: totalMinutesForLessons(teacherLessons)
+        };
+      });
+
+      if (teacherSortMode === "custom") {
+        const rank = new Map(customTeacherOrder.map((teacherIndex, pos) => [teacherIndex, pos]));
+        stats.sort((a, b) => (rank.get(a.teacherIndex) ?? 0) - (rank.get(b.teacherIndex) ?? 0));
+        return stats;
+      }
+
+      const direction = teacherSortMode === "busy-first" ? -1 : 1;
+      stats.sort((a, b) => {
+        if (a.totalMinutes !== b.totalMinutes) {
+          return (a.totalMinutes - b.totalMinutes) * direction;
+        }
+        return a.teacherIndex - b.teacherIndex;
+      });
+      return stats;
+    }
+
+    function moveTeacherInCustomOrder(sourceTeacherIndex, targetTeacherIndex) {
+      if (sourceTeacherIndex === targetTeacherIndex) return;
+      ensureCustomTeacherOrder();
+      const sourcePos = customTeacherOrder.indexOf(sourceTeacherIndex);
+      const targetPos = customTeacherOrder.indexOf(targetTeacherIndex);
+      if (sourcePos < 0 || targetPos < 0) return;
+      customTeacherOrder.splice(sourcePos, 1);
+      const nextTargetPos = customTeacherOrder.indexOf(targetTeacherIndex);
+      customTeacherOrder.splice(nextTargetPos, 0, sourceTeacherIndex);
+    }
+
+    function attachTeacherRowDropHandlers(el) {
+      el.addEventListener("dragstart", (event) => {
+        if (teacherSortMode !== "custom") {
+          event.preventDefault();
+          return;
+        }
+        const teacherIndex = Number(el.dataset.teacherIndex);
+        if (!event.dataTransfer || Number.isNaN(teacherIndex)) return;
+        event.dataTransfer.setData("text/plain", String(teacherIndex));
+        event.dataTransfer.effectAllowed = "move";
+      });
+
+      el.addEventListener("dragover", (event) => {
+        if (teacherSortMode !== "custom") return;
+        event.preventDefault();
+        el.classList.add("drag-over");
+      });
+
+      el.addEventListener("dragleave", () => {
+        el.classList.remove("drag-over");
+      });
+
+      el.addEventListener("drop", (event) => {
+        el.classList.remove("drag-over");
+        if (teacherSortMode !== "custom") return;
+        event.preventDefault();
+        const raw = event.dataTransfer ? event.dataTransfer.getData("text/plain") : "";
+        const sourceTeacherIndex = Number(raw);
+        const targetTeacherIndex = Number(el.dataset.teacherIndex);
+        if (Number.isNaN(sourceTeacherIndex) || Number.isNaN(targetTeacherIndex)) return;
+        moveTeacherInCustomOrder(sourceTeacherIndex, targetTeacherIndex);
+        render();
+      });
+    }
+
+    function updateWeekZoomUi() {
+      weekZoomBar.hidden = false;
+      if (mode === "day") {
+        weekZoomFitSwitch.checked = dayZoomMode === "fit";
+      } else {
+        weekZoomFitSwitch.checked = weekZoomMode === "fit";
+      }
+    }
+
+    function isZoomFitMode() {
+      return (mode === "day" && dayZoomMode === "fit") || (mode === "week" && weekZoomMode === "fit");
+    }
+
+    function applyFitModeZOrder() {
+      if (!isZoomFitMode()) {
+        namesCol.querySelectorAll(".teacher-name").forEach((el) => el.style.removeProperty("z-index"));
+        tracks.querySelectorAll(".track").forEach((el) => el.style.removeProperty("z-index"));
+        return;
+      }
+      const nameEls = namesCol.querySelectorAll(".teacher-name");
+      const trs = tracks.querySelectorAll(".track");
+      for (let i = 0; i < nameEls.length; i += 1) {
+        const z = String(i + 1);
+        nameEls[i].style.zIndex = z;
+        if (trs[i]) {
+          trs[i].style.zIndex = z;
+        }
+      }
+    }
+
+    function elevateTrackForRequestSlots(teacherIndex) {
+      if (Number.isNaN(teacherIndex)) {
+        return;
+      }
+      const z = isZoomFitMode() ? "100" : "30";
+      const t = tracks.querySelector(`.track[data-teacher-index="${teacherIndex}"]`);
+      const n = namesCol.querySelector(`.teacher-name[data-teacher-index="${teacherIndex}"]`);
+      if (t) {
+        t.style.zIndex = z;
+      }
+      if (n) {
+        n.style.zIndex = z;
+      }
+    }
+
+    function buildLessonKey(L) {
+      return `${L.teacher}|${L.day}|${L.start}|${L.end}|${L.title}|${L.place}`;
+    }
+
+    function isLessonOccupied(lessonKey) {
+      let hash = 0;
+      for (let i = 0; i < lessonKey.length; i += 1) {
+        hash = (hash + lessonKey.charCodeAt(i) * (i + 1)) % 9973;
+      }
+      return hash % 3 !== 0;
+    }
+
+    function getStudentsForLesson(lessonKey) {
+      return lessonStudentsByKey.get(lessonKey) || [];
+    }
+
+    function setLessonCardContent(el, titleText, metaText, lessonKey) {
+      const assigned = getStudentsForLesson(lessonKey);
+      const studentsText = `👤 ${assigned.length} / 15`;
+      const hasSubject = el.dataset.hasSubject === "1";
+      const titleHtml = hasSubject ? `<div class="lesson-title">${escapeHtml(titleText)}</div>` : "";
+      el.innerHTML = `${titleHtml}<div class="lesson-meta">${escapeHtml(metaText)}</div><div class="lesson-students">${escapeHtml(studentsText)}</div>`;
+    }
+
+    function getStudentRequestSubjects(studentName) {
+      if (!studentName) {
+        return [];
+      }
+      const studentCards = Array.from(document.querySelectorAll(".student-request-item"));
+      for (const item of studentCards) {
+        const nameEl = item.querySelector(".student-card .student-name");
+        if (!nameEl || (nameEl.textContent || "").trim() !== studentName) {
+          continue;
+        }
+        return Array.from(item.querySelectorAll(".request-title"))
+          .map((el) => (el.textContent || "").trim())
+          .filter(Boolean);
+      }
+      return [];
+    }
+
+    function uniqueSubjects(list) {
+      return Array.from(new Set(list.filter(Boolean)));
+    }
+
+    function normalizeText(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function getTeacherSubjects(teacherIndex) {
+      return uniqueSubjects(
+        lessons.filter((L) => L.teacher === teacherIndex).map((L) => L.title)
+      );
+    }
+
+    function closeMatchingStudentRequest(studentName, subjectName, teacherIndex) {
+      if (!studentName || !subjectName || !Number.isInteger(teacherIndex)) {
+        return;
+      }
+      const wantedStudent = normalizeText(studentName);
+      const wantedSubject = normalizeText(subjectName);
+      const wantedTeacher = normalizeText(teachers[teacherIndex] || "");
+      const requestItems = Array.from(document.querySelectorAll(".student-request-item"));
+      const item = requestItems.find((node) => {
+        const nameEl = node.querySelector(".student-card .student-name");
+        return normalizeText(nameEl ? nameEl.textContent : "") === wantedStudent;
+      });
+      if (!item) {
+        return;
+      }
+
+      const cards = Array.from(item.querySelectorAll(".request-card"));
+      const match = cards.find((card) => {
+        const titleEl = card.querySelector(".request-title");
+        const teacherEl = card.querySelector(".request-teacher");
+        const cardSubject = normalizeText(titleEl ? titleEl.textContent : "");
+        const cardTeacher = normalizeText(teacherEl ? teacherEl.textContent : "");
+        return cardSubject === wantedSubject && cardTeacher.includes(wantedTeacher);
+      });
+      if (!match) {
+        return;
+      }
+
+      const removedRequestId = match.dataset.requestId || "";
+      match.remove();
+
+      const countEl = item.querySelector(".student-request-count");
+      if (countEl) {
+        const remaining = item.querySelectorAll(".request-card").length;
+        countEl.textContent = String(remaining);
+      }
+
+      if (removedRequestId && activeRequestId === removedRequestId) {
+        clearScheduleHighlights();
+      }
+    }
+
+    function closeSubjectPicker(selectedSubject = null) {
+      subjectPickerBackdrop.hidden = true;
+      subjectPickerGroups.innerHTML = "";
+      subjectPickerValue = "";
+      subjectPickerAssign.disabled = true;
+      if (subjectPickerResolver) {
+        const resolve = subjectPickerResolver;
+        subjectPickerResolver = null;
+        resolve(selectedSubject);
+      }
+    }
+
+    function showSubjectPicker(primarySubjects, secondarySubjects) {
+      return new Promise((resolve) => {
+        subjectPickerResolver = resolve;
+        subjectPickerValue = "";
+        subjectPickerAssign.disabled = true;
+        subjectPickerGroups.innerHTML = "";
+
+        const buildGroup = (title, items, withTitle = true) => {
+          if (items.length === 0) {
+            return;
+          }
+          const group = document.createElement("section");
+          group.className = "subject-picker-group";
+          if (withTitle) {
+            const groupTitle = document.createElement("p");
+            groupTitle.className = "subject-picker-group-title";
+            groupTitle.textContent = title;
+            group.appendChild(groupTitle);
+          }
+          items.forEach((subject) => {
+            const option = document.createElement("label");
+            option.className = "subject-picker-option";
+            const radio = document.createElement("input");
+            radio.type = "radio";
+            radio.name = "subject-picker-choice";
+            radio.value = subject;
+            radio.addEventListener("change", () => {
+              subjectPickerValue = subject;
+              subjectPickerAssign.disabled = false;
+            });
+            const text = document.createElement("span");
+            text.className = "subject-picker-option-text";
+            text.textContent = subject;
+            option.appendChild(radio);
+            option.appendChild(text);
+            group.appendChild(option);
+          });
+          subjectPickerGroups.appendChild(group);
+        };
+
+        const hasPrimary = primarySubjects.length > 0;
+        buildGroup("Из заявок ученика", primarySubjects, true);
+        buildGroup("Другие предметы преподавателя", secondarySubjects, hasPrimary);
+
+        subjectPickerBackdrop.hidden = false;
+      });
+    }
+
+    subjectPickerCancel.addEventListener("click", () => closeSubjectPicker(null));
+    subjectPickerAssign.addEventListener("click", () => {
+      if (!subjectPickerValue) {
+        return;
+      }
+      closeSubjectPicker(subjectPickerValue);
+    });
+    subjectPickerBackdrop.addEventListener("click", (event) => {
+      if (event.target === subjectPickerBackdrop) {
+        closeSubjectPicker(null);
+      }
+    });
+
+    function attachLessonDropHandlers(el, lessonKey, titleText, metaText) {
+      el.addEventListener("dragover", (event) => {
+        if (activeDragRequest) {
+          return;
+        }
+        event.preventDefault();
+        el.classList.add("drop-hover");
+      });
+
+      el.addEventListener("dragleave", () => {
+        el.classList.remove("drop-hover");
+      });
+
+      el.addEventListener("drop", async (event) => {
+        if (activeDragRequest) {
+          event.preventDefault();
+          return;
+        }
+        event.preventDefault();
+        el.classList.remove("drop-hover");
+        const raw = event.dataTransfer ? event.dataTransfer.getData(DRAG_STUDENT_MIME) : "";
+        if (!raw) return;
+        let payload;
+        try {
+          payload = JSON.parse(raw);
+        } catch {
+          return;
+        }
+        const name = payload && typeof payload.name === "string" ? payload.name.trim() : "";
+        if (!name) return;
+        const teacherIndex = Number(el.dataset.teacherIndex);
+        const hasSubject = el.dataset.hasSubject === "1";
+        if (!hasSubject && Number.isInteger(teacherIndex)) {
+          const studentRequested = uniqueSubjects(getStudentRequestSubjects(name));
+          const teacherSubjects = getTeacherSubjects(teacherIndex);
+          const primarySubjects = teacherSubjects.filter((subject) => studentRequested.includes(subject));
+          const secondarySubjects = teacherSubjects.filter((subject) => !primarySubjects.includes(subject));
+          const pickedSubject = await showSubjectPicker(primarySubjects, secondarySubjects);
+          if (!pickedSubject) {
+            return;
+          }
+          lessonSubjectByKey.set(lessonKey, pickedSubject);
+          el.dataset.hasSubject = "1";
+          el.classList.remove("empty-slot");
+          el.classList.add(`b${(teacherIndex % 4) + 1}`);
+          titleText = pickedSubject;
+        }
+        const list = getStudentsForLesson(lessonKey);
+        if (!list.includes(name)) {
+          lessonStudentsByKey.set(lessonKey, [...list, name]);
+        }
+        if (lessonSubjectByKey.has(lessonKey)) {
+          titleText = lessonSubjectByKey.get(lessonKey);
+        }
+        setLessonCardContent(el, titleText, metaText, lessonKey);
+        closeMatchingStudentRequest(name, titleText, teacherIndex);
+      });
+    }
+
+    function clearScheduleHighlights() {
+      document.querySelectorAll(".request-slot-highlight").forEach((el) => el.remove());
+      document.querySelectorAll('.request-link[data-action="show-slots"]').forEach((btn) => {
+        btn.classList.remove("active");
+      });
+      activeRequestId = null;
+      applyRequestFocusState();
+      returnViewState = null;
+      returnViewBtn.hidden = true;
+      applyFitModeZOrder();
+    }
+
+    function getRequestData(card) {
+      const teacherIndex = Number(card.dataset.teacherIndex);
+      const days = (card.dataset.days || "")
+        .split(",")
+        .map((x) => Number(x.trim()))
+        .filter((x) => Number.isInteger(x) && x >= 0 && x <= 6);
+      const startMinutes = parseTime(card.dataset.timeStart || "08:00");
+      const endMinutes = parseTime(card.dataset.timeEnd || "20:00");
+      const durationMinutes = Number(card.dataset.durationMinutes || "60");
+      return {
+        requestId: card.dataset.requestId || "",
+        teacherIndex,
+        days,
+        startMinutes,
+        endMinutes,
+        durationMinutes: Math.max(30, durationMinutes)
+      };
+    }
+
+    function removeRequestCardById(requestId) {
+      if (!requestId) {
+        return;
+      }
+      const match = document.querySelector(`.request-card[data-request-id="${requestId}"]`);
+      if (!match) {
+        return;
+      }
+      const item = match.closest(".student-request-item");
+      match.remove();
+      if (item) {
+        const countEl = item.querySelector(".student-request-count");
+        if (countEl) {
+          const remaining = item.querySelectorAll(".request-card").length;
+          countEl.textContent = String(remaining);
+        }
+      }
+      if (activeRequestId === requestId) {
+        clearScheduleHighlights();
+      }
+    }
+
+    function getDefaultPlaceForTeacher(teacherIndex) {
+      const l = lessons.find((x) => x.teacher === teacherIndex);
+      return l && l.place ? l.place : "—";
+    }
+
+    function findSlotForRequest(teacherIndex, day, request, desiredStart) {
+      const wStart = Math.max(request.startMinutes, START_HOUR * 60);
+      const wEnd = Math.min(request.endMinutes, END_HOUR * 60);
+      const free = getFreeIntervalsForTeacherDay(teacherIndex, day, wStart, wEnd);
+      const dur = request.durationMinutes;
+      for (let i = 0; i < free.length; i += 1) {
+        const [a, b] = free[i];
+        if (b - a < dur) {
+          continue;
+        }
+        const s = Math.max(a, Math.min(desiredStart, b - dur));
+        if (s >= a && s + dur <= b) {
+          return s;
+        }
+      }
+      return null;
+    }
+
+    function clientYToDayAndMinute(track, clientY, durationM) {
+      const rect = track.getBoundingClientRect();
+      if (rect.height < 1) {
+        return null;
+      }
+      const y = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+      let day;
+      let inDay; /* minutes in [0, MINUTES_PER_DAY] from schedule start of that day */
+      if (scheduleDropContext.mode === "day") {
+        day = scheduleDropContext.dayIndex;
+        inDay = y * MINUTES_PER_DAY;
+      } else {
+        const w = y * 7 * MINUTES_PER_DAY;
+        day = Math.min(6, Math.floor(w / MINUTES_PER_DAY));
+        inDay = w - day * MINUTES_PER_DAY;
+      }
+      const snapped = Math.round(inDay / 15) * 15;
+      const clamped = Math.max(0, Math.min(MINUTES_PER_DAY - 15, snapped));
+      let startM = START_HOUR * 60 + clamped;
+      if (startM + durationM > END_HOUR * 60) {
+        startM = Math.max(START_HOUR * 60, END_HOUR * 60 - durationM);
+      }
+      return { day, startM };
+    }
+
+    function clearRequestDropTrackHighlight() {
+      if (!tracks) {
+        return;
+      }
+      tracks.querySelectorAll(".track.request-drop-candidate").forEach((el) => {
+        el.classList.remove("request-drop-candidate");
+      });
+    }
+
+    function isValidRequestDropOnTrack(event, request, track) {
+      const trackTeacher = Number(track.dataset.teacherIndex);
+      if (Number.isNaN(request.teacherIndex) || request.teacherIndex !== trackTeacher) {
+        return false;
+      }
+      if (request.days.length > 0) {
+        if (scheduleDropContext.mode === "day" && !request.days.includes(scheduleDropContext.dayIndex)) {
+          return false;
+        }
+        if (scheduleDropContext.mode === "week") {
+          const t = clientYToDayAndMinute(track, event.clientY, request.durationMinutes);
+          if (!t || !request.days.includes(t.day)) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function initRequestCardDrag() {
+      if (!studentsSidebarList || studentsSidebarList.dataset.requestDragInit === "1") {
+        return;
+      }
+      studentsSidebarList.dataset.requestDragInit = "1";
+      const bindCard = (card) => {
+        if (card.dataset.requestDragCardInit === "1") {
+          return;
+        }
+        card.dataset.requestDragCardInit = "1";
+        card.setAttribute("draggable", "true");
+        card.querySelectorAll("button, summary").forEach((el) => {
+          const n = el;
+          n.setAttribute("draggable", "false");
+        });
+        card.addEventListener("dragstart", (event) => {
+          const title = (card.querySelector(".request-title")
+            && card.querySelector(".request-title").textContent
+            || "")
+            .trim();
+          const base = getRequestData(card);
+          if (Number.isNaN(base.teacherIndex) || !title) {
+            event.preventDefault();
+            return;
+          }
+          const payload = { ...base, title };
+          activeDragRequest = payload;
+          if (event.dataTransfer) {
+            event.dataTransfer.setData(DRAG_REQUEST_MIME, JSON.stringify(payload));
+            event.dataTransfer.setData("text/plain", title);
+            event.dataTransfer.effectAllowed = "copy";
+          }
+          activateDesiredTimeForRequestCard(card, true);
+        });
+        card.addEventListener("dragend", () => {
+          activeDragRequest = null;
+          clearRequestDropTrackHighlight();
+        });
+      };
+      studentsSidebarList.querySelectorAll(".request-card").forEach(bindCard);
+    }
+
+    function initScheduleRequestDrop() {
+      if (!tracks || tracks.dataset.scheduleRequestDrop === "1") {
+        return;
+      }
+      tracks.dataset.scheduleRequestDrop = "1";
+      document.addEventListener("dragend", () => {
+        clearRequestDropTrackHighlight();
+        activeDragRequest = null;
+      });
+      tracks.addEventListener(
+        "dragover",
+        (event) => {
+          if (!activeDragRequest) {
+            return;
+          }
+          const track = event.target instanceof Element ? event.target.closest(".track") : null;
+          if (!track || !tracks.contains(track)) {
+            clearRequestDropTrackHighlight();
+            return;
+          }
+          if (!isValidRequestDropOnTrack(event, activeDragRequest, track)) {
+            clearRequestDropTrackHighlight();
+            return;
+          }
+          event.preventDefault();
+          if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = "copy";
+          }
+          clearRequestDropTrackHighlight();
+          track.classList.add("request-drop-candidate");
+        },
+        true
+      );
+      tracks.addEventListener(
+        "dragleave",
+        (event) => {
+          if (!activeDragRequest) {
+            return;
+          }
+          if (!tracks) {
+            return;
+          }
+          if (event.target === tracks) {
+            clearRequestDropTrackHighlight();
+          }
+        },
+        true
+      );
+      tracks.addEventListener(
+        "drop",
+        (event) => {
+          const raw =
+            (event.dataTransfer && event.dataTransfer.getData(DRAG_REQUEST_MIME)) || "";
+          if (!raw) {
+            return;
+          }
+          event.preventDefault();
+          let request;
+          try {
+            request = JSON.parse(raw);
+          } catch {
+            return;
+          }
+          if (!request || !request.requestId) {
+            return;
+          }
+          const track = event.target instanceof Element ? event.target.closest(".track") : null;
+          if (!track || !tracks.contains(track)) {
+            return;
+          }
+          if (!isValidRequestDropOnTrack(event, request, track)) {
+            return;
+          }
+          const tIdx = Number(track.dataset.teacherIndex);
+          const t = clientYToDayAndMinute(track, event.clientY, request.durationMinutes);
+          if (!t) {
+            return;
+          }
+          const place = getDefaultPlaceForTeacher(tIdx);
+          const startSlot = findSlotForRequest(tIdx, t.day, request, t.startM);
+          if (startSlot == null) {
+            return;
+          }
+          const endM = startSlot + request.durationMinutes;
+          if (endM > END_HOUR * 60) {
+            return;
+          }
+          const L = {
+            teacher: tIdx,
+            day: t.day,
+            start: minutesToLabel(startSlot),
+            end: minutesToLabel(endM),
+            title: request.title,
+            place
+          };
+          const lessonKey = buildLessonKey(L);
+          lessons.push(L);
+          lessonSubjectByKey.set(lessonKey, request.title);
+          removeRequestCardById(request.requestId);
+          activeDragRequest = null;
+          event.stopImmediatePropagation();
+          clearRequestDropTrackHighlight();
+          render();
+        },
+        true
+      );
+    }
+
+    function getFreeIntervalsForTeacherDay(teacherIndex, dayIndex, windowStart, windowEnd) {
+      const dayLessons = lessons
+        .filter((L) => L.teacher === teacherIndex && L.day === dayIndex)
+        .map((L) => [parseTime(L.start), parseTime(L.end)])
+        .sort((a, b) => a[0] - b[0]);
+
+      const free = [];
+      let cursor = windowStart;
+      dayLessons.forEach(([busyStart, busyEnd]) => {
+        if (busyEnd <= cursor || busyStart >= windowEnd) {
+          return;
+        }
+        if (busyStart > cursor) {
+          free.push([cursor, Math.min(busyStart, windowEnd)]);
+        }
+        cursor = Math.max(cursor, busyEnd);
+      });
+      if (cursor < windowEnd) {
+        free.push([cursor, windowEnd]);
+      }
+      return free;
+    }
+
+    function minutesToLabel(minutes) {
+      const hh = Math.floor(minutes / 60);
+      const mm = minutes % 60;
+      return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+    }
+
+    function applyRequestFocusState() {
+      document.querySelectorAll(".teacher-name.is-request-focus-teacher").forEach((el) => {
+        el.classList.remove("is-request-focus-teacher");
+      });
+      document.querySelectorAll(".track.is-request-focus-teacher").forEach((el) => {
+        el.classList.remove("is-request-focus-teacher");
+      });
+      board.classList.remove("request-focus-active");
+
+      if (!activeRequestId) {
+        return;
+      }
+      const card = document.querySelector(`.request-card[data-request-id="${activeRequestId}"]`);
+      if (!card) {
+        return;
+      }
+      const teacherIndex = Number(card.dataset.teacherIndex);
+      if (Number.isNaN(teacherIndex)) {
+        return;
+      }
+      const teacherName = namesCol.querySelector(`.teacher-name[data-teacher-index="${teacherIndex}"]`);
+      const teacherTrack = tracks.querySelector(`.track[data-teacher-index="${teacherIndex}"]`);
+      if (teacherName) {
+        teacherName.classList.add("is-request-focus-teacher");
+      }
+      if (teacherTrack) {
+        teacherTrack.classList.add("is-request-focus-teacher");
+      }
+      board.classList.add("request-focus-active");
+    }
+
+    function activateDesiredTimeForRequestCard(card, fromDrag) {
+      if (mode === "day") {
+        returnViewState = {
+          mode,
+          weekZoomMode,
+          dayZoomMode,
+          anchorDate: new Date(anchorDate)
+        };
+        returnViewBtn.hidden = false;
+        activeRequestId = card.dataset.requestId || null;
+        mode = "week";
+        if (!fromDrag) {
+          weekZoomMode = "fit";
+          weekZoomFitSwitch.checked = true;
+        }
+        render();
+        return;
+      }
+      if (mode === "week" && weekZoomMode !== "fit" && !fromDrag) {
+        activeRequestId = card.dataset.requestId || null;
+        weekZoomMode = "fit";
+        weekZoomFitSwitch.checked = true;
+        render();
+        return;
+      }
+      const showSlotsBtn = card.querySelector('.request-link[data-action="show-slots"]');
+      setRequestHighlights(card, showSlotsBtn);
+    }
+
+    function setRequestHighlights(card, button) {
+      const request = getRequestData(card);
+      if (Number.isNaN(request.teacherIndex)) {
+        return;
+      }
+
+      document.querySelectorAll(".request-slot-highlight").forEach((el) => el.remove());
+      document.querySelectorAll('.request-link[data-action="show-slots"]').forEach((btn) => {
+        btn.classList.remove("active");
+      });
+      applyFitModeZOrder();
+
+      const dayIndex = isoDayIndex(anchorDate);
+      const relevantDays = mode === "day"
+        ? request.days.filter((d) => d === dayIndex)
+        : request.days;
+
+      if (relevantDays.length === 0) {
+        activeRequestId = request.requestId;
+        if (button) {
+          button.classList.add("active");
+        }
+        return;
+      }
+
+      const totalWeekMinutes = 7 * MINUTES_PER_DAY;
+      const reqStart = Math.max(request.startMinutes, START_HOUR * 60);
+      const reqEnd = Math.min(request.endMinutes, END_HOUR * 60);
+
+      relevantDays.forEach((reqDay) => {
+        const freeIntervals = getFreeIntervalsForTeacherDay(request.teacherIndex, reqDay, reqStart, reqEnd);
+        const track = tracks.querySelector(`.track[data-teacher-index="${request.teacherIndex}"]`);
+        if (!track) {
+          return;
+        }
+        freeIntervals.forEach(([freeStart, freeEnd]) => {
+          if (freeEnd - freeStart < request.durationMinutes) {
+            return;
+          }
+          const segment = document.createElement("div");
+          segment.className = "request-slot-highlight";
+          const tooltipText = `${minutesToLabel(freeStart)} — ${minutesToLabel(freeEnd)}`;
+          segment.dataset.tooltip = tooltipText;
+          if (mode === "day") {
+            const topPct = ((freeStart - START_HOUR * 60) / MINUTES_PER_DAY) * 100;
+            const heightPct = ((freeEnd - freeStart) / MINUTES_PER_DAY) * 100;
+            segment.style.top = `${topPct}%`;
+            segment.style.height = `${heightPct}%`;
+          } else {
+            const startFromWeek = reqDay * MINUTES_PER_DAY + (freeStart - START_HOUR * 60);
+            const endFromWeek = reqDay * MINUTES_PER_DAY + (freeEnd - START_HOUR * 60);
+            const topPct = (startFromWeek / totalWeekMinutes) * 100;
+            const heightPct = ((endFromWeek - startFromWeek) / totalWeekMinutes) * 100;
+            segment.style.top = `${topPct}%`;
+            segment.style.height = `${heightPct}%`;
+          }
+          track.appendChild(segment);
+        });
+      });
+
+      elevateTrackForRequestSlots(request.teacherIndex);
+      activeRequestId = request.requestId;
+      if (button) {
+        button.classList.add("active");
+      }
+      applyRequestFocusState();
+    }
+
+    function restoreRequestHighlights() {
+      if (!activeRequestId) {
+        return;
+      }
+      const card = document.querySelector(`.request-card[data-request-id="${activeRequestId}"]`);
+      const button = card ? card.querySelector('.request-link[data-action="show-slots"]') : null;
+      if (!card || !button) {
+        activeRequestId = null;
+        applyRequestFocusState();
+        return;
+      }
+      setRequestHighlights(card, button);
+    }
+
+    function initRequestCardActions() {
+      if (!studentsSidebarList || studentsSidebarList.dataset.requestActionsReady === "1") {
+        return;
+      }
+      studentsSidebarList.dataset.requestActionsReady = "1";
+      studentsSidebarList.addEventListener("click", (event) => {
+        const target = event.target instanceof HTMLElement ? event.target : null;
+        if (!target) {
+          return;
+        }
+        const button = target.closest(".request-link");
+        if (!button) {
+          return;
+        }
+        const card = button.closest(".request-card");
+        if (!card) {
+          return;
+        }
+        const action = button.dataset.action;
+        if (action === "notes") {
+          card.classList.toggle("notes-open");
+          button.classList.toggle("active", card.classList.contains("notes-open"));
+          return;
+        }
+        if (action === "show-slots") {
+          if (button.classList.contains("active")) {
+            clearScheduleHighlights();
+            return;
+          }
+          activateDesiredTimeForRequestCard(card);
+        }
+      });
+    }
+
+    function initStudentDragSources() {
+      const cards = document.querySelectorAll(".students-sidebar .student-card");
+      cards.forEach((card) => {
+        if (card.dataset.dragReady === "1") return;
+        card.draggable = true;
+        card.dataset.dragReady = "1";
+        card.addEventListener("dragstart", (event) => {
+          const nameEl = card.querySelector(".student-name");
+          const classEl = card.querySelector(".student-class");
+          const payload = JSON.stringify({
+            name: nameEl ? nameEl.textContent || "" : "",
+            className: classEl ? classEl.textContent || "" : ""
+          });
+          if (event.dataTransfer) {
+            event.dataTransfer.setData(DRAG_STUDENT_MIME, payload);
+            event.dataTransfer.setData("text/plain", payload);
+            event.dataTransfer.effectAllowed = "copy";
+          }
+        });
+      });
+    }
+
+    function render() {
+      scheduleDropContext = { mode, dayIndex: isoDayIndex(anchorDate) };
+      board.classList.toggle("week", mode === "week");
+      board.classList.toggle("day", mode === "day");
+      board.classList.toggle("week-zoom-fit", mode === "week" && weekZoomMode === "fit");
+      board.classList.toggle("day-zoom-fit", mode === "day" && dayZoomMode === "fit");
+      btnDay.classList.toggle("active", mode === "day");
+      btnWeek.classList.toggle("active", mode === "week");
+      updateWeekZoomUi();
+
+      const weekStart = mondayOfWeek(anchorDate);
+
+      if (mode === "day") {
+        board.style.setProperty("--hours", String(HOURS));
+        board.style.setProperty("--day-span", "1");
+        board.style.removeProperty("--day-band-h");
+        const d = startOfDay(anchorDate);
+        const title = `${WEEK_DAYS_SHORT[isoDayIndex(d)]}, ${d.getDate()} ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+        dateTitle.textContent = title;
+
+        timeline.innerHTML = "";
+        const row = document.createElement("div");
+        row.className = "timeline-day-mode";
+        for (let h = START_HOUR; h < END_HOUR; h += 1) {
+          const cell = document.createElement("div");
+          cell.className = "hour-cell hour-tick";
+          cell.textContent = `${String(h).padStart(2, "0")}:00`;
+          row.appendChild(cell);
+        }
+        timeline.appendChild(row);
+
+        namesCol.innerHTML = "";
+        tracks.innerHTML = "";
+        const dayIdx = isoDayIndex(d);
+        const teachersOrdered = getTeacherOrder();
+        boardRail.style.setProperty("--teacher-cols", String(teachersOrdered.length));
+        const dayData = teachersOrdered.map(({ name, teacherIndex, teacherLessons }) => {
+          const dayLessons = teacherLessons.filter((L) => L.day === dayIdx);
+          const dayMin = totalMinutesForLessons(dayLessons);
+          const hoursLabel = `За день: ${formatHoursSubtitle(dayMin)}`;
+          return { name, teacherIndex, dayLessons, hoursLabel };
+        });
+        dayData.forEach(({ name, hoursLabel, teacherIndex }) => {
+          const nameEl = buildTeacherNameEl(name, hoursLabel, teacherIndex);
+          attachTeacherRowDropHandlers(nameEl);
+          namesCol.appendChild(nameEl);
+        });
+        dayData.forEach(({ teacherIndex, dayLessons }) => {
+          const track = document.createElement("div");
+          track.className = "track";
+          track.dataset.teacherIndex = String(teacherIndex);
+          dayLessons.forEach((L) => {
+            const el = document.createElement("div");
+            const lessonKey = buildLessonKey(L);
+            const occupied = isLessonOccupied(lessonKey);
+            const selectedSubject = lessonSubjectByKey.get(lessonKey);
+            const hasSubject = occupied || Boolean(selectedSubject);
+            el.className = hasSubject ? `lesson-card b${(teacherIndex % 4) + 1}` : "lesson-card empty-slot";
+            el.dataset.hasSubject = hasSubject ? "1" : "0";
+            el.dataset.teacherIndex = String(teacherIndex);
+            const startM = minutesFromScheduleStart(L.start);
+            const endM = minutesFromScheduleStart(L.end);
+            const topPct = (startM / MINUTES_PER_DAY) * 100;
+            const heightPct = ((endM - startM) / MINUTES_PER_DAY) * 100;
+            el.style.top = `${topPct}%`;
+            el.style.height = `${heightPct}%`;
+            el.style.setProperty("--slot-pct", String(heightPct));
+            const metaText = `${L.start}–${L.end} · ${L.place}`;
+            const displayTitle = selectedSubject || L.title;
+            setLessonCardContent(el, displayTitle, metaText, lessonKey);
+            attachLessonDropHandlers(el, lessonKey, displayTitle, metaText);
+            track.appendChild(el);
+          });
+          tracks.appendChild(track);
+        });
+        applyFitModeZOrder();
+        restoreRequestHighlights();
+        return;
+      }
+
+      /* Неделя */
+      board.style.setProperty("--hours", String(HOURS));
+      board.style.setProperty("--day-span", "7");
+      let dayBandH = "";
+      if (weekZoomMode === "default") {
+        board.style.setProperty("--hour-h", `${DEFAULT_WEEK_HOUR_W}px`);
+        dayBandH = `calc(var(--hour-h) * ${HOURS})`;
+        board.style.setProperty("--day-band-h", dayBandH);
+      } else {
+        board.style.removeProperty("--day-band-h");
+      }
+
+      const mon = weekStart;
+      const sun = new Date(mon.getTime() + 6 * 86400000);
+      const weekRange =
+        mon.getMonth() === sun.getMonth()
+          ? `${mon.getDate()}–${sun.getDate()} ${MONTH_NAMES[mon.getMonth()]} ${mon.getFullYear()}`
+          : `${mon.getDate()} ${MONTH_NAMES[mon.getMonth()]} — ${sun.getDate()} ${MONTH_NAMES[sun.getMonth()]} ${sun.getFullYear()}`;
+      dateTitle.textContent = weekRange;
+
+      timeline.innerHTML = "";
+      const weekRoot = document.createElement("div");
+      weekRoot.className = "timeline-week-mode";
+
+      const namesRow = document.createElement("div");
+      namesRow.className = "week-day-names";
+      for (let i = 0; i < 7; i += 1) {
+        const dayDate = new Date(weekStart);
+        dayDate.setDate(weekStart.getDate() + i);
+        const cell = document.createElement("span");
+        cell.className = "week-day-cell";
+        if (weekZoomMode === "default") {
+          cell.style.height = dayBandH;
+          cell.style.minHeight = dayBandH;
+        }
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "week-day-name";
+        nameSpan.textContent = WEEK_DAYS_SHORT[i];
+        const dateSpan = document.createElement("span");
+        dateSpan.className = "week-day-date";
+        dateSpan.textContent = String(dayDate.getDate());
+        cell.appendChild(nameSpan);
+        cell.appendChild(dateSpan);
+        namesRow.appendChild(cell);
+      }
+      weekRoot.appendChild(namesRow);
+
+      const hourRow = document.createElement("div");
+      hourRow.className = "hour-row";
+      for (let d = 0; d < 7; d += 1) {
+        for (let h = START_HOUR; h < END_HOUR; h += 1) {
+          const cell = document.createElement("div");
+          cell.className = "hour-cell hour-tick";
+          cell.textContent = `${String(h).padStart(2, "0")}:00`;
+          hourRow.appendChild(cell);
+        }
+      }
+      weekRoot.appendChild(hourRow);
+      timeline.appendChild(weekRoot);
+
+      namesCol.innerHTML = "";
+      tracks.innerHTML = "";
+
+      const totalMin = 7 * MINUTES_PER_DAY;
+
+      const teachersOrdered = getTeacherOrder();
+      boardRail.style.setProperty("--teacher-cols", String(teachersOrdered.length));
+      teachersOrdered.forEach(({ name, teacherIndex, teacherLessons, totalMinutes }) => {
+        const list = teacherLessons;
+        const weekMin = totalMinutes;
+        const hoursLabel = `За неделю: ${formatHoursSubtitle(weekMin)}`;
+        const nameEl = buildTeacherNameEl(name, hoursLabel, teacherIndex);
+        attachTeacherRowDropHandlers(nameEl);
+        namesCol.appendChild(nameEl);
+      });
+      teachersOrdered.forEach(({ teacherIndex, teacherLessons }) => {
+        const list = teacherLessons;
+        const track = document.createElement("div");
+        track.className = "track";
+        track.dataset.teacherIndex = String(teacherIndex);
+        list.forEach((L) => {
+          const el = document.createElement("div");
+          const lessonKey = buildLessonKey(L);
+          const occupied = isLessonOccupied(lessonKey);
+          const selectedSubject = lessonSubjectByKey.get(lessonKey);
+          const hasSubject = occupied || Boolean(selectedSubject);
+          el.className = hasSubject ? `lesson-card b${(teacherIndex % 4) + 1}` : "lesson-card empty-slot";
+          el.dataset.hasSubject = hasSubject ? "1" : "0";
+          el.dataset.teacherIndex = String(teacherIndex);
+          const startM = L.day * MINUTES_PER_DAY + minutesFromScheduleStart(L.start);
+          const endM = L.day * MINUTES_PER_DAY + minutesFromScheduleStart(L.end);
+          const topPct = (startM / totalMin) * 100;
+          const heightPct = ((endM - startM) / totalMin) * 100;
+          el.style.top = `${topPct}%`;
+          el.style.height = `${heightPct}%`;
+          el.style.setProperty("--slot-pct", String(heightPct));
+          const metaText = `${WEEK_DAYS_SHORT[L.day]} ${L.start}–${L.end} · ${L.place}`;
+          const displayTitle = selectedSubject || L.title;
+          setLessonCardContent(el, displayTitle, metaText, lessonKey);
+          attachLessonDropHandlers(el, lessonKey, displayTitle, metaText);
+          track.appendChild(el);
+        });
+        tracks.appendChild(track);
+      });
+      applyFitModeZOrder();
+      restoreRequestHighlights();
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    btnDay.addEventListener("click", () => {
+      mode = "day";
+      render();
+    });
+
+    btnWeek.addEventListener("click", () => {
+      mode = "week";
+      render();
+    });
+
+    weekZoomFitSwitch.addEventListener("change", () => {
+      if (mode === "day") {
+        dayZoomMode = weekZoomFitSwitch.checked ? "fit" : "default";
+      } else {
+        weekZoomMode = weekZoomFitSwitch.checked ? "fit" : "default";
+      }
+      render();
+    });
+
+    teacherSort.addEventListener("change", () => {
+      teacherSortMode = teacherSort.value === "free-first" ? "free-first" : "busy-first";
+      render();
+    });
+
+    btnToday.addEventListener("click", () => {
+      anchorDate = new Date();
+      render();
+    });
+
+    btnPrev.addEventListener("click", () => {
+      const d = new Date(anchorDate);
+      if (mode === "day") {
+        d.setDate(d.getDate() - 1);
+      } else {
+        d.setDate(d.getDate() - 7);
+      }
+      anchorDate = d;
+      render();
+    });
+
+    btnNext.addEventListener("click", () => {
+      const d = new Date(anchorDate);
+      if (mode === "day") {
+        d.setDate(d.getDate() + 1);
+      } else {
+        d.setDate(d.getDate() + 7);
+      }
+      anchorDate = d;
+      render();
+    });
+
+    returnViewBtn.addEventListener("click", () => {
+      if (!returnViewState) {
+        returnViewBtn.hidden = true;
+        return;
+      }
+      mode = returnViewState.mode;
+      weekZoomMode = returnViewState.weekZoomMode;
+      if ("dayZoomMode" in returnViewState) {
+        dayZoomMode = returnViewState.dayZoomMode;
+      }
+      anchorDate = new Date(returnViewState.anchorDate);
+      returnViewState = null;
+      clearScheduleHighlights();
+      render();
+    });
+
+    initStudentDragSources();
+    initRequestCardActions();
+    initScheduleRequestDrop();
+    initRequestCardDrag();
+    render();
+  </script>
+</body>
+</html>
