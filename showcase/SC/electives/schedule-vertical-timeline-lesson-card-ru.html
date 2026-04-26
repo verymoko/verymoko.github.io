@@ -159,6 +159,10 @@
       padding: 0 0 16px;
     }
 
+    .board-scroll.day-zoom-fit {
+      padding-bottom: 0;
+    }
+
     .time-rail {
       min-height: 0;
       display: grid;
@@ -499,6 +503,12 @@
     .board.day.day-zoom-fit .timeline {
       height: calc(var(--hour-h) * var(--hours));
       min-height: 0;
+    }
+
+    .board.day.day-zoom-fit {
+      width: 100%;
+      max-width: 100%;
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .board.day.day-zoom-fit .timeline-day-mode {
@@ -1844,9 +1854,13 @@
 
     function resolveDayHourHeightPx() {
       if (!boardScroll) return DEFAULT_DAY_HOUR_H;
+      if (dayZoomMode !== "fit") return DEFAULT_DAY_HOUR_H;
       const viewportHeight = boardScroll.clientHeight;
       if (!Number.isFinite(viewportHeight) || viewportHeight <= 0) return DEFAULT_DAY_HOUR_H;
-      return Math.max(DEFAULT_DAY_HOUR_H, viewportHeight / HOURS);
+      const headerHRaw = getComputedStyle(document.documentElement).getPropertyValue("--header-h");
+      const headerH = Number.parseFloat(headerHRaw);
+      const timelineAreaH = viewportHeight - (Number.isFinite(headerH) ? headerH : 0);
+      return Math.max(22, timelineAreaH / HOURS);
     }
 
     function applyFitModeZOrder() {
@@ -2625,6 +2639,7 @@
       board.classList.toggle("day", mode === "day");
       board.classList.toggle("week-zoom-fit", mode === "week" && weekZoomMode === "fit");
       board.classList.toggle("day-zoom-fit", mode === "day" && dayZoomMode === "fit");
+      boardScroll.classList.toggle("day-zoom-fit", mode === "day" && dayZoomMode === "fit");
       btnDay.classList.toggle("active", mode === "day");
       btnWeek.classList.toggle("active", mode === "week");
       updateWeekZoomUi();
