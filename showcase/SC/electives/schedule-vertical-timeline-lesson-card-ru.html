@@ -315,10 +315,21 @@
       background: #f8f9ff;
       padding: 8px 10px;
       cursor: grab;
+      position: relative;
+      z-index: 1;
+      transition: margin-top 0.16s ease;
     }
 
     .request-card:active {
       cursor: grabbing;
+    }
+
+    .request-card.is-stacked {
+      margin-top: -56px;
+    }
+
+    .request-card.is-stacked.stack-base {
+      margin-top: 0;
     }
 
     .request-head {
@@ -1983,12 +1994,8 @@
 
       const removedRequestId = match.dataset.requestId || "";
       match.remove();
-
-      const countEl = item.querySelector(".student-request-count");
-      if (countEl) {
-        const remaining = item.querySelectorAll(".request-card").length;
-        countEl.textContent = String(remaining);
-      }
+      refreshRequestCardStacking(item);
+      syncRequestCountBadge(item);
 
       if (removedRequestId && activeRequestId === removedRequestId) {
         clearScheduleHighlights();
@@ -2158,6 +2165,86 @@
       };
     }
 
+    function getRequestedLessonsPerWeek(card) {
+      const explicitCount = Number(card.dataset.lessonsPerWeek || "");
+      if (Number.isFinite(explicitCount) && explicitCount > 0) {
+        return Math.floor(explicitCount);
+      }
+      const summary = card.querySelector(".request-summary");
+      const text = summary ? summary.textContent || "" : "";
+      const match = text.match(/(\d+)\s*раз(?:а)?\s+в\s+недел/i);
+      if (!match) {
+        return 1;
+      }
+      const parsed = Number(match[1]);
+      return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1;
+    }
+
+    function syncRequestCountBadge(item) {
+      if (!item) {
+        return;
+      }
+      const countEl = item.querySelector(".student-request-count");
+      if (!countEl) {
+        return;
+      }
+      const remaining = item.querySelectorAll(".request-card").length;
+      countEl.textContent = String(remaining);
+    }
+
+    function refreshRequestCardStacking(item) {
+      if (!item) {
+        return;
+      }
+      const cards = Array.from(item.querySelectorAll(".request-card"));
+      const groups = new Map();
+      cards.forEach((card) => {
+        card.classList.remove("is-stacked", "stack-base");
+        card.style.zIndex = "1";
+        const id = card.dataset.requestId || "";
+        if (!id) {
+          return;
+        }
+        if (!groups.has(id)) {
+          groups.set(id, []);
+        }
+        groups.get(id).push(card);
+      });
+      groups.forEach((groupCards) => {
+        if (groupCards.length <= 1) {
+          return;
+        }
+        groupCards.forEach((card, idx) => {
+          card.classList.add("is-stacked");
+          if (idx === 0) {
+            card.classList.add("stack-base");
+          }
+          card.style.zIndex = String(groupCards.length - idx);
+        });
+      });
+    }
+
+    function expandRequestCardsByWeeklyCount() {
+      const items = document.querySelectorAll(".student-request-item");
+      items.forEach((item) => {
+        const cards = Array.from(item.querySelectorAll(".request-card"));
+        cards.forEach((card) => {
+          if (card.dataset.expandedByFrequency === "1") {
+            return;
+          }
+          card.dataset.expandedByFrequency = "1";
+          const copiesNeeded = getRequestedLessonsPerWeek(card) - 1;
+          for (let idx = 0; idx < copiesNeeded; idx += 1) {
+            const copy = card.cloneNode(true);
+            copy.dataset.expandedByFrequency = "1";
+            card.after(copy);
+          }
+        });
+        refreshRequestCardStacking(item);
+        syncRequestCountBadge(item);
+      });
+    }
+
     function removeRequestCardById(requestId) {
       if (!requestId) {
         return;
@@ -2168,13 +2255,8 @@
       }
       const item = match.closest(".student-request-item");
       match.remove();
-      if (item) {
-        const countEl = item.querySelector(".student-request-count");
-        if (countEl) {
-          const remaining = item.querySelectorAll(".request-card").length;
-          countEl.textContent = String(remaining);
-        }
-      }
+      refreshRequestCardStacking(item);
+      syncRequestCountBadge(item);
       if (activeRequestId === requestId) {
         clearScheduleHighlights();
       }
@@ -2935,6 +3017,7 @@
     });
 
     initStudentDragSources();
+    expandRequestCardsByWeeklyCount();
     initRequestCardActions();
     initScheduleRequestDrop();
     initRequestCardDrag();
