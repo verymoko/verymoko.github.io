@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>День и неделя раздельно</title>
+  <title>Заявка — это урок, а не подсказка</title>
   <style>
     :root {
       --bg: #f7f7fb;
@@ -147,11 +147,35 @@
       flex: 1 1 auto;
       min-height: 0;
       width: 100%;
-      overflow-x: auto;
-      overflow-y: auto;
+      display: grid;
+      grid-template-columns: var(--time-col-w) minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .board-scroll {
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
       padding: 0 0 16px;
-      display: flex;
-      flex-direction: column;
+    }
+
+    .board-scroll.day-zoom-fit {
+      padding-bottom: 0;
+    }
+
+    .time-rail {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: var(--header-h) 1fr;
+      background: #fafbff;
+      border-right: 1px solid var(--line-strong);
+      box-shadow: 4px 0 10px rgba(16, 24, 40, 0.05);
+      z-index: 35;
+    }
+
+    .timeline-viewport {
+      min-height: 0;
+      overflow: hidden;
     }
 
     .students-sidebar {
@@ -291,10 +315,21 @@
       background: #f8f9ff;
       padding: 8px 10px;
       cursor: grab;
+      position: relative;
+      z-index: 1;
+      transition: margin-top 0.16s ease;
     }
 
     .request-card:active {
       cursor: grabbing;
+    }
+
+    .request-card.is-stacked {
+      margin-top: -56px;
+    }
+
+    .request-card.is-stacked.stack-base {
+      margin-top: 0;
     }
 
     .request-head {
@@ -435,10 +470,10 @@
       --hours: 12;
       --day-span: 1;
       display: grid;
-      grid-template-columns: var(--time-col-w) minmax(0, 1fr);
+      grid-template-columns: max-content;
       grid-template-rows: var(--header-h) 1fr;
-      width: 100%;
-      min-width: max(100%, min-content);
+      width: max-content;
+      min-width: 100%;
       flex: 1 1 auto;
       min-height: 0;
       align-self: stretch;
@@ -446,9 +481,10 @@
 
     /* Режим «День»: временная шкала и дорожки на всю ширину окна */
     .board.day {
-      width: 100%;
-      max-width: 100%;
-      grid-template-columns: var(--time-col-w) minmax(0, 1fr);
+      width: max-content;
+      min-width: 100%;
+      max-width: none;
+      grid-template-columns: max-content;
       min-height: 100%;
     }
 
@@ -465,16 +501,9 @@
     }
 
     .board.day .track {
-      height: auto;
-      min-height: 100%;
+      height: calc(var(--hour-h) * var(--hours));
+      min-height: 0;
       min-width: 0;
-      background-image: repeating-linear-gradient(
-        to bottom,
-        transparent 0,
-        transparent calc(100% / var(--hours) - 1px),
-        var(--line) calc(100% / var(--hours) - 1px),
-        var(--line) calc(100% / var(--hours))
-      );
     }
 
     .board.day .board-rail,
@@ -483,24 +512,30 @@
     }
 
     .board.day.day-zoom-fit .timeline {
-      height: 100%;
+      height: calc(var(--hour-h) * var(--hours));
       min-height: 0;
+    }
+
+    .board.day.day-zoom-fit {
+      width: 100%;
+      max-width: 100%;
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .board.day.day-zoom-fit .timeline-day-mode {
-      min-height: 100%;
+      min-height: 0;
     }
 
     .board.day.day-zoom-fit .hour-cell {
-      height: auto;
-      flex: 1 1 0;
+      height: var(--hour-h);
+      flex: 0 0 auto;
       min-height: 0;
-      flex-shrink: 1;
+      flex-shrink: 0;
     }
 
     .board.day.day-zoom-fit .track {
-      height: 100%;
-      min-height: 100%;
+      height: calc(var(--hour-h) * var(--hours));
+      min-height: 0;
     }
 
     .board.day.day-zoom-fit .board-rail {
@@ -545,7 +580,9 @@
     .board.week.week-zoom-fit {
       width: 100%;
       max-width: 100%;
-      grid-template-columns: var(--time-col-w) minmax(0, 1fr);
+      min-height: 100%;
+      height: 100%;
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .board.week.week-zoom-fit .timeline-week-mode {
@@ -554,12 +591,15 @@
     }
 
     .board.week.week-zoom-fit .week-day-cell {
-      flex: 1 1 0;
+      flex: 0 0 auto;
       min-width: 0;
       width: auto;
     }
 
-    .board.week.week-zoom-fit .week-day-names,
+    .board.week.week-zoom-fit .week-day-names {
+      height: auto;
+    }
+
     .board.week.week-zoom-fit .hour-row {
       height: 100%;
     }
@@ -609,6 +649,7 @@
     /* Неделя «в экран»: равномерная почасовая сетка + отдельно усиленные линии только между днями */
     .board.week.week-zoom-fit .track {
       height: 100%;
+      min-height: 100%;
       min-width: 0;
       background-color: #fafbff;
       background-image:
@@ -651,11 +692,7 @@
     }
 
     .corner {
-      grid-row: 1;
-      grid-column: 1;
-      position: sticky;
-      left: 0;
-      top: 0;
+      position: relative;
       z-index: 30;
       height: auto;
       min-height: var(--header-h);
@@ -696,13 +733,14 @@
     .board-rail {
       --teacher-cols: 1;
       grid-row: 1 / -1;
-      grid-column: 2;
+      grid-column: 1;
       display: grid;
       grid-template-columns: repeat(var(--teacher-cols), minmax(var(--teacher-col-w), 1fr));
       grid-template-rows: var(--header-h) 1fr;
       min-width: 0;
       min-height: 0;
-      width: 100%;
+      width: max-content;
+      min-width: 100%;
       align-self: stretch;
       box-sizing: border-box;
     }
@@ -713,15 +751,9 @@
     }
 
     .timeline {
-      grid-row: 2;
-      grid-column: 1;
-      position: sticky;
-      top: var(--header-h);
-      left: 0;
+      position: relative;
       z-index: 20;
       background: #fafbff;
-      border-right: 1px solid var(--line-strong);
-      box-shadow: 4px 0 10px rgba(16, 24, 40, 0.05);
     }
 
     .timeline-day-mode {
@@ -742,18 +774,44 @@
       flex-direction: column;
       border-right: 1px solid var(--line);
       background: #fff;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      z-index: 35;
+      padding: 4px 3px;
+      gap: 4px;
     }
 
     .week-day-cell {
+      display: block;
+    }
+
+    .week-day-radio {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .week-day-label {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 8px 6px;
-      border-top: 1px solid var(--line);
+      width: 100%;
+      padding: 6px 2px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
       color: var(--text);
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+      user-select: none;
+    }
+
+    .week-day-radio:checked + .week-day-label {
+      border-color: var(--accent);
+      background: #eef3ff;
+      color: #1639aa;
     }
 
     .week-day-name {
@@ -787,7 +845,7 @@
       justify-content: center;
       font-size: 11px;
       color: var(--muted);
-      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
     }
 
     .hour-cell.hour-tick {
@@ -1262,7 +1320,7 @@
     </header>
     <div class="main-layout">
       <div class="board-wrap" id="boardWrap">
-        <div class="board" id="board">
+        <div class="time-rail" id="timeRail">
           <div class="corner">
             <span class="corner-title">Время / дата</span>
             <select id="teacherSort" class="teacher-sort" aria-label="Сортировка преподавателей по занятости">
@@ -1271,10 +1329,16 @@
               <option value="custom">Произвольный порядок</option>
             </select>
           </div>
-          <div class="timeline" id="timeline"></div>
-          <div class="board-rail" id="boardRail">
-            <div class="names-col" id="namesCol"></div>
-            <div class="tracks" id="tracks"></div>
+          <div class="timeline-viewport" id="timelineViewport">
+            <div class="timeline" id="timeline"></div>
+          </div>
+        </div>
+        <div class="board-scroll" id="boardScroll">
+          <div class="board" id="board">
+            <div class="board-rail" id="boardRail">
+              <div class="names-col" id="namesCol"></div>
+              <div class="tracks" id="tracks"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1546,10 +1610,14 @@
     /** День: «в экран» — сетка по вертикали на всю высоту области, равные слоты часа */
     let dayZoomMode = "default";
     const DEFAULT_WEEK_HOUR_W = 56;
+    const DEFAULT_DAY_HOUR_H = 56;
 
     const board = document.getElementById("board");
     const boardRail = document.getElementById("boardRail");
+    const boardScroll = document.getElementById("boardScroll");
     const timeline = document.getElementById("timeline");
+    const timelineViewport = document.getElementById("timelineViewport");
+    const timeRail = document.getElementById("timeRail");
     const namesCol = document.getElementById("namesCol");
     const tracks = document.getElementById("tracks");
 
@@ -1578,6 +1646,55 @@
     let returnViewState = null;
     let subjectPickerResolver = null;
     let subjectPickerValue = "";
+    let weekHourRowEl = null;
+    let weekDayRadioInputs = [];
+
+    function syncTimeRailScroll() {
+      if (!boardScroll || !timeline) return;
+      if (mode === "week" && weekHourRowEl) {
+        timeline.style.transform = "";
+        weekHourRowEl.style.transform = `translateY(${-boardScroll.scrollTop}px)`;
+        syncActiveWeekDayFromScroll();
+        return;
+      }
+      weekHourRowEl = null;
+      weekDayRadioInputs = [];
+      timeline.style.transform = `translateY(${-boardScroll.scrollTop}px)`;
+    }
+
+    function resolveWeekDayHeightPx() {
+      if (!tracks) return 0;
+      const firstTrack = tracks.querySelector(".track");
+      if (!firstTrack) return 0;
+      const dayHeight = firstTrack.clientHeight / 7;
+      return Number.isFinite(dayHeight) && dayHeight > 0 ? dayHeight : 0;
+    }
+
+    function setActiveWeekDay(dayIndex) {
+      if (!Array.isArray(weekDayRadioInputs) || weekDayRadioInputs.length !== 7) return;
+      if (weekZoomMode === "fit") {
+        weekDayRadioInputs.forEach((input) => {
+          input.checked = false;
+        });
+        return;
+      }
+      const safeIdx = Math.max(0, Math.min(6, dayIndex));
+      weekDayRadioInputs.forEach((input, idx) => {
+        input.checked = idx === safeIdx;
+      });
+    }
+
+    function syncActiveWeekDayFromScroll() {
+      if (mode !== "week" || !boardScroll) return;
+      if (weekZoomMode === "fit") {
+        setActiveWeekDay(0);
+        return;
+      }
+      const dayHeight = resolveWeekDayHeightPx();
+      if (!dayHeight) return;
+      const activeDay = Math.max(0, Math.min(6, Math.floor((boardScroll.scrollTop + 1) / dayHeight)));
+      setActiveWeekDay(activeDay);
+    }
 
     function startOfDay(d) {
       const x = new Date(d);
@@ -1746,6 +1863,17 @@
       return (mode === "day" && dayZoomMode === "fit") || (mode === "week" && weekZoomMode === "fit");
     }
 
+    function resolveDayHourHeightPx() {
+      if (!boardScroll) return DEFAULT_DAY_HOUR_H;
+      if (dayZoomMode !== "fit") return DEFAULT_DAY_HOUR_H;
+      const viewportHeight = boardScroll.clientHeight;
+      if (!Number.isFinite(viewportHeight) || viewportHeight <= 0) return DEFAULT_DAY_HOUR_H;
+      const headerHRaw = getComputedStyle(document.documentElement).getPropertyValue("--header-h");
+      const headerH = Number.parseFloat(headerHRaw);
+      const timelineAreaH = viewportHeight - (Number.isFinite(headerH) ? headerH : 0);
+      return Math.max(22, timelineAreaH / HOURS);
+    }
+
     function applyFitModeZOrder() {
       if (!isZoomFitMode()) {
         namesCol.querySelectorAll(".teacher-name").forEach((el) => el.style.removeProperty("z-index"));
@@ -1866,12 +1994,8 @@
 
       const removedRequestId = match.dataset.requestId || "";
       match.remove();
-
-      const countEl = item.querySelector(".student-request-count");
-      if (countEl) {
-        const remaining = item.querySelectorAll(".request-card").length;
-        countEl.textContent = String(remaining);
-      }
+      refreshRequestCardStacking(item);
+      syncRequestCountBadge(item);
 
       if (removedRequestId && activeRequestId === removedRequestId) {
         clearScheduleHighlights();
@@ -2041,6 +2165,86 @@
       };
     }
 
+    function getRequestedLessonsPerWeek(card) {
+      const explicitCount = Number(card.dataset.lessonsPerWeek || "");
+      if (Number.isFinite(explicitCount) && explicitCount > 0) {
+        return Math.floor(explicitCount);
+      }
+      const summary = card.querySelector(".request-summary");
+      const text = summary ? summary.textContent || "" : "";
+      const match = text.match(/(\d+)\s*раз(?:а)?\s+в\s+недел/i);
+      if (!match) {
+        return 1;
+      }
+      const parsed = Number(match[1]);
+      return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1;
+    }
+
+    function syncRequestCountBadge(item) {
+      if (!item) {
+        return;
+      }
+      const countEl = item.querySelector(".student-request-count");
+      if (!countEl) {
+        return;
+      }
+      const remaining = item.querySelectorAll(".request-card").length;
+      countEl.textContent = String(remaining);
+    }
+
+    function refreshRequestCardStacking(item) {
+      if (!item) {
+        return;
+      }
+      const cards = Array.from(item.querySelectorAll(".request-card"));
+      const groups = new Map();
+      cards.forEach((card) => {
+        card.classList.remove("is-stacked", "stack-base");
+        card.style.zIndex = "1";
+        const id = card.dataset.requestId || "";
+        if (!id) {
+          return;
+        }
+        if (!groups.has(id)) {
+          groups.set(id, []);
+        }
+        groups.get(id).push(card);
+      });
+      groups.forEach((groupCards) => {
+        if (groupCards.length <= 1) {
+          return;
+        }
+        groupCards.forEach((card, idx) => {
+          card.classList.add("is-stacked");
+          if (idx === 0) {
+            card.classList.add("stack-base");
+          }
+          card.style.zIndex = String(groupCards.length - idx);
+        });
+      });
+    }
+
+    function expandRequestCardsByWeeklyCount() {
+      const items = document.querySelectorAll(".student-request-item");
+      items.forEach((item) => {
+        const cards = Array.from(item.querySelectorAll(".request-card"));
+        cards.forEach((card) => {
+          if (card.dataset.expandedByFrequency === "1") {
+            return;
+          }
+          card.dataset.expandedByFrequency = "1";
+          const copiesNeeded = getRequestedLessonsPerWeek(card) - 1;
+          for (let idx = 0; idx < copiesNeeded; idx += 1) {
+            const copy = card.cloneNode(true);
+            copy.dataset.expandedByFrequency = "1";
+            card.after(copy);
+          }
+        });
+        refreshRequestCardStacking(item);
+        syncRequestCountBadge(item);
+      });
+    }
+
     function removeRequestCardById(requestId) {
       if (!requestId) {
         return;
@@ -2051,13 +2255,8 @@
       }
       const item = match.closest(".student-request-item");
       match.remove();
-      if (item) {
-        const countEl = item.querySelector(".student-request-count");
-        if (countEl) {
-          const remaining = item.querySelectorAll(".request-card").length;
-          countEl.textContent = String(remaining);
-        }
-      }
+      refreshRequestCardStacking(item);
+      syncRequestCountBadge(item);
       if (activeRequestId === requestId) {
         clearScheduleHighlights();
       }
@@ -2522,6 +2721,7 @@
       board.classList.toggle("day", mode === "day");
       board.classList.toggle("week-zoom-fit", mode === "week" && weekZoomMode === "fit");
       board.classList.toggle("day-zoom-fit", mode === "day" && dayZoomMode === "fit");
+      boardScroll.classList.toggle("day-zoom-fit", mode === "day" && dayZoomMode === "fit");
       btnDay.classList.toggle("active", mode === "day");
       btnWeek.classList.toggle("active", mode === "week");
       updateWeekZoomUi();
@@ -2529,6 +2729,9 @@
       const weekStart = mondayOfWeek(anchorDate);
 
       if (mode === "day") {
+        const resolvedDayHourH = resolveDayHourHeightPx();
+        document.documentElement.style.setProperty("--hour-h", `${resolvedDayHourH}px`);
+        board.style.setProperty("--hour-h", `${resolvedDayHourH}px`);
         board.style.setProperty("--hours", String(HOURS));
         board.style.setProperty("--day-span", "1");
         board.style.removeProperty("--day-band-h");
@@ -2591,6 +2794,13 @@
           });
           tracks.appendChild(track);
         });
+        const firstTrack = tracks.querySelector(".track");
+        const firstHourCell = timeline.querySelector(".hour-cell.hour-tick");
+        const secondHourCell = timeline.querySelectorAll(".hour-cell.hour-tick")[1];
+        const trackRect = firstTrack ? firstTrack.getBoundingClientRect() : null;
+        const hour1Rect = firstHourCell ? firstHourCell.getBoundingClientRect() : null;
+        const hour2Rect = secondHourCell ? secondHourCell.getBoundingClientRect() : null;
+        const hourStepPx = hour1Rect && hour2Rect ? (hour2Rect.top - hour1Rect.top) : null;
         applyFitModeZOrder();
         restoreRequestHighlights();
         return;
@@ -2601,10 +2811,12 @@
       board.style.setProperty("--day-span", "7");
       let dayBandH = "";
       if (weekZoomMode === "default") {
+        document.documentElement.style.setProperty("--hour-h", `${DEFAULT_WEEK_HOUR_W}px`);
         board.style.setProperty("--hour-h", `${DEFAULT_WEEK_HOUR_W}px`);
         dayBandH = `calc(var(--hour-h) * ${HOURS})`;
         board.style.setProperty("--day-band-h", dayBandH);
       } else {
+        document.documentElement.style.setProperty("--hour-h", `${DEFAULT_WEEK_HOUR_W}px`);
         board.style.removeProperty("--day-band-h");
       }
 
@@ -2622,29 +2834,48 @@
 
       const namesRow = document.createElement("div");
       namesRow.className = "week-day-names";
+      weekDayRadioInputs = [];
       for (let i = 0; i < 7; i += 1) {
         const dayDate = new Date(weekStart);
         dayDate.setDate(weekStart.getDate() + i);
-        const cell = document.createElement("span");
+        const cell = document.createElement("label");
         cell.className = "week-day-cell";
-        if (weekZoomMode === "default") {
-          cell.style.height = dayBandH;
-          cell.style.minHeight = dayBandH;
-        }
+
+        const dayInput = document.createElement("input");
+        dayInput.type = "radio";
+        dayInput.name = "weekDaySelector";
+        dayInput.className = "week-day-radio";
+        dayInput.value = String(i);
+
+        dayInput.addEventListener("change", () => {
+          if (!dayInput.checked || !boardScroll) return;
+          const dayHeight = resolveWeekDayHeightPx();
+          if (!dayHeight) return;
+          boardScroll.scrollTo({ top: i * dayHeight, behavior: "smooth" });
+        });
+
+        const dayLabel = document.createElement("span");
+        dayLabel.className = "week-day-label";
+
         const nameSpan = document.createElement("span");
         nameSpan.className = "week-day-name";
         nameSpan.textContent = WEEK_DAYS_SHORT[i];
         const dateSpan = document.createElement("span");
         dateSpan.className = "week-day-date";
         dateSpan.textContent = String(dayDate.getDate());
-        cell.appendChild(nameSpan);
-        cell.appendChild(dateSpan);
+
+        dayLabel.appendChild(nameSpan);
+        dayLabel.appendChild(dateSpan);
+        cell.appendChild(dayInput);
+        cell.appendChild(dayLabel);
+        weekDayRadioInputs.push(dayInput);
         namesRow.appendChild(cell);
       }
       weekRoot.appendChild(namesRow);
 
       const hourRow = document.createElement("div");
       hourRow.className = "hour-row";
+      weekHourRowEl = hourRow;
       for (let d = 0; d < 7; d += 1) {
         for (let h = START_HOUR; h < END_HOUR; h += 1) {
           const cell = document.createElement("div");
@@ -2702,6 +2933,12 @@
       });
       applyFitModeZOrder();
       restoreRequestHighlights();
+      if (weekZoomMode === "fit") {
+        setActiveWeekDay(0);
+      } else {
+        setActiveWeekDay(isoDayIndex(anchorDate));
+      }
+      syncTimeRailScroll();
     }
 
     function escapeHtml(s) {
@@ -2780,10 +3017,34 @@
     });
 
     initStudentDragSources();
+    expandRequestCardsByWeeklyCount();
     initRequestCardActions();
     initScheduleRequestDrop();
     initRequestCardDrag();
+    boardScroll?.addEventListener("scroll", syncTimeRailScroll, { passive: true });
+    timeRail?.addEventListener(
+      "wheel",
+      (event) => {
+        if (!boardScroll) return;
+        boardScroll.scrollTop += event.deltaY;
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+    timelineViewport?.addEventListener(
+      "wheel",
+      (event) => {
+        if (!boardScroll) return;
+        boardScroll.scrollTop += event.deltaY;
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+    window.addEventListener("resize", () => {
+      render();
+    });
     render();
+    syncTimeRailScroll();
   </script>
 </body>
 </html>
