@@ -579,6 +579,16 @@
       pointer-events: auto;
     }
 
+    .board.request-slots-assign-active.day.day-zoom-fit .track.is-request-focus-teacher,
+    .board.request-slots-assign-active.week.week-zoom-fit .track.is-request-focus-teacher {
+      pointer-events: auto;
+      cursor: crosshair;
+    }
+
+    .board.request-slots-assign-active .track.is-request-focus-teacher .request-slot-highlight[data-tooltip] {
+      pointer-events: none;
+    }
+
     /*
       Неделя «Вся сетка в экран»: вторая колонка тянется на всю ширину (без щели от floor(px)).
       Сетка часов и дней — в долях 100%, не фиксированный --hour-w.
@@ -1005,8 +1015,13 @@
       border: 1px solid #6d8ce8;
       background: #e8ecff;
       color: #1f2e70;
-      cursor: default;
+      cursor: grab;
       box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+    }
+
+    .lesson-card.is-dragging {
+      opacity: 0.6;
+      cursor: grabbing;
     }
 
     .lesson-card.drop-hover {
@@ -1066,6 +1081,56 @@
     }
 
     .request-slot-highlight[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 8px);
+      transform: translateX(-50%);
+      background: #111827;
+      color: #fff;
+      font-size: 11px;
+      line-height: 1.2;
+      white-space: nowrap;
+      padding: 4px 8px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(16, 24, 40, 0.18);
+      z-index: 2000;
+    }
+
+    .request-slot-assign-floater {
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.25;
+      color: rgba(53, 99, 255, 0.88);
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(53, 99, 255, 0.38);
+      border-radius: 6px;
+      padding: 4px 8px;
+      box-shadow: 0 2px 10px rgba(16, 24, 40, 0.12);
+      white-space: nowrap;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.08s ease;
+    }
+
+    .request-slot-assign-floater.is-visible {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .request-drop-preview {
+      background: rgba(17, 24, 39, 0.14);
+      outline: 1px dashed rgba(17, 24, 39, 0.45);
+      z-index: 5;
+      pointer-events: none !important;
+    }
+
+    .request-drop-preview[data-tooltip]::after {
       content: attr(data-tooltip);
       position: absolute;
       left: 50%;
@@ -1644,10 +1709,14 @@
     const studentsSidebarList = document.querySelector(".students-sidebar-list");
     const lessonStudentsByKey = new Map();
     const lessonSubjectByKey = new Map();
+    const lessonOccupiedById = new Map();
     const DRAG_STUDENT_MIME = "application/x-student";
     const DRAG_REQUEST_MIME = "application/x-student-request-lesson";
+    const DRAG_LESSON_MIME = "application/x-schedule-lesson";
     let activeRequestId = null;
     let activeDragRequest = null;
+    let activeDragLesson = null;
+    let lessonSeq = 1;
     let scheduleDropContext = { mode: "week", dayIndex: 0 };
     let returnViewState = null;
     let subjectPickerResolver = null;
@@ -1916,12 +1985,31 @@
       return `${L.teacher}|${L.day}|${L.start}|${L.end}|${L.title}|${L.place}`;
     }
 
-    function isLessonOccupied(lessonKey) {
+    function ensureLessonId(L) {
+      if (!L.lessonId) {
+        L.lessonId = `lesson-${lessonSeq}`;
+        lessonSeq += 1;
+      }
+      return L.lessonId;
+    }
+
+    function findLessonById(lessonId) {
+      return lessons.find((L) => L.lessonId === lessonId) || null;
+    }
+
+    function isLessonOccupied(lesson) {
+      const lessonId = ensureLessonId(lesson);
+      if (lessonOccupiedById.has(lessonId)) {
+        return Boolean(lessonOccupiedById.get(lessonId));
+      }
+      const lessonKey = buildLessonKey(lesson);
       let hash = 0;
       for (let i = 0; i < lessonKey.length; i += 1) {
         hash = (hash + lessonKey.charCodeAt(i) * (i + 1)) % 9973;
       }
-      return hash % 3 !== 0;
+      const occupied = hash % 3 !== 0;
+      lessonOccupiedById.set(lessonId, occupied);
+      return occupied;
     }
 
     function getStudentsForLesson(lessonKey) {
@@ -2082,8 +2170,37 @@
     });
 
     function attachLessonDropHandlers(el, lessonKey, titleText, metaText) {
+      if (el.dataset.lessonMoveReady !== "1") {
+        el.dataset.lessonMoveReady = "1";
+        el.setAttribute("draggable", "true");
+        el.addEventListener("dragstart", (event) => {
+          if (!event.dataTransfer) {
+            event.preventDefault();
+            return;
+          }
+          const lessonId = el.dataset.lessonId || "";
+          if (!lessonId) {
+            event.preventDefault();
+            return;
+          }
+          activeDragLesson = { lessonId, el, originalMetaText: "" };
+          el.classList.add("is-dragging");
+          event.dataTransfer.setData(DRAG_LESSON_MIME, JSON.stringify(activeDragLesson));
+          event.dataTransfer.effectAllowed = "move";
+        });
+        el.addEventListener("dragend", () => {
+          resetActiveDragLessonMetaPreview();
+          activeDragLesson = null;
+          el.classList.remove("is-dragging");
+          clearRequestDropTrackHighlight();
+        });
+      }
+
       el.addEventListener("dragover", (event) => {
         if (activeDragRequest) {
+          return;
+        }
+        if (activeDragLesson) {
           return;
         }
         event.preventDefault();
@@ -2146,6 +2263,8 @@
         btn.classList.remove("active");
       });
       activeRequestId = null;
+      board.classList.remove("request-slots-assign-active");
+      hideRequestSlotAssignFloater();
       applyRequestFocusState();
       returnViewState = null;
       returnViewBtn.hidden = true;
@@ -2273,32 +2392,44 @@
       return l && l.place ? l.place : "—";
     }
 
-    function findSlotForRequest(teacherIndex, day, request, desiredStart) {
-      const wStart = Math.max(request.startMinutes, START_HOUR * 60);
-      const wEnd = Math.min(request.endMinutes, END_HOUR * 60);
-      const free = getFreeIntervalsForTeacherDay(teacherIndex, day, wStart, wEnd);
-      const dur = request.durationMinutes;
+    function findSlotForDrop(teacherIndex, day, durationM, desiredStart) {
+      const free = getFreeIntervalsForTeacherDay(teacherIndex, day, START_HOUR * 60, END_HOUR * 60);
       for (let i = 0; i < free.length; i += 1) {
         const [a, b] = free[i];
-        if (b - a < dur) {
+        if (b - a < durationM) {
           continue;
         }
-        const s = Math.max(a, Math.min(desiredStart, b - dur));
-        if (s >= a && s + dur <= b) {
+        const s = Math.max(a, Math.min(desiredStart, b - durationM));
+        if (s >= a && s + durationM <= b) {
           return s;
         }
       }
       return null;
     }
 
-    function clientYToDayAndMinute(track, clientY, durationM) {
+    function findSlotForLessonMove(teacherIndex, day, durationM, desiredStart, movingLesson) {
+      const free = getFreeIntervalsForTeacherDay(teacherIndex, day, START_HOUR * 60, END_HOUR * 60, movingLesson);
+      for (let i = 0; i < free.length; i += 1) {
+        const [a, b] = free[i];
+        if (b - a < durationM) {
+          continue;
+        }
+        const s = Math.max(a, Math.min(desiredStart, b - durationM));
+        if (s >= a && s + durationM <= b) {
+          return s;
+        }
+      }
+      return null;
+    }
+
+    function snapTrackPointerToStartMinutes(track, clientY) {
       const rect = track.getBoundingClientRect();
       if (rect.height < 1) {
         return null;
       }
       const y = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
       let day;
-      let inDay; /* minutes in [0, MINUTES_PER_DAY] from schedule start of that day */
+      let inDay;
       if (scheduleDropContext.mode === "day") {
         day = scheduleDropContext.dayIndex;
         inDay = y * MINUTES_PER_DAY;
@@ -2307,13 +2438,22 @@
         day = Math.min(6, Math.floor(w / MINUTES_PER_DAY));
         inDay = w - day * MINUTES_PER_DAY;
       }
-      const snapped = Math.round(inDay / 15) * 15;
-      const clamped = Math.max(0, Math.min(MINUTES_PER_DAY - 15, snapped));
-      let startM = START_HOUR * 60 + clamped;
+      const snapped = Math.round(inDay / 5) * 5;
+      const clamped = Math.max(0, Math.min(MINUTES_PER_DAY - 5, snapped));
+      const startM = START_HOUR * 60 + clamped;
+      return { day, startM };
+    }
+
+    function clientYToDayAndMinute(track, clientY, durationM) {
+      const raw = snapTrackPointerToStartMinutes(track, clientY);
+      if (!raw) {
+        return null;
+      }
+      let startM = raw.startM;
       if (startM + durationM > END_HOUR * 60) {
         startM = Math.max(START_HOUR * 60, END_HOUR * 60 - durationM);
       }
-      return { day, startM };
+      return { day: raw.day, startM };
     }
 
     function clearRequestDropTrackHighlight() {
@@ -2325,21 +2465,58 @@
       });
     }
 
+    function clearRequestDropPreview() {
+      if (!tracks) {
+        return;
+      }
+      tracks.querySelectorAll(".request-drop-preview").forEach((el) => el.remove());
+    }
+
+    function updateRequestDropPreview(track, request, event) {
+      if (!tracks) {
+        return false;
+      }
+      const t = clientYToDayAndMinute(track, event.clientY, request.durationMinutes);
+      if (!t) {
+        clearRequestDropPreview();
+        return false;
+      }
+      const startSlot = findSlotForDrop(Number(track.dataset.teacherIndex), t.day, request.durationMinutes, t.startM);
+      if (startSlot == null) {
+        clearRequestDropPreview();
+        return false;
+      }
+      const endM = startSlot + request.durationMinutes;
+      if (endM > END_HOUR * 60) {
+        clearRequestDropPreview();
+        return false;
+      }
+      clearRequestDropPreview();
+      const segment = document.createElement("div");
+      segment.className = "request-slot-highlight request-drop-preview";
+      segment.dataset.tooltip = `${minutesToLabel(startSlot)} — ${minutesToLabel(endM)}`;
+      if (scheduleDropContext.mode === "day") {
+        const topPct = ((startSlot - START_HOUR * 60) / MINUTES_PER_DAY) * 100;
+        const heightPct = ((endM - startSlot) / MINUTES_PER_DAY) * 100;
+        segment.style.top = `${topPct}%`;
+        segment.style.height = `${heightPct}%`;
+      } else {
+        const totalWeekMinutes = 7 * MINUTES_PER_DAY;
+        const startFromWeek = t.day * MINUTES_PER_DAY + (startSlot - START_HOUR * 60);
+        const endFromWeek = t.day * MINUTES_PER_DAY + (endM - START_HOUR * 60);
+        const topPct = (startFromWeek / totalWeekMinutes) * 100;
+        const heightPct = ((endFromWeek - startFromWeek) / totalWeekMinutes) * 100;
+        segment.style.top = `${topPct}%`;
+        segment.style.height = `${heightPct}%`;
+      }
+      track.appendChild(segment);
+      return true;
+    }
+
     function isValidRequestDropOnTrack(event, request, track) {
       const trackTeacher = Number(track.dataset.teacherIndex);
       if (Number.isNaN(request.teacherIndex) || request.teacherIndex !== trackTeacher) {
         return false;
-      }
-      if (request.days.length > 0) {
-        if (scheduleDropContext.mode === "day" && !request.days.includes(scheduleDropContext.dayIndex)) {
-          return false;
-        }
-        if (scheduleDropContext.mode === "week") {
-          const t = clientYToDayAndMinute(track, event.clientY, request.durationMinutes);
-          if (!t || !request.days.includes(t.day)) {
-            return false;
-          }
-        }
       }
       return true;
     }
@@ -2381,6 +2558,7 @@
         card.addEventListener("dragend", () => {
           activeDragRequest = null;
           clearRequestDropTrackHighlight();
+          clearRequestDropPreview();
         });
       };
       studentsSidebarList.querySelectorAll(".request-card").forEach(bindCard);
@@ -2393,6 +2571,7 @@
       tracks.dataset.scheduleRequestDrop = "1";
       document.addEventListener("dragend", () => {
         clearRequestDropTrackHighlight();
+        clearRequestDropPreview();
         activeDragRequest = null;
       });
       tracks.addEventListener(
@@ -2404,10 +2583,12 @@
           const track = event.target instanceof Element ? event.target.closest(".track") : null;
           if (!track || !tracks.contains(track)) {
             clearRequestDropTrackHighlight();
+            clearRequestDropPreview();
             return;
           }
           if (!isValidRequestDropOnTrack(event, activeDragRequest, track)) {
             clearRequestDropTrackHighlight();
+            clearRequestDropPreview();
             return;
           }
           event.preventDefault();
@@ -2416,6 +2597,7 @@
           }
           clearRequestDropTrackHighlight();
           track.classList.add("request-drop-candidate");
+          updateRequestDropPreview(track, activeDragRequest, event);
         },
         true
       );
@@ -2430,6 +2612,8 @@
           }
           if (event.target === tracks) {
             clearRequestDropTrackHighlight();
+            clearRequestDropPreview();
+            resetActiveDragLessonMetaPreview();
           }
         },
         true
@@ -2454,19 +2638,23 @@
           }
           const track = event.target instanceof Element ? event.target.closest(".track") : null;
           if (!track || !tracks.contains(track)) {
+            clearRequestDropPreview();
             return;
           }
           if (!isValidRequestDropOnTrack(event, request, track)) {
+            clearRequestDropPreview();
             return;
           }
           const tIdx = Number(track.dataset.teacherIndex);
           const t = clientYToDayAndMinute(track, event.clientY, request.durationMinutes);
           if (!t) {
+            clearRequestDropPreview();
             return;
           }
           const place = getDefaultPlaceForTeacher(tIdx);
-          const startSlot = findSlotForRequest(tIdx, t.day, request, t.startM);
+          const startSlot = findSlotForDrop(tIdx, t.day, request.durationMinutes, t.startM);
           if (startSlot == null) {
+            clearRequestDropPreview();
             return;
           }
           const endM = startSlot + request.durationMinutes;
@@ -2481,6 +2669,7 @@
             title: request.title,
             place
           };
+          ensureLessonId(L);
           const lessonKey = buildLessonKey(L);
           lessons.push(L);
           lessonSubjectByKey.set(lessonKey, request.title);
@@ -2488,15 +2677,20 @@
           activeDragRequest = null;
           event.stopImmediatePropagation();
           clearRequestDropTrackHighlight();
+          clearRequestDropPreview();
           render();
         },
         true
       );
     }
 
-    function getFreeIntervalsForTeacherDay(teacherIndex, dayIndex, windowStart, windowEnd) {
+    lessons.forEach((L) => {
+      ensureLessonId(L);
+    });
+
+    function getFreeIntervalsForTeacherDay(teacherIndex, dayIndex, windowStart, windowEnd, ignoreLesson = null) {
       const dayLessons = lessons
-        .filter((L) => L.teacher === teacherIndex && L.day === dayIndex)
+        .filter((L) => L.teacher === teacherIndex && L.day === dayIndex && L !== ignoreLesson)
         .map((L) => [parseTime(L.start), parseTime(L.end)])
         .sort((a, b) => a[0] - b[0]);
 
@@ -2521,6 +2715,236 @@
       const hh = Math.floor(minutes / 60);
       const mm = minutes % 60;
       return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+    }
+
+    function moveLessonWithAssignments(lesson, day, startMinutes) {
+      const oldKey = buildLessonKey(lesson);
+      const oldSubject = lessonSubjectByKey.get(oldKey);
+      const oldStudents = lessonStudentsByKey.get(oldKey);
+      const duration = parseTime(lesson.end) - parseTime(lesson.start);
+      lesson.day = day;
+      lesson.start = minutesToLabel(startMinutes);
+      lesson.end = minutesToLabel(startMinutes + duration);
+      const newKey = buildLessonKey(lesson);
+      if (oldSubject !== undefined) {
+        lessonSubjectByKey.delete(oldKey);
+        lessonSubjectByKey.set(newKey, oldSubject);
+      }
+      if (oldStudents !== undefined) {
+        lessonStudentsByKey.delete(oldKey);
+        lessonStudentsByKey.set(newKey, oldStudents);
+      }
+    }
+
+    function setActiveDragLessonMetaPreview(lesson, day, startM) {
+      if (!activeDragLesson || !activeDragLesson.el) {
+        return;
+      }
+      const metaEl = activeDragLesson.el.querySelector(".lesson-meta");
+      if (!metaEl) {
+        return;
+      }
+      if (!activeDragLesson.originalMetaText) {
+        activeDragLesson.originalMetaText = metaEl.textContent || "";
+      }
+      const endM = startM + lessonDurationMinutes(lesson);
+      if (mode === "day") {
+        metaEl.textContent = `${minutesToLabel(startM)}–${minutesToLabel(endM)} · ${lesson.place}`;
+      } else {
+        metaEl.textContent = `${WEEK_DAYS_SHORT[day]} ${minutesToLabel(startM)}–${minutesToLabel(endM)} · ${lesson.place}`;
+      }
+    }
+
+    function resetActiveDragLessonMetaPreview() {
+      if (!activeDragLesson || !activeDragLesson.el) {
+        return;
+      }
+      const metaEl = activeDragLesson.el.querySelector(".lesson-meta");
+      if (!metaEl) {
+        return;
+      }
+      if (typeof activeDragLesson.originalMetaText === "string") {
+        metaEl.textContent = activeDragLesson.originalMetaText;
+      }
+    }
+
+    function updateLessonMovePreview(track, lesson, event) {
+      const duration = lessonDurationMinutes(lesson);
+      const t = clientYToDayAndMinute(track, event.clientY, duration);
+      if (!t) {
+        clearRequestDropPreview();
+        resetActiveDragLessonMetaPreview();
+        return false;
+      }
+      const startSlot = findSlotForLessonMove(lesson.teacher, t.day, duration, t.startM, lesson);
+      if (startSlot == null) {
+        clearRequestDropPreview();
+        resetActiveDragLessonMetaPreview();
+        return false;
+      }
+      const endM = startSlot + duration;
+      if (endM > END_HOUR * 60) {
+        clearRequestDropPreview();
+        resetActiveDragLessonMetaPreview();
+        return false;
+      }
+      setActiveDragLessonMetaPreview(lesson, t.day, startSlot);
+      clearRequestDropPreview();
+      const segment = document.createElement("div");
+      segment.className = "request-slot-highlight request-drop-preview";
+      segment.dataset.tooltip = `${minutesToLabel(startSlot)} — ${minutesToLabel(endM)}`;
+      if (scheduleDropContext.mode === "day") {
+        const topPct = ((startSlot - START_HOUR * 60) / MINUTES_PER_DAY) * 100;
+        const heightPct = ((endM - startSlot) / MINUTES_PER_DAY) * 100;
+        segment.style.top = `${topPct}%`;
+        segment.style.height = `${heightPct}%`;
+      } else {
+        const totalWeekMinutes = 7 * MINUTES_PER_DAY;
+        const startFromWeek = t.day * MINUTES_PER_DAY + (startSlot - START_HOUR * 60);
+        const endFromWeek = t.day * MINUTES_PER_DAY + (endM - START_HOUR * 60);
+        const topPct = (startFromWeek / totalWeekMinutes) * 100;
+        const heightPct = ((endFromWeek - startFromWeek) / totalWeekMinutes) * 100;
+        segment.style.top = `${topPct}%`;
+        segment.style.height = `${heightPct}%`;
+      }
+      track.appendChild(segment);
+      return true;
+    }
+
+    function initScheduleLessonMove() {
+      if (!tracks || tracks.dataset.scheduleLessonMove === "1") {
+        return;
+      }
+      tracks.dataset.scheduleLessonMove = "1";
+      document.addEventListener("dragend", () => {
+        clearRequestDropTrackHighlight();
+        clearRequestDropPreview();
+        resetActiveDragLessonMetaPreview();
+        activeDragLesson = null;
+      });
+      tracks.addEventListener(
+        "dragover",
+        (event) => {
+          if (!activeDragLesson) {
+            return;
+          }
+          const track = event.target instanceof Element ? event.target.closest(".track") : null;
+          if (!track || !tracks.contains(track)) {
+            clearRequestDropTrackHighlight();
+            clearRequestDropPreview();
+            resetActiveDragLessonMetaPreview();
+            return;
+          }
+          const lesson = findLessonById(activeDragLesson.lessonId || "");
+          if (!lesson) {
+            clearRequestDropTrackHighlight();
+            clearRequestDropPreview();
+            resetActiveDragLessonMetaPreview();
+            return;
+          }
+          const trackTeacher = Number(track.dataset.teacherIndex);
+          if (trackTeacher !== lesson.teacher) {
+            clearRequestDropTrackHighlight();
+            clearRequestDropPreview();
+            resetActiveDragLessonMetaPreview();
+            return;
+          }
+          const duration = lessonDurationMinutes(lesson);
+          const t = clientYToDayAndMinute(track, event.clientY, duration);
+          if (!t) {
+            clearRequestDropTrackHighlight();
+            clearRequestDropPreview();
+            resetActiveDragLessonMetaPreview();
+            return;
+          }
+          const startSlot = findSlotForLessonMove(lesson.teacher, t.day, duration, t.startM, lesson);
+          if (startSlot == null) {
+            clearRequestDropTrackHighlight();
+            clearRequestDropPreview();
+            resetActiveDragLessonMetaPreview();
+            return;
+          }
+          event.preventDefault();
+          if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = "move";
+          }
+          clearRequestDropTrackHighlight();
+          track.classList.add("request-drop-candidate");
+          updateLessonMovePreview(track, lesson, event);
+        },
+        true
+      );
+      tracks.addEventListener(
+        "dragleave",
+        (event) => {
+          if (!activeDragLesson) {
+            return;
+          }
+          if (event.target === tracks) {
+            clearRequestDropTrackHighlight();
+            clearRequestDropPreview();
+          }
+        },
+        true
+      );
+      tracks.addEventListener(
+        "drop",
+        (event) => {
+          const raw =
+            (event.dataTransfer && event.dataTransfer.getData(DRAG_LESSON_MIME)) || "";
+          if (!raw) {
+            return;
+          }
+          let payload;
+          try {
+            payload = JSON.parse(raw);
+          } catch {
+            return;
+          }
+          const lessonId = payload && typeof payload.lessonId === "string" ? payload.lessonId : "";
+          if (!lessonId) {
+            return;
+          }
+          const lesson = findLessonById(lessonId);
+          if (!lesson) {
+            return;
+          }
+          const track = event.target instanceof Element ? event.target.closest(".track") : null;
+          if (!track || !tracks.contains(track)) {
+            clearRequestDropPreview();
+            resetActiveDragLessonMetaPreview();
+            return;
+          }
+          const trackTeacher = Number(track.dataset.teacherIndex);
+          if (trackTeacher !== lesson.teacher) {
+            clearRequestDropPreview();
+            resetActiveDragLessonMetaPreview();
+            return;
+          }
+          const duration = lessonDurationMinutes(lesson);
+          const t = clientYToDayAndMinute(track, event.clientY, duration);
+          if (!t) {
+            clearRequestDropPreview();
+            resetActiveDragLessonMetaPreview();
+            return;
+          }
+          const startSlot = findSlotForLessonMove(lesson.teacher, t.day, duration, t.startM, lesson);
+          if (startSlot == null) {
+            clearRequestDropPreview();
+            resetActiveDragLessonMetaPreview();
+            return;
+          }
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          moveLessonWithAssignments(lesson, t.day, startSlot);
+          clearRequestDropTrackHighlight();
+          clearRequestDropPreview();
+          resetActiveDragLessonMetaPreview();
+          activeDragLesson = null;
+          render();
+        },
+        true
+      );
     }
 
     function applyRequestFocusState() {
@@ -2601,6 +3025,8 @@
         : request.days;
 
       if (relevantDays.length === 0) {
+        board.classList.remove("request-slots-assign-active");
+        hideRequestSlotAssignFloater();
         activeRequestId = request.requestId;
         if (button) {
           button.classList.add("active");
@@ -2612,6 +3038,7 @@
       const reqStart = Math.max(request.startMinutes, START_HOUR * 60);
       const reqEnd = Math.min(request.endMinutes, END_HOUR * 60);
 
+      let didAppendSlotHighlight = false;
       relevantDays.forEach((reqDay) => {
         const freeIntervals = getFreeIntervalsForTeacherDay(request.teacherIndex, reqDay, reqStart, reqEnd);
         const track = tracks.querySelector(`.track[data-teacher-index="${request.teacherIndex}"]`);
@@ -2622,6 +3049,7 @@
           if (freeEnd - freeStart < request.durationMinutes) {
             return;
           }
+          didAppendSlotHighlight = true;
           const segment = document.createElement("div");
           segment.className = "request-slot-highlight";
           const tooltipText = `${minutesToLabel(freeStart)} — ${minutesToLabel(freeEnd)}`;
@@ -2645,10 +3073,172 @@
 
       elevateTrackForRequestSlots(request.teacherIndex);
       activeRequestId = request.requestId;
+      if (didAppendSlotHighlight) {
+        board.classList.add("request-slots-assign-active");
+      } else {
+        board.classList.remove("request-slots-assign-active");
+        hideRequestSlotAssignFloater();
+      }
       if (button) {
         button.classList.add("active");
       }
       applyRequestFocusState();
+    }
+
+    function isValidRequestSlotCursor(request, teacherIndex, day, startM) {
+      if (Number.isNaN(request.teacherIndex) || teacherIndex !== request.teacherIndex) {
+        return false;
+      }
+      const dayIndex = isoDayIndex(anchorDate);
+      const relevantDays = mode === "day"
+        ? request.days.filter((d) => d === dayIndex)
+        : request.days;
+      if (request.days.length > 0 && !relevantDays.includes(day)) {
+        return false;
+      }
+      const dur = request.durationMinutes;
+      if (startM + dur > END_HOUR * 60) {
+        return false;
+      }
+      const reqStart = Math.max(request.startMinutes, START_HOUR * 60);
+      const reqEnd = Math.min(request.endMinutes, END_HOUR * 60);
+      if (startM < reqStart || startM + dur > reqEnd) {
+        return false;
+      }
+      const free = getFreeIntervalsForTeacherDay(teacherIndex, day, reqStart, reqEnd);
+      return free.some(([a, b]) => startM >= a && startM + dur <= b);
+    }
+
+    function getRequestSlotAssignFloater() {
+      let el = document.getElementById("requestSlotAssignFloater");
+      if (!el) {
+        el = document.createElement("div");
+        el.id = "requestSlotAssignFloater";
+        el.className = "request-slot-assign-floater";
+        el.setAttribute("aria-hidden", "true");
+        document.body.appendChild(el);
+      }
+      return el;
+    }
+
+    function hideRequestSlotAssignFloater() {
+      const el = document.getElementById("requestSlotAssignFloater");
+      if (!el) {
+        return;
+      }
+      el.classList.remove("is-visible");
+      el.textContent = "";
+    }
+
+    function updateRequestSlotAssignFloaterFromPointerEvent(event) {
+      if (!board.classList.contains("request-slots-assign-active") || !activeRequestId || !tracks) {
+        hideRequestSlotAssignFloater();
+        return;
+      }
+      const card = document.querySelector(`.request-card[data-request-id="${activeRequestId}"]`);
+      if (!card) {
+        hideRequestSlotAssignFloater();
+        return;
+      }
+      const request = getRequestData(card);
+      if (Number.isNaN(request.teacherIndex)) {
+        hideRequestSlotAssignFloater();
+        return;
+      }
+      const track = event.target instanceof Element ? event.target.closest(".track") : null;
+      if (!track || !tracks.contains(track) || !track.classList.contains("is-request-focus-teacher")) {
+        hideRequestSlotAssignFloater();
+        return;
+      }
+      const teacherIndex = Number(track.dataset.teacherIndex);
+      const snap = snapTrackPointerToStartMinutes(track, event.clientY);
+      if (!snap) {
+        hideRequestSlotAssignFloater();
+        return;
+      }
+      const { day, startM } = snap;
+      if (!isValidRequestSlotCursor(request, teacherIndex, day, startM)) {
+        hideRequestSlotAssignFloater();
+        return;
+      }
+      const endM = startM + request.durationMinutes;
+      const el = getRequestSlotAssignFloater();
+      el.textContent = `Назначить урок ${minutesToLabel(startM)}—${minutesToLabel(endM)}`;
+      el.style.left = `${event.clientX}px`;
+      el.style.top = `${event.clientY}px`;
+      el.style.transform = "translate(10px, 10px)";
+      el.classList.add("is-visible");
+    }
+
+    function assignActiveRequestFromPointerEvent(event) {
+      if (!board.classList.contains("request-slots-assign-active") || !activeRequestId || !tracks) {
+        return;
+      }
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target || target.closest(".lesson-card")) {
+        return;
+      }
+      const card = document.querySelector(`.request-card[data-request-id="${activeRequestId}"]`);
+      if (!card) {
+        return;
+      }
+      const request = getRequestData(card);
+      if (Number.isNaN(request.teacherIndex)) {
+        return;
+      }
+      const track = target.closest(".track");
+      if (!track || !tracks.contains(track) || !track.classList.contains("is-request-focus-teacher")) {
+        return;
+      }
+      const teacherIndex = Number(track.dataset.teacherIndex);
+      const snap = snapTrackPointerToStartMinutes(track, event.clientY);
+      if (!snap) {
+        return;
+      }
+      const { day, startM } = snap;
+      if (!isValidRequestSlotCursor(request, teacherIndex, day, startM)) {
+        return;
+      }
+      const title = (card.querySelector(".request-title") && card.querySelector(".request-title").textContent || "")
+        .trim();
+      if (!title) {
+        return;
+      }
+      const endM = startM + request.durationMinutes;
+      const place = getDefaultPlaceForTeacher(teacherIndex);
+      const L = {
+        teacher: teacherIndex,
+        day,
+        start: minutesToLabel(startM),
+        end: minutesToLabel(endM),
+        title,
+        place
+      };
+      ensureLessonId(L);
+      const lessonKey = buildLessonKey(L);
+      lessons.push(L);
+      lessonSubjectByKey.set(lessonKey, title);
+      event.preventDefault();
+      event.stopPropagation();
+      removeRequestCardById(request.requestId);
+      hideRequestSlotAssignFloater();
+      render();
+    }
+
+    function initRequestSlotCursorAssign() {
+      if (!tracks || tracks.dataset.requestSlotCursorAssignInit === "1") {
+        return;
+      }
+      tracks.dataset.requestSlotCursorAssignInit = "1";
+      tracks.addEventListener("mousemove", (event) => {
+        updateRequestSlotAssignFloaterFromPointerEvent(event);
+      });
+      tracks.addEventListener("mouseleave", () => {
+        hideRequestSlotAssignFloater();
+      });
+      tracks.addEventListener("click", (event) => {
+        assignActiveRequestFromPointerEvent(event);
+      });
     }
 
     function restoreRequestHighlights() {
@@ -2779,12 +3369,13 @@
           dayLessons.forEach((L) => {
             const el = document.createElement("div");
             const lessonKey = buildLessonKey(L);
-            const occupied = isLessonOccupied(lessonKey);
+            const occupied = isLessonOccupied(L);
             const selectedSubject = lessonSubjectByKey.get(lessonKey);
             const hasSubject = occupied || Boolean(selectedSubject);
             el.className = hasSubject ? `lesson-card b${(teacherIndex % 4) + 1}` : "lesson-card empty-slot";
             el.dataset.hasSubject = hasSubject ? "1" : "0";
             el.dataset.teacherIndex = String(teacherIndex);
+            el.dataset.lessonId = ensureLessonId(L);
             const startM = minutesFromScheduleStart(L.start);
             const endM = minutesFromScheduleStart(L.end);
             const topPct = (startM / MINUTES_PER_DAY) * 100;
@@ -2916,12 +3507,13 @@
         list.forEach((L) => {
           const el = document.createElement("div");
           const lessonKey = buildLessonKey(L);
-          const occupied = isLessonOccupied(lessonKey);
+          const occupied = isLessonOccupied(L);
           const selectedSubject = lessonSubjectByKey.get(lessonKey);
           const hasSubject = occupied || Boolean(selectedSubject);
           el.className = hasSubject ? `lesson-card b${(teacherIndex % 4) + 1}` : "lesson-card empty-slot";
           el.dataset.hasSubject = hasSubject ? "1" : "0";
           el.dataset.teacherIndex = String(teacherIndex);
+          el.dataset.lessonId = ensureLessonId(L);
           const startM = L.day * MINUTES_PER_DAY + minutesFromScheduleStart(L.start);
           const endM = L.day * MINUTES_PER_DAY + minutesFromScheduleStart(L.end);
           const topPct = (startM / totalMin) * 100;
@@ -3026,7 +3618,9 @@
     expandRequestCardsByWeeklyCount();
     initRequestCardActions();
     initScheduleRequestDrop();
+    initScheduleLessonMove();
     initRequestCardDrag();
+    initRequestSlotCursorAssign();
     boardScroll?.addEventListener("scroll", syncTimeRailScroll, { passive: true });
     timeRail?.addEventListener(
       "wheel",
