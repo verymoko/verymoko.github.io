@@ -60,6 +60,7 @@ main {
   display: flex;
   flex-flow: row wrap;
   gap: var(--module);
+  padding-top: 64px;
 }
 
 .stack {
