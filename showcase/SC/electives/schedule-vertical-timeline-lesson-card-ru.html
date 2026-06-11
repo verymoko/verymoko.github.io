@@ -607,26 +607,41 @@
     }
 
     .board.week.week-zoom-fit .week-day-cell {
-      flex: 0 0 auto;
+      flex: 1 1 0;
       min-width: 0;
       width: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .board.week.week-zoom-fit .week-day-names {
-      height: auto;
+      height: 100%;
+      min-height: 0;
+      align-self: stretch;
+      justify-self: stretch;
+      justify-content: center;
+      gap: 0;
+      padding: 0 3px;
     }
 
     .board.week.week-zoom-fit .hour-row {
       height: 100%;
     }
 
-    /* В «уместить в экран» подписи часов нечитаемы — скрываем, остаётся только колонка дней */
     .board.week.week-zoom-fit .hour-row {
-      display: none;
+      display: flex;
     }
 
     .board.week.week-zoom-fit .timeline-week-mode {
-      grid-template-columns: 1fr;
+      grid-template-columns: 42px 1fr;
+      height: 100%;
+    }
+
+    .board.week.week-zoom-fit .hour-row .hour-cell {
+      flex: 1 1 0;
+      height: auto;
+      min-height: 0;
     }
 
     .board.week.week-zoom-fit .board-rail {
@@ -790,9 +805,6 @@
       flex-direction: column;
       border-right: 1px solid var(--line);
       background: #fff;
-      position: sticky;
-      top: 0;
-      align-self: start;
       z-index: 35;
       padding: 4px 3px;
       gap: 4px;
@@ -944,6 +956,36 @@
         var(--line) calc(var(--hour-h) - 1px),
         var(--line) var(--hour-h)
       );
+    }
+
+    .board.week .track::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        transparent calc(100% / 7),
+        rgba(17, 24, 39, 0.03) calc(100% / 7),
+        rgba(17, 24, 39, 0.03) calc(2 * 100% / 7),
+        transparent calc(2 * 100% / 7),
+        transparent calc(3 * 100% / 7),
+        rgba(17, 24, 39, 0.03) calc(3 * 100% / 7),
+        rgba(17, 24, 39, 0.03) calc(4 * 100% / 7),
+        transparent calc(4 * 100% / 7),
+        transparent calc(5 * 100% / 7),
+        rgba(17, 24, 39, 0.03) calc(5 * 100% / 7),
+        rgba(17, 24, 39, 0.03) calc(6 * 100% / 7),
+        transparent calc(6 * 100% / 7),
+        transparent 100%
+      );
+    }
+
+    .board.week .track > * {
+      position: relative;
+      z-index: 1;
     }
 
     /* Неделя (стандарт, px): равномерная почасовая сетка + усиленные линии только между днями */
@@ -1747,12 +1789,6 @@
 
     function setActiveWeekDay(dayIndex) {
       if (!Array.isArray(weekDayRadioInputs) || weekDayRadioInputs.length !== 7) return;
-      if (weekZoomMode === "fit") {
-        weekDayRadioInputs.forEach((input) => {
-          input.checked = false;
-        });
-        return;
-      }
       const safeIdx = Math.max(0, Math.min(6, dayIndex));
       weekDayRadioInputs.forEach((input, idx) => {
         input.checked = idx === safeIdx;
@@ -1761,10 +1797,6 @@
 
     function syncActiveWeekDayFromScroll() {
       if (mode !== "week" || !boardScroll) return;
-      if (weekZoomMode === "fit") {
-        setActiveWeekDay(0);
-        return;
-      }
       const dayHeight = resolveWeekDayHeightPx();
       if (!dayHeight) return;
       const activeDay = Math.max(0, Math.min(6, Math.floor((boardScroll.scrollTop + 1) / dayHeight)));
@@ -3531,11 +3563,7 @@
       });
       applyFitModeZOrder();
       restoreRequestHighlights();
-      if (weekZoomMode === "fit") {
-        setActiveWeekDay(0);
-      } else {
-        setActiveWeekDay(isoDayIndex(anchorDate));
-      }
+      setActiveWeekDay(isoDayIndex(anchorDate));
       syncTimeRailScroll();
     }
 
